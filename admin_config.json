@@ -1,0 +1,13 @@
+{
+    "output_root": ".",
+    "prompts_hub_path": "/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml",
+    "patterns_path": "/workspace/hf-conda/RAG/问答机器人/config/patterns.yaml",
+    "img_prefix": "https://your-oss-bucket.com/finebi/docs/images",
+    "pdf_prefix": "https://your-oss-bucket.com/finebi/pdfs/",
+    "namespace_seed": "FineBI_RAG_2026",
+    "milvus_host": "172.17.0.1",
+    "collection_name": "finebi_knowledge_chunks",
+    "vlm_model_name": "Qwen--Qwen3-VL-32B-Instruct",
+    "llm_model_name": "Qwen/Qwen3-32B",
+    "score_threshold": 80.0
+}

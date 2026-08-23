@@ -1,0 +1,35 @@
+{
+  "user_id": "gao",
+  "updated_at": "2026-08-21 11:22:54",
+  "capability_tree": {
+    "mastered": [],
+    "learning": [
+      {
+        "name": "大规模视觉语言模型部署",
+        "proficiency": "intermediate",
+        "notes": null,
+        "bottleneck": "DGX SPARK 多卡显存分配卡点"
+      }
+    ],
+    "future_goals": []
+  },
+  "goals": {
+    "long_term": [],
+    "short_term": {
+      "this_week": null,
+      "today": "在 DGX SPARK 上部署大规模 VL 模型",
+      "current_blocker": "多卡显存分配卡点"
+    }
+  },
+  "cognitive_emotional_patterns": {},
+  "trajectories": {},
+  "preference_shifts": [
+    {
+      "timestamp": "2026-08-21 10:38:05",
+      "from": "pdfplumber",
+      "to": "视觉语言模型 (VLM) 架构",
+      "trigger_event": "关键表格提取效果差"
+    }
+  ],
+  "reflections": []
+}

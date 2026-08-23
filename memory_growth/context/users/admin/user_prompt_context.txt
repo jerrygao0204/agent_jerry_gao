@@ -1,0 +1,37 @@
+==================================================
+【用户长期记忆与成长语境】 (User ID: admin)
+==================================================
+
+[模块 1: 用户静态基础档案 (Identity Fact)]
+- 用户姓名是高铮
+
+[模块 2: 用户硬性偏好 (Explicit Preferences)]
+- 暂无相关记录
+
+[模块 3: 用户技术与业务约束 (Explicit Constraints)]
+- 暂无相关记录
+
+[模块 4: 已明确决策历史与技术迁移 (Explicit Decisions & Migration)]
+- 暂无相关记录
+
+[模块 5: 长期认知与能力协议 (Co-Reasoning Protocol)]
+- 暂无相关记录
+
+[模块 6: 基础能力现状 (Layer 1: Ability Tree Anchor)]
+- 暂无相关记录
+
+[模块 7: 动态实践与思维模式 (Layer 2: Reasoning Patterns)]
+- 暂无相关记录
+
+[模块 8: 演进目标与长远规划 (Layer 3: Long-Term Goals)]
+- 暂无相关记录
+
+[模块 9: 反思与避坑清单 (Reflection Points & Avoidance)]
+- 暂无相关记录
+
+[模块 10: 用户成长轨迹 (User Growth Points)]
+- 暂无相关记录
+
+[模块 11: 模型协作演進点 (Model Growth Points)]
+- 暂无相关记录
+==================================================

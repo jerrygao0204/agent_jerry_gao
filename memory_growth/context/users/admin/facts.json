@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "last_run_at": "2026-08-22 15:01:24",
+    "updated_at": "2026-08-22 15:01:59"
+  },
+  "facts": [
+    {
+      "category": "identity_fact",
+      "fact": "用户姓名是高铮",
+      "source_quote": "你好啊,我叫高铮",
+      "timestamp": "2026-08-21 12:39:44"
+    }
+  ]
+}

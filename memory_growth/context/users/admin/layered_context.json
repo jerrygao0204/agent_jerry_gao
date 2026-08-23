@@ -1,0 +1,31 @@
+{
+  "user_profile": {
+    "identity_facts": [
+      {
+        "category": "identity_fact",
+        "fact": "用户姓名是高铮",
+        "source_quote": "你好啊,我叫高铮",
+        "timestamp": "2026-08-21 12:39:44",
+        "field": "identity_facts"
+      }
+    ]
+  },
+  "stable_context": {
+    "long_term_goals": [],
+    "ability_tree": [],
+    "co_reasoning_protocol": []
+  },
+  "dynamic_context": {
+    "short_term_goals": [],
+    "current_blockers": [],
+    "preference_trajectory": [],
+    "reasoning_patterns": [],
+    "technical_migration": [],
+    "reflection_points": []
+  },
+  "growth_context": {
+    "growth_trajectory": [],
+    "user_growth_points": [],
+    "model_growth_points": []
+  }
+}

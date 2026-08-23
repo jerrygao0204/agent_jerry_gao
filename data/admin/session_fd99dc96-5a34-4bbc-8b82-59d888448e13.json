@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "admin",
+    "role": "user",
+    "content": "你好啊,我叫高铮",
+    "timestamp": "2026-08-21 12:39:44"
+  },
+  {
+    "user_id": "admin",
+    "role": "assistant",
+    "content": "你好，高铮！很高兴见到你~ 有什么我可以帮你的吗？或者你最近有什么想聊的？ 😊",
+    "timestamp": "2026-08-21 12:41:47"
+  }
+]
