@@ -1,0 +1,30 @@
+# 由扫描仓库内所有 import 语句 + 硬编码的 install_package() 调用整理生成。
+# 未标注具体版本号：仓库中没有任何版本约束（各脚本运行时用 install_package() 直接装最新版），
+# 建议在实际环境里先跑通一次，再用 `pip freeze > requirements.lock.txt` 把验证过的版本锁定下来。
+
+# 深度学习与模型推理
+torch
+transformers
+accelerate
+
+# 向量数据库
+pymilvus
+
+# PDF / 文档解析
+PyMuPDF          # import 名为 fitz
+pdfplumber
+beautifulsoup4   # import 名为 bs4
+Pillow           # import 名为 PIL
+
+# 文本分块
+langchain_text_splitters
+
+# 数据校验与配置
+pydantic
+PyYAML           # import 名为 yaml
+openpyxl
+
+# Web / Agent 服务
+gradio
+mcp
+fastmcp
