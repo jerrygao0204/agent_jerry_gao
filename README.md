@@ -1,4 +1,4 @@
-# agent_jerry_gao
+# Growlong
 
 一套围绕**三工厂底座**构建的 FineBI 智能问答系统：`ModelFactory`（模型与算力）、`ToolFactory`（分级工具）、`AgentFactory`（路由 + ReAct Agent 组装）作为共享基础设施，支撑起三个复用它们的入口程序——知识库建设后台、问答机器人网页、对外 MCP 工具服务。系统内嵌了一条内容无关的 RAG 入库管线（当前以 PDF 解析为起点验证，向量库本身可承载任意数据源），以及一套不只是记录聊天、而是追踪用户能力/目标/状态**成长轨迹**的分层记忆体，并配有代码沙箱执行与内容合规双重安全防护。
 
@@ -8,6 +8,7 @@
 
 - **三工厂解耦，一套底座支撑三个入口**：`ModelFactory` 统一管理 LLM/VLM/Embedding 的加载与显卡分配，`ToolFactory` 提供领域→工具包→工具的三级注册体系，`AgentFactory` 在此之上组装路由与推理 Agent。三者被 `app_admin.py`（建库）、`qa_admin.py`（问答网页）、`mcp_server.py`（MCP 工具服务）共同复用，避免了模型重复加载和工具重复实现。
 - **建库与问答解耦**：文档解析（VLM）→ Markdown → JSON 分块 → 校验 → 写入 Milvus 是一条独立的离线管线，问答机器人只负责检索与生成，两者可以分别迭代、分别扩容。PDF 只是当前落地的第一种数据源（也是最初用于验证管线的起点），向量库本身不绑定 PDF——任何能整理成文本分块的内容（网页、Word、数据库导出、API 返回等）都可以走同一条入库路径，只需替换 `data_prep/` 里的解析环节。
+- **自研滑动窗口解析长 PDF**：`pdf_to_markdown.py` 没有直接把整份 PDF 丢给 VLM，而是用自研的滑动窗口机制分片识别，解决了长文档超出模型单次处理能力的问题；同时通过跨窗口的表格合并逻辑，修复了表格跨页断裂、无法被正确识别为同一张表的问题。
 - **工具能力可对外复用**：`ToolFactory` 里注册的工具（如知识库检索）不仅供内部 `ReActAgent` 调用，还通过 `mcp_server.py` 原样暴露给外部 Agent，同一套能力两处复用。
 - **记忆体追踪的是轨迹而非流水账**：`memory_growth` 把用户信息拆成身份（无轨迹，单独存 profile）、稳定语境（长期目标/能力树）、动态语境（当前偏好/卡点）、成长语境（前三层如何随时间演变）四层，渲染为 Prompt 注入 Agent——做到的是"共同成长"式的持续认知积累，而不只是更大的聊天记录库。这与会话内的短期记忆（`memory/`）是互补的两个时间尺度。
 - **双重安全防护，分而治之**：代码类工具调用走 AST 静态审查 + 子进程沙箱隔离；文本类输入输出走正则脱敏 + LLM 语义二次审查。两条链路共用 `config/patterns.yaml` 规则源，但审查对象和执行方式完全独立，互不影响。
@@ -57,7 +58,7 @@ flowchart TD
 | `app_admin.py` | 知识库管理后台（Gradio）：配置文档处理与入库参数（目前主体被注释，处于重构中） |
 | `qa_admin.py` | 问答系统主后台（Gradio）：加载模型、检索器、Agent、记忆与合规模块，提供带用户鉴权的问答界面 |
 | `mcp_server.py` | 基于 FastMCP 将内部工具（如知识库检索、仪表板查询）暴露为 MCP Tool，供外部 Agent 调用 |
-| `data_prep/pdf_to_markdown.py` | 使用 VLM（多模态模型）解析 PDF 版面与图片，输出 Markdown |
+| `data_prep/pdf_to_markdown.py` | 使用 VLM（多模态模型）解析 PDF 版面与图片，输出 Markdown；采用自研的滑动窗口识别机制对长 PDF 做分片处理，并通过跨窗口表格合并解决了长文档中表格跨页断裂的问题 |
 | `data_prep/markdown_to_json.py` | 按标题分块 Markdown，产出带元数据的 JSON chunk |
 | `ingest/validator.py` | 写入前的数据校验（字段完整性、长度、结构） |
 | `ingest/db_uploader.py` | 连接 Milvus，写入向量与元数据，并做检索验证 |
@@ -122,5 +123,5 @@ cd agent_jerry_gao
 
 - **硬编码路径**：多处默认路径指向 `/workspace/hf-conda/RAG/问答机器人/...`（如 `memory/chat_history_file.py`、`memory_growth/path_config.py`），迁移环境时需要替换。
 - **在演/在重构文件**：`app_admin.py`、`agent/react_agent_integrated.py`、`factory/tool_registry.py`、`generator/qa_chain.py` 等文件中存在整段注释掉的历史实现，与当前生效代码并存，阅读时需以未注释部分为准。
-- **无依赖清单**：建议后续补充 `requirements.txt` / `pyproject.toml` 固化依赖版本。
+- **依赖清单**：仓库本身没有 `requirements.txt`（依赖靠各脚本运行时 `install_package()` 现装），已根据代码里的 import 与 `install_package()` 调用整理出一份 `requirements.txt`（未锁定具体版本，建议实际环境验证后用 `pip freeze` 锁定）。
 - **存储引擎为测试态**：`memory/chat_history_file.py` 当前使用 JSON 文件存储对话历史，注释中说明后续可替换为数据库存储。
