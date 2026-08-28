@@ -1,3 +1,4 @@
+# memory_growth/layer_mapper.py
 """
 layer_mapper.py - 把 FactExtractor 产出的扁平事实(facts.json)
 映射进标准的三层语境 JSON 结构 (QAChain 适配版)。

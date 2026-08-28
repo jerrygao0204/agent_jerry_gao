@@ -1,3 +1,4 @@
+# memory_growth/context_builder.py
 """
 context_builder.py - 成长型语境 Prompt 构建器
 

@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "查询表A有多少行数据",
+    "timestamp": "2026-08-26 10:16:28"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "表A共有10,000行数据。",
+    "timestamp": "2026-08-26 10:18:02"
+  }
+]

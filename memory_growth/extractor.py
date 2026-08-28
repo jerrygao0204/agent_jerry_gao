@@ -1,5 +1,6 @@
+# memory_growth/extractor.py
 """
-FactExtractor - 成长型语境系统的事实抽取管道 (QAChain 适配 + 单文件元数据版)
+extractor.py - 成长型语境系统的事实抽取管道 (QAChain 适配 + 单文件元数据版)
 
 架构特点：
 1. 元数据合并：提取水位线 last_run_at 直接写在 facts.json 的 metadata 字段中，无需独立的 state JSON 文件。

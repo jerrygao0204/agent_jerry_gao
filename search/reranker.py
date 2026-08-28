@@ -73,7 +73,7 @@ class FineBIReranker:
         self.model.to(self.device)
         self.model.eval()
         logging.info("Reranker 模型加载成功。")
-        
+
     def rerank(
         self, 
         query: str, 
@@ -144,3 +144,27 @@ class FineBIReranker:
             f"重排完成：初筛 {len(documents)} 个 Chunk -> 过滤保留 {len(valid_docs)} 个高置信度 Chunk (Top-1 概率: {top_1_prob:.2%}) -> 截取 Top-{len(final_results)}。"
         )
         return final_results
+
+if __name__ == "__main__":
+    # 模拟从 `retriever.py` 混合检索出来的初筛数据
+    mock_retrieved_docs = [
+        {"chunk_id": "c1", "content": "FineBI 支持多种数据源连接，包括 MySQL, Oracle 以及各种大数据库平台。"},
+        {"chunk_id": "c2", "content": "帆软报表软件的安装教程请参考官方支持文档，并确保本地 JDK 环境配置正确。"},
+        {"chunk_id": "c3", "content": "在 FineBI 管理系统中，用户可以通过新建数据集并选择对应的数据库驱动来完成数据库的连接配置。"}
+    ]
+    
+    test_query = "FineBI 怎么连接数据库？"
+    
+    # 初始化 Reranker 实例
+    reranker = FineBIReranker(
+        model_name_or_path="BAAI/bge-reranker-large",
+        cache_dir="/workspace/hf-conda/hf_cache/hub",
+        cuda_device="0"
+    )
+    
+    # 执行精排
+    ranked_results = reranker.rerank(query=test_query, documents=mock_retrieved_docs, top_n=2)
+    
+    print("\n" + "="*20 + " 重排序精排结果 " + "="*20)
+    for idx, doc in enumerate(ranked_results):
+        print(f"Top {idx+1} [精排得分: {doc['rerank_score']:.4f}] -> {doc['content']}")

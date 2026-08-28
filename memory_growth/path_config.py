@@ -1,3 +1,4 @@
+# memory_growth/path_config.py
 """
 path_config.py - 统一管理多用户的输入与输出路径
 """

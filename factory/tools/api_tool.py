@@ -12,7 +12,7 @@ class DashboardQueryInput(BaseModel):
 
 class FineBIDashboardTool(BaseTool):
     name: str = "get_finebi_dashboards"
-    description: str = "获取 FineBI 系统中已发布的仪表板列表及状态元数据"
+    description: str = "查询系统中的可视化仪表板、看板、报表组件列表及其配置。"
     domain: str = "finebi_system"
     package: str = "metadata_pkg"
     args_schema = DashboardQueryInput
