@@ -39,7 +39,7 @@ from search.retriever import FineBIRetriever
 from search.reranker import FineBIReranker
 from factory import init_tools, tool_factory
 from agent.sandbox import SandboxExecutor
-from agent.react_agent_integrated import IntegratedReActAgent
+from agent.react_agent import ReActAgent 
 from memory.memory_manager import MemoryManager
 from agent.compliance import ComplianceChecker
 
@@ -188,13 +188,6 @@ def clear_agent_memory(user_state: dict):
 
     return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
-# def clear_agent_memory(user_state: dict):
-#     username = user_state.get("username", "default")
-#     mem_mgr = get_or_create_user_memory(username)
-#     mem_mgr.clear_all()
-#     choices = fetch_session_dropdown_choices(username)
-#     new_choice = choices[0][1] if choices else None
-#     return [], "*等待启动诊断...*", "已清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
@@ -345,16 +338,26 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
-    agent = IntegratedReActAgent(
-        model_name=llm_model,
-        top_k_ret=top_k_ret,
-        top_k_rerank=top_k_rerank,
-        filter_str=filter_input,
-        memory_mgr=user_mem_mgr,
-        max_steps=5,
-        sandbox_timeout=2
-    )
-
+    # agent = IntegratedReActAgent(
+    #     model_name=llm_model,
+    #     top_k_ret=top_k_ret,
+    #     top_k_rerank=top_k_rerank,
+    #     filter_str=filter_input,
+    #     memory_mgr=user_mem_mgr,
+    #     max_steps=5,
+    #     sandbox_timeout=2
+    # )
+    agent = ReActAgent(
+            llm_client=None,
+            model_name=llm_model,
+            top_k_ret=top_k_ret,
+            top_k_rerank=top_k_rerank,
+            filter_str=filter_input,
+            memory_mgr=user_mem_mgr,
+            max_steps=5,
+            sandbox_timeout=2,
+        )
+    
     inspector_log = f"🚀 **Agent 任务启动 (用户: {username} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "🤖 推理中...", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
@@ -412,6 +415,7 @@ def test_tool_execution(tool_name, tool_input_json):
     try:
         params = json.loads(tool_input_json) if tool_input_json.strip() else {}
         tool_instance = tool_factory.get_tool(tool_name) if hasattr(tool_factory, "get_tool") else None
+        print(f'找到工具:{tool_instance}')
         if not tool_instance:
             return json.dumps({"status": "error", "message": f"未找到工具: {tool_name}"}, ensure_ascii=False, indent=2), "❌ 失败"
         
@@ -420,18 +424,136 @@ def test_tool_execution(tool_name, tool_input_json):
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)}, ensure_ascii=False, indent=2), f"❌ 失败: {str(e)}"
 
-def stream_agent_sandbox_execution(user_query: str):
-    if not user_query.strip():
+# def stream_agent_sandbox_execution(user_query: str, llm_model: str, top_k_ret: int, top_k_rerank: int, filter_input: str):
+#     clean_query = user_query.strip() if user_query else ""
+#     if not clean_query:
+#         yield "⚠️ 请输入有效的测试问题！"
+#         return
+
+#     # ==================== 🔍 DEBUG PRINT 开始 ====================
+#     print("\n" + "=" * 60)
+#     print("🐞 [Tab 2 沙盒 Debug] 启动 ReAct Agent 推理诊断")
+#     print(f"👉 输入 Query: {clean_query}")
+#     print(f"👉 当前模型 (LLM): {llm_model}")
+#     print(f"👉 Top-K 检索/重排: {top_k_ret} / {top_k_rerank}")
+#     print(f"👉 Filter 过滤词: {filter_input}")
+    
+#     # 1. 排查全局 registered_tools
+#     global_tools = get_all_registered_tool_names()
+#     print(f"👉 [全局注册工具]: {global_tools}")
+#     if "web_search" not in global_tools:
+#         print("❌ 【异常】全局注册工具中不存在 'web_search'！请检查 factory/init_tools 是否实现了 web_search 的注册。")
+#     else:
+#         print("✅ 全局注册工具中包含 'web_search'。")
+
+#     # 2. 实例化 Agent（修复原代码参数写死的问题）
+#     agent = IntegratedReActAgent(
+#         model_name=llm_model,
+#         top_k_ret=top_k_ret,
+#         top_k_rerank=top_k_rerank,
+#         filter_str=filter_input,
+#         max_steps=5,
+#         sandbox_timeout=2
+#     )
+
+#     # 3. 排查 Agent 实例内实际绑定的工具列表
+#     loaded_tools = []
+#     if hasattr(agent, "tools"):
+#         loaded_tools = list(agent.tools.keys()) if isinstance(agent.tools, dict) else agent.tools
+#     elif hasattr(agent, "tool_map"):
+#         loaded_tools = list(agent.tool_map.keys())
+#     print(f"👉 [Agent 实际加载工具]: {loaded_tools}")
+
+#     if "web_search" not in loaded_tools:
+#         print("❌ 【核心原因】Agent 实例未能成功绑定 'web_search' 工具！")
+#     else:
+#         print("✅ Agent 实例已成功绑定 'web_search' 工具。")
+
+#     # 4. 打印 Agent 内部 Prompt 预览（检查大模型是否能感知到 web_search）
+#     if hasattr(agent, "system_prompt"):
+#         print(f"👉 [Agent System Prompt 预览]:\n{str(agent.system_prompt)[:300]}...")
+#     print("=" * 60 + "\n")
+#     # ==================== 🔍 DEBUG PRINT 结束 ====================
+
+#     full_log = ""
+#     try:
+#         for step_data in agent.run_stream(clean_query):
+#             full_log += step_data.get("content", "") + "\n\n"
+#             yield full_log
+#     except Exception as e:
+#         logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
+#         yield full_log + f"\n\n🚨 异常: {str(e)}"
+        
+def stream_agent_sandbox_execution(
+    user_query: str,
+    llm_model: str,
+    top_k_ret: int,
+    top_k_rerank: int,
+    filter_input: str,
+):
+    clean_query = user_query.strip() if user_query else ""
+    if not clean_query:
         yield "⚠️ 请输入有效的测试问题！"
         return
+
+    # ==================== 🔍 DEBUG PRINT 开始 ====================
+    print("\n" + "=" * 60)
+    print("🐞 [Tab 2 沙盒 Debug] 启动 ReAct Agent 推理诊断")
+    print(f"👉 输入 Query: {clean_query}")
+    print(f"👉 当前模型 (LLM): {llm_model}")
+    print(f"👉 Top-K 检索/重排: {top_k_ret} / {top_k_rerank}")
+    print(f"👉 Filter 过滤词: {filter_input}")
+
+    # 1. 排查工厂绑定的全局全量工具 (Factory 索引)
+    global_tools = get_all_registered_tool_names()
+    print(f"👉 [全局注册工具总量]: {len(global_tools)} | 列表: {global_tools}")
+
+    # 2. 实例化 Agent
+    agent = ReActAgent(
+        llm_client=None,
+        model_name=llm_model,
+        top_k_ret=top_k_ret,
+        top_k_rerank=top_k_rerank,
+        filter_str=filter_input,
+        max_steps=5,
+        sandbox_timeout=2,
+    )
+
+    # 3. 模拟三级路由诊断 (Level 1 Domain -> Level 2 Package -> Level 3 Tools)
+    scoped_tool_names = []
+    selected_domains = []
+    selected_packages = []
+
+    if hasattr(agent, "_route_domains") and hasattr(agent, "_route_packages"):
+        # Level 1 路由：Domain 剪枝
+        selected_domains = agent._route_domains(clean_query)
+        # Level 2 路由：Package 锁定
+        selected_packages = agent._route_packages(clean_query, selected_domains)
+        
+        # Level 3 工具 Schema 提取
+        tool_names_str, _ = agent.tool_factory.get_tools_metadata_by_packages(selected_packages)
+        scoped_tool_names = [t.strip() for t in tool_names_str.split(",") if t.strip()]
+
+        print(f"🎯 [Level 1 命中领域 (Domain)]: {selected_domains}")
+        print(f"📦 [Level 2 锁定工具包 (Package)]: {[pkg for _, pkg in selected_packages]}")
+        print(f"⚡ [Level 3 按需加载的工具清单]: {scoped_tool_names}")
+
+        if "web_search" not in scoped_tool_names:
+            print(f"ℹ️ 当前 Query 未激活 'web_search' 工具包，成功执行剪枝。")
+        else:
+            print("✅ 当前 Query 已成功绑定 'web_search' 工具。")
+    print("=" * 60 + "\n")
+    # ==================== 🔍 DEBUG PRINT 结束 ====================
+
     full_log = ""
-    agent = IntegratedReActAgent(max_steps=5, sandbox_timeout=2)
     try:
-        for step_data in agent.run_stream(user_query):
+        for step_data in agent.run_stream(clean_query):
             full_log += step_data.get("content", "") + "\n\n"
             yield full_log
     except Exception as e:
+        logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
         yield full_log + f"\n\n🚨 异常: {str(e)}"
+
 
 def get_all_registered_tool_names() -> list:
     tools = []
@@ -748,7 +870,12 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                             react_log_markdown = gr.Markdown(value="等待启动诊断...")
 
                     btn_run_tool.click(fn=test_tool_execution, inputs=[tool_select, tool_json_input], outputs=[tool_json_output, tool_status])
-                    run_btn.click(fn=stream_agent_sandbox_execution, inputs=[test_input], outputs=[react_log_markdown])
+                    # run_btn.click(fn=stream_agent_sandbox_execution, inputs=[test_input], outputs=[react_log_markdown])
+                    run_btn.click(
+                        fn=stream_agent_sandbox_execution, 
+                        inputs=[test_input, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input], 
+                        outputs=[react_log_markdown]
+                    )
 
                 # ---------------------------------------------------------
                 # Tab 3: ReAct Agent 智能助理 (支持多 Session 清单与思维链)
