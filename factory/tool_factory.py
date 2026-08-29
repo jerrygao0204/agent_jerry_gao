@@ -2,7 +2,7 @@
 import json
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Type, List, Optional, Tuple
+from typing import Dict, Any, Type, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("ToolFactory")
@@ -60,21 +60,11 @@ class HierarchicalToolFactory:
         self._hierarchy: Dict[str, Dict[str, Dict[str, BaseTool]]] = {}
         self._flat_tools: Dict[str, BaseTool] = {}
 
-        # Level 1 静态元数据定义 (Domain Description)
-        self._domain_metadata: Dict[str, str] = {
-            "rag_knowledge": "处理用户手册、排错指南、FAQ 等非结构化文档检索",
-            "finebi_system": "查询 FineBI 系统仪表板、数据集元数据、权限及定时任务状态",
-            "data_analytics": "对业务数据进行二次统计分析、指标计算与报表生成",
-            "web_search": "进行网络搜索与公网实时信息查询"
-        }
+        # Level 1 动态元数据定义 (Domain Description) -> 置空
+        self._domain_metadata: Dict[str, str] = {}
 
-        # Level 2 静态元数据定义 (Package Description)
-        self._package_metadata: Dict[str, Dict[str, str]] = {
-            "data_analytics": {
-                "analytics_pkg": "针对数据集元数据、行数、列数及结构信息的统计分析工具包",
-                "chart_pkg": "针对报表渲染、图表生成的可视化工具包"
-            }
-        }
+        # Level 2 动态元数据定义 (Package Description) -> 置空
+        self._package_metadata: Dict[str, Dict[str, str]] = {}
 
     def register_tool(self, tool: BaseTool) -> None:
         """注册工具并建立索引 (Register Tool)"""
@@ -87,11 +77,9 @@ class HierarchicalToolFactory:
         self._hierarchy.setdefault(domain, {}).setdefault(package, {})[tool.name] = tool
         self._flat_tools[tool.name] = tool
 
-        if domain not in self._domain_metadata:
-            self._domain_metadata[domain] = f"处理与 {domain} 相关的业务操作"
-
-        if domain not in self._package_metadata or package not in self._package_metadata[domain]:
-            self._package_metadata.setdefault(domain, {})[package] = f"{package} 相关工具包"
+        # 仅当没有从配置文件/显式 API 注册过元数据时，才写入兜底描述
+        self._domain_metadata.setdefault(domain, f"处理与 {domain} 相关的业务操作")
+        self._package_metadata.setdefault(domain, {}).setdefault(package, f"{package} 工具包")
 
         logger.info(f"🛠️ [ToolFactory] 注册成功: [{domain} -> {package} -> {tool.name}]")
 
@@ -116,23 +104,42 @@ class HierarchicalToolFactory:
             for domain in self._hierarchy.keys()
         ]
 
-    # -------------------------------------------------------------
-    # Level 2 API: 根据命中 Domain 获取其下属 Package 清单 (Package Level)
-    # -------------------------------------------------------------
-    def get_packages_summary_by_domains(self, target_domains: List[str]) -> List[Dict[str, str]]:
+    def get_packages_summary_by_domains(self, target_domains: List[str]) -> List[Dict[str, Any]]:
         """获取指定 Domain 下的所有 Package 元数据，供第二级 Router 决策"""
         packages_summary = []
         for dom in target_domains:
             if dom in self._hierarchy:
-                for pkg in self._hierarchy[dom].keys():
+                for pkg, tools in self._hierarchy[dom].items():
                     desc = self._package_metadata.get(dom, {}).get(pkg, f"{pkg} 工具包")
+                    
+                    # 📌 补全工具列表解析
+                    tools_summary = []
+                    # 支持 tools 为列表（[tool_name1, tool_name2]）或字典（{tool_name: tool_obj}）
+                    tool_items = tools.items() if isinstance(tools, dict) else [(t, None) for t in tools]
+                    
+                    for tool_name, tool_val in tool_items:
+                        # 尝试从对象、注册表或默认获取描述
+                        tool_desc = "通用工具"
+                        if hasattr(tool_val, "description"):
+                            tool_desc = tool_val.description
+                        elif hasattr(self, "get_tool") and callable(getattr(self, "get_tool")):
+                            tool_obj = self.get_tool(tool_name)
+                            if tool_obj and hasattr(tool_obj, "description"):
+                                tool_desc = tool_obj.description
+                        
+                        tools_summary.append({
+                            "name": tool_name,
+                            "description": tool_desc
+                        })
+
                     packages_summary.append({
                         "domain": dom,
                         "package": pkg,
-                        "description": desc
+                        "description": desc,
+                        "tools": tools_summary  # 📌 取消注释并注入解析好的工具列表
                     })
         return packages_summary
-
+    
     # -------------------------------------------------------------
     # Level 3 API: 根据命中的 Packages 抽取原子工具集 (Tool Level)
     # -------------------------------------------------------------
@@ -144,43 +151,40 @@ class HierarchicalToolFactory:
                 scoped_tools.update(self._hierarchy[dom][pkg])
         return scoped_tools
 
-    def get_tools_metadata_by_packages(self, target_packages: List[Tuple[str, str]]) -> Tuple[str, str]:
-        """导出精确定位后的工具标准 JSON Schema 描述"""
+    def get_tools_metadata_by_packages(
+        self, 
+        target_packages: List[Tuple[str, str]], 
+        as_json_string: bool = False
+    ) -> Tuple[str, Union[str, List[Dict[str, Any]]]]:
+        """
+        导出符合 OpenAI Function Call 标准规范的工具 Schema 描述
+        """
         tools = self.get_tools_by_packages(target_packages)
         if not tools:
             logger.warning(f"⚠️ 未命中任何有效包 [{target_packages}]，降级全量查找。")
             tools = self._flat_tools
 
         tool_names = ", ".join(tools.keys())
-        descriptions = []
+        formatted_tool_specs = []
 
         for name, tool in tools.items():
+            # 获取 Pydantic 导出的 parameters schema
             schema_dict = tool.get_json_schema()
+
+            # 📌 严格按照 OpenAI 标准格式封装
             tool_spec = {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": schema_dict
-            }
-            descriptions.append(json.dumps(tool_spec, ensure_ascii=False, indent=2))
-
-        return tool_names, "\n\n".join(descriptions)
-
-    def get_openai_tools_schema_by_packages(
-        self, target_packages: Optional[List[Tuple[str, str]]] = None
-    ) -> List[Dict[str, Any]]:
-        """专供 OpenAI / DeepSeek 原生 Function Calling 使用的标准 API 结构"""
-        tools = self.get_tools_by_packages(target_packages) if target_packages else self._flat_tools
-        return [
-            {
                 "type": "function",
                 "function": {
                     "name": tool.name,
                     "description": tool.description,
-                    "parameters": tool.get_json_schema()
+                    "parameters": schema_dict
                 }
             }
-            for tool in tools.values()
-        ]
+            formatted_tool_specs.append(tool_spec)
+
+        if as_json_string:
+            return tool_names, json.dumps(formatted_tool_specs, ensure_ascii=False, indent=2)
+        return tool_names, formatted_tool_specs
 
     def get_tool(self, name: str) -> Optional[BaseTool]:
         return self._flat_tools.get(name)
@@ -217,3 +221,4 @@ if __name__ == "__main__":
     names, desc = factory.get_tools_metadata_by_packages([("data_analytics", "analytics_pkg")])
     print("工具名称列表:", names)
     print(desc)
+
