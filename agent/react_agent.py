@@ -12,7 +12,7 @@ if project_root not in sys.path:
 import re
 import json
 import logging
-from typing import Dict, Any, Generator, Optional, List, Tuple
+from typing import Dict, Any, Generator, Optional, List, Tuple, Union
 from factory.tool_factory import HierarchicalToolFactory, BaseTool, tool_factory as default_tool_factory
 from memory.memory_manager import MemoryManager
 from agent.sandbox import SandboxExecutor
@@ -72,14 +72,35 @@ class ReActAgent:
         for pkg in packages_summary:
             pkg_name = pkg.get("package")
             desc = pkg.get("description", "无详细描述")
-            tools = pkg.get("tools", [])
+            raw_tools = pkg.get("tools", [])
+
+            tool_lines = []
+            # 📌 针对各种不同的 Tool 数据结构类型进行容错提取
+            if isinstance(raw_tools, list):
+                for t in raw_tools:
+                    if isinstance(t, dict):
+                        t_name = t.get("name", "unknown_tool")
+                        t_desc = t.get("description", "无工具描述")
+                        tool_lines.append(f"    * `{t_name}`: {t_desc}")
+                    elif hasattr(t, "name"):
+                        t_name = getattr(t, "name")
+                        t_desc = getattr(t, "description", "无工具描述")
+                        tool_lines.append(f"    * `{t_name}`: {t_desc}")
+                    elif isinstance(t, str):
+                        # 如果工具列表中只有名称，尝试从 ToolFactory 补全描述
+                        tool_obj = self.tool_factory.get_tool(t) if hasattr(self.tool_factory, "get_tool") else None
+                        t_desc = tool_obj.description if (tool_obj and hasattr(tool_obj, "description")) else "通用执行工具"
+                        tool_lines.append(f"    * `{t}`: {t_desc}")
             
-            # 解析工具列表及具体功能
-            if isinstance(tools, list) and len(tools) > 0 and isinstance(tools[0], dict):
-                tool_lines = [f"    * `{t['name']}`: {t.get('description', '无工具描述')}" for t in tools]
-                tool_str = "\n" + "\n".join(tool_lines)
-            else:
-                tool_str = ", ".join(tools) if isinstance(tools, list) else str(tools)
+            tool_str = "\n".join(tool_lines) if tool_lines else "    * 无可用下属工具"
+
+
+            # # 解析工具列表及具体功能
+            # if isinstance(tools, list) and len(tools) > 0 and isinstance(tools[0], dict):
+            #     tool_lines = [f"    * `{t['name']}`: {t.get('description', '无工具描述')}" for t in tools]
+            #     tool_str = "\n" + "\n".join(tool_lines)
+            # else:
+            #     tool_str = ", ".join(tools) if isinstance(tools, list) else str(tools)
             
             formatted.append(
                 f"- **Package 名称**: `{pkg_name}`\n"
@@ -148,19 +169,6 @@ class ReActAgent:
                 "请严格仅返回 JSON 数组格式（例如: [\"pkg_name\"]），严禁包含任何 Markdown 格式以外的解释或说明文字。"
             )
 
-        # if router_prompt_template:
-        #     self.router_prompt_template = router_prompt_template
-        # elif self.prompt_hub and hasattr(self.prompt_hub, "get_prompt"):
-        #     router_obj = self.prompt_hub.get_prompt("agent_router_prompt")
-        #     self.router_prompt_template = getattr(router_obj, "content", str(router_obj))
-        # else:
-        #     self.router_prompt_template = (
-        #         "你是一个意图路由专家。请分析用户问题，从给定的领域列表中选择最相关的 1~2 个领域。\n"
-        #         "可用领域清单:\n{domains_summary}\n\n"
-        #         "用户问题: {input}\n\n"
-        #         "请严格仅返回 JSON 数组格式的领域代码，例如: [\"rag_knowledge\"]，不要输出任何额外内容。"
-        #     )
-
     def _is_short_query(self, query: str) -> bool:
         clean_q = query.strip().lower()
         if len(clean_q) < self.min_query_length:
@@ -210,7 +218,17 @@ class ReActAgent:
     def _route_packages(self, query: str, target_domains: List[str]) -> List[Tuple[str, str]]:
         """Level 2 路由：基于选定的 Domain 选出命中的 (Domain, Package) 二元组"""
         packages_summary = self.tool_factory.get_packages_summary_by_domains(target_domains)
+        # ==================== 🔍 DEBUG 打印开始 ====================
+        print("\n" + "🔍" * 25 + " [TOOL FACTORY 结构诊断] " + "🔍" * 25)
+        print(f"👉 目标 Domains: {target_domains}")
+        print(f"👉 ToolFactory 返回的 packages_summary 原始数据类型: {type(packages_summary)}")
+        print("👉 packages_summary 完整内容:")
+        print(json.dumps(packages_summary, ensure_ascii=False, indent=2, default=str))
+        print("🔍" * 68 + "\n")
+        # ==================== 🔍 DEBUG 打印结束 ====================
+
         if not packages_summary:
+            print("⚠️ [WARNING] packages_summary 为空！")
             return []
         
         # 1. 转化为结构化 Markdown 描述，消除纯 JSON 的符号噪音
@@ -273,10 +291,23 @@ class ReActAgent:
             "content": content
         }
 
-    def run_stream(self, query: str) -> Generator[Dict[str, Any], None, None]:
-        """流式 Agent 推理逻辑"""
+    def run_stream(
+        self, 
+        query: str, 
+        tools_schema: Optional[Union[str, List[Dict[str, Any]]]] = None
+    ) -> Generator[Dict[str, Any], None, None]:
+        """
+        流式 Agent 推理逻辑
+        :param query: 用户输入 Query
+        :param tools_schema: (可选) 外部传入的工具 Schema。支持标准的 Specs List[Dict] 或描述字符串
+        """
         self.memory_mgr.begin_transaction()
         self.memory_mgr.process_user_input(query)
+
+        # 📌【修复 1】：在入口处安全初始化变量，防范 UnboundLocalError
+        selected_packages: List[Tuple[str, str]] = []
+        pkg_names: List[str] = ["injected_custom_schema"]
+
 
         try:
             # 1. 短文本拦截
@@ -293,19 +324,41 @@ class ReActAgent:
                 self.memory_mgr.process_assistant_output(final_ans)
                 self.memory_mgr.commit()
                 return
-
+            
             # 2. 三级分级路由机制 (Hierarchical Routing)
-            yield self._yield_step("thought", "正在分析用户意图，匹配业务领域 (Domain)...")
-            selected_domains = self._route_domains(query)
-            
-            yield self._yield_step("thought", f"锁定业务领域: `{selected_domains}`，正在筛选工具包 (Package)...")
-            selected_packages = self._route_packages(query, selected_domains)
-            
-            pkg_names = [pkg for _, pkg in selected_packages]
-            yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
+            # 📌 优先使用外部注入的 tools_schema；若无，则自动触发内部路由获取
+            if tools_schema is not None:
+                yield self._yield_step("thought", "检测到沙盒注入的预剪枝工具 Schema，直接载入...")
+                if isinstance(tools_schema, list):
+                    # 转换标准的 Tool Spec 结构为 Prompt 渲染需要的文本格式
+                    tool_names_list = []
+                    descriptions = []
+                    for spec in tools_schema:
+                        func_info = spec.get("function", spec) if isinstance(spec, dict) else {}
+                        name = func_info.get("name", "unknown_tool")
+                        desc = func_info.get("description", "")
+                        params = func_info.get("parameters", {})
+                        tool_names_list.append(name)
+                        descriptions.append(f"- **{name}**: {desc}\n  参数规范: {json.dumps(params, ensure_ascii=False)}")
+                    
+                    tool_names = ", ".join(tool_names_list)
+                    tools_description = "\n".join(descriptions)
+                    pkg_names = tool_names_list  # 给报错打印提示用
+                else:
+                    tools_description = str(tools_schema)
+                    tool_names = "已加载工具"
+            else:
+                yield self._yield_step("thought", "正在分析用户意图，匹配业务领域 (Domain)...")
+                selected_domains = self._route_domains(query)
+                
+                yield self._yield_step("thought", f"锁定业务领域: `{selected_domains}`，正在筛选工具包 (Package)...")
+                selected_packages = self._route_packages(query, selected_domains)
+                
+                pkg_names = [pkg for _, pkg in selected_packages]
+                yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
 
-            # 按 Package 提取完整的工具标准 Spec/Schema
-            tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages)
+                tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages)
+           
             scratchpad = ""
 
             # 3. 核心 ReAct 循环
