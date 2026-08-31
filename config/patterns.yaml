@@ -149,3 +149,20 @@ entity_patterns:
       - "PostgreSQL"
       - "ClickHouse"
       - "Doris"
+
+# ==========================================
+# 🎯 路由与意图决策规则配置 (Routing & Intent Rules)
+# ==========================================
+routing_rules:
+  # 两阶段路由 Top1 与 Top2 置信度分差控制阈值 (低于该分差则触发主动澄清反问)
+  max_score_gap: 0.15
+  
+  # 最低候选置信度阈值 (低于该得分直接走默认通用 Q&A)
+  min_confidence_score: 0.35
+
+  # 反问澄清提示词模版
+  clarification_template: |
+    🤔 您好，我检测到您的请求可能属于以下几个方面，请问您具体想了解哪一个？
+    1. **{top_1_label}**
+    2. **{top_2_label}**
+    您可以直接回复选项数字或补充更多细节。
