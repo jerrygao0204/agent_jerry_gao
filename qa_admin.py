@@ -22,7 +22,7 @@ import torch
 import yaml
 from typing import Dict, Any, List, Tuple, Generator, Optional
 from urllib.parse import unquote
-
+from api.observability import scan_metrics
 # ==========================================
 # 📂 1. 动态注入系统路径与模块导入
 # ==========================================
@@ -42,12 +42,14 @@ from agent.sandbox import SandboxExecutor
 from agent.react_agent import ReActAgent 
 from memory.memory_manager import MemoryManager
 from agent.compliance import ComplianceChecker
+from memory.feedback_store import feedback_store
 
 # ==========================================
 # ⚙️ 2. 全局配置与用户凭证加载
 # ==========================================
 CONFIG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_config.json")
 USERS_AUTH_PATH = os.path.join(SCRIPT_DIR, "config", "users_auth.yaml")
+DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 
 DEFAULT_QA_CONFIG = {
     "prompts_hub_path": os.path.join(SCRIPT_DIR, "config", "prompt_hub.yaml"),
@@ -188,6 +190,49 @@ def clear_agent_memory(user_state: dict):
 
     return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
+# ==========================================
+# 📊 监控可观测性面板逻辑 (Tab 4 专用)
+# ==========================================
+def render_tab3_monitor_dashboard() -> str:
+    """直接复用 scan_metrics 读取系统的真实监控指标，仅在 Tab 3 右侧展示"""
+    try:
+        metrics = scan_metrics(data_dir=DATA_DIR)
+        total_users = metrics.get('total_users', 0)
+        total_sessions = metrics.get('total_sessions', 0)
+        total_queries = metrics.get('total_queries', 0)
+        compliance_interceptions = metrics.get('compliance_interceptions', 0)
+        interception_rate = metrics.get('interception_rate', '0.00%')
+    except Exception as e:
+        logging.error(f"读取监控指标失败: {e}")
+        return "*📊 监控指标读取异常*"
+
+    return f"""
+> **📊 系统实时运行指标**
+- **👥 累计活跃用户**: `{total_users}` 人
+- **💬 累计会话总数**: `{total_sessions}` 个
+- **❓ 累计提问总次**: `{total_queries}` 次
+
+> **🛡️ 风控安全监控**
+- **🚨 触发安全拦截**: `{compliance_interceptions}` 次
+- **📉 安全拦截比例**: `{interception_rate}`
+"""
+
+def render_observability_dashboard():
+    """读取并格式化 Observability 核心指标"""
+    metrics = scan_metrics(data_dir=DATA_DIR)
+    
+    summary_md = f"""
+### 📈 系统运行核心指标概览
+
+| 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
+| :--- | :--- | :--- |
+| **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
+| **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
+| **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
+| **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
+| **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
+"""
+    return summary_md, metrics
 
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
@@ -214,30 +259,81 @@ def get_qa_chain(llm_choice: str, top_k_ret: int, top_k_rerank: int):
 
     return global_qa_chain
 
+
 def format_sources_log(llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_pattern: str, chunks: List[Dict[str, Any]]) -> str:
-    log_lines = [f"🔍 **检索与重排配置**: LLM={llm_choice} | Retrieval Top-K={top_k_ret} | Rerank Top-K={top_k_rerank}"]
-    log_lines.append(f"🎯 **Filter 表达式**: `{filter_pattern}`" if filter_pattern else "ℹ️ **Filter 表达式**: 无（纯语义+BM25混合召回）")
+    log_lines = []
+    
+    # 1. 顶部配置折叠
+    log_lines.append("<details><summary>🔧 <b>点击展开 / 折叠检索与重排配置</b></summary>\n")
+    log_lines.append(f"- **LLM 模型**: `{llm_choice}`")
+    log_lines.append(f"- **检索/重排 Top-K**: `Ret={top_k_ret}` | `Rerank={top_k_rerank}`")
+    log_lines.append(f"- **Filter 过滤**: `{filter_pattern}`" if filter_pattern else "- **Filter 过滤**: *无 (混合召回)*")
+    log_lines.append("</details>\n")
     log_lines.append("─" * 50)
 
     if not chunks:
-        log_lines.append("⚠️ **提示**: 重排过滤后无满足得分阈值的有效切片，已阻断回答。")
+        log_lines.append("⚠️ **提示**: 检索重排后未返回有效切片。")
         return "\n".join(log_lines) + "\n"
 
     for idx, chunk in enumerate(chunks, 1):
-        raw_score = chunk.get("rerank_score", chunk.get("score", 0.0))
-        try:
-            score = float(raw_score) if raw_score is not None else 0.0
-        except (ValueError, TypeError):
-            score = 0.0
+        if not isinstance(chunk, dict):
+            log_lines.append(f"### 📦 切片 [{idx}]\n```text\n{str(chunk)}\n```\n")
+            continue
 
-        doc_name = chunk.get("doc_name") or chunk.get("biz_summary") or "未知文档"
-        content = chunk.get("content") or chunk.get("base_content") or ""
-        content_preview = str(content)[:300].replace("\n", " ")
+        # 直接提取扁平化字段
+        chunk_id = chunk.get("chunk_id", f"Chunk_{idx}")
+        file_url = chunk.get("file_url", "")
+        hierarchy = chunk.get("hierarchy") or chunk.get("section_id", "")
+        biz_summary = chunk.get("biz_summary", "")
+        
+        # 分数提取
+        rerank_score = chunk.get("rerank_score", chunk.get("score", 0.0))
+        rerank_prob = chunk.get("rerank_prob")
+        
+        # 内容与上下文
+        main_content = chunk.get("content") or chunk.get("base_content", "")
+        up_content = chunk.get("up_content")
+        down_content = chunk.get("down_content")
 
-        log_lines.append(f"**[{idx}] {doc_name}** (Rerank 得分: **{score:.4f}**)")
-        log_lines.append(f"```text\n{content_preview}...\n```")
+        # 📌 Markdown 卡片头
+        log_lines.append(f"### 📄 [{idx}] {chunk_id}")
+        if hierarchy:
+            log_lines.append(f"📌 **章节层级**: `{hierarchy}`")
+        
+        # 分数与链接展示
+        score_info = f"`Score={rerank_score:.4f}`"
+        if rerank_prob is not None:
+            score_info += f" ｜ `Prob={rerank_prob:.4f}`"
+        
+        url_display = f" ｜ 🔗 [查看/下载源文件]({file_url})" if file_url else ""
+        log_lines.append(f"🎯 **重排得分**: {score_info}{url_display}")
+
+        # 业务摘要折叠框 (如果有)
+        if biz_summary:
+            log_lines.append(f"> 💡 **业务摘要**: {biz_summary}")
+
+        log_lines.append("") # 换行
+
+        # 上文折叠框
+        if up_content and str(up_content).strip() and str(up_content) != "NULL":
+            log_lines.append("<details><summary>⬆️ <b>点击展开上文 (up_content)</b></summary>\n")
+            log_lines.append(f"```text\n{str(up_content).strip()}\n```")
+            log_lines.append("</details>\n")
+
+        # 核心切片内容
+        log_lines.append("**📝 当前切片内容:**")
+        log_lines.append(f"```text\n{str(main_content).strip()}\n```\n")
+
+        # 下文折叠框
+        if down_content and str(down_content).strip() and str(down_content) != "NULL":
+            log_lines.append("<details><summary>⬇️ <b>点击展开下文 (down_content)</b></summary>\n")
+            log_lines.append(f"```text\n{str(down_content).strip()}\n```")
+            log_lines.append("</details>\n")
+
+        log_lines.append("─" * 50)
 
     return "\n".join(log_lines) + "\n"
+
 
 # Tab 1: 向量库快速检索与 RAG 流式生成（无持久化保存、无 LLM 降级）
 def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str, user_state: dict):
@@ -281,6 +377,22 @@ def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choi
             top_n=top_k_rerank
         )
 
+        for chunk in reranked_chunks:
+            meta = chunk.get("metadata", {})
+            prev_id = meta.get("prev_chunk_id")
+            next_id = meta.get("next_chunk_id")
+            
+            # 根据你的 retriever 实际查 ID 的方法补全文本（例如 query_by_id 或 get_by_id）
+            if prev_id and hasattr(chain.retriever, "get_by_id"):
+                prev_doc = chain.retriever.get_by_id(prev_id)
+                if prev_doc:
+                    chunk["prev_content"] = prev_doc.get("content")
+                    
+            if next_id and hasattr(chain.retriever, "get_by_id"):
+                next_doc = chain.retriever.get_by_id(next_id)
+                if next_doc:
+                    chunk["next_content"] = next_doc.get("content")
+
         sources_log = format_sources_log(llm_choice, top_k_ret, top_k_rerank, filter_pattern, reranked_chunks)
 
         # ❌ 3. 无匹配切片时直接中断提示
@@ -309,12 +421,25 @@ def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choi
 
             token_str = "".join([str(item) for item in token_val]) if isinstance(token_val, list) else str(token_val)
             accumulated_raw_text += token_str
-            
+
             sanitized_display = checker.sanitize_text(accumulated_raw_text.split("</think>")[-1].strip())
             history[-1]["content"] = sanitized_display
             
             # 返回 6 个值，通过 gr.skip() 忽略第 5 和第 6 个下拉框组件的更新
             yield history, sources_log, "⚡ 正在生成回答...", get_gpu_memory_status(), gr.skip(), gr.skip()
+        yield history, sources_log, "🟢 就绪", get_gpu_memory_status(), gr.skip(), gr.skip()
+
+        # =========================================================
+        # 💡 5. 生成结束，挂载溯源 Accordion 证据链
+        # =========================================================
+        # final_answer = history[-1]["content"]
+        # # 渲染带 [Doc X] 及底层结构（如 section_id / source_file）的证据链
+        # final_with_citation = CitationFormatter.render_citation_accordion(final_answer, reranked_chunks)
+        
+        # history[-1]["content"] = final_with_citation
+        # yield history, sources_log, "✅ 生成完成", get_gpu_memory_status(), gr.skip(), gr.skip()
+
+
 
     except Exception as e:
         logging.error(f"Tab 1 向量库检索异常: {e}", exc_info=True)
@@ -333,20 +458,27 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         yield history, "*请输入有效指令*", "就绪", get_gpu_memory_status(), gr.update(choices=choices)
         return
 
-   
+    # 1. 安全风控拦截检查
+    checker = get_compliance_checker()
+    is_safe, risk_level, hit_rule = checker.check_static_rules(clean_message)
+
+    if not is_safe:
+        fallback_msg = checker.fallback_responses.get(risk_level, "⚠️ [安全审计拦截] 您的 Agent 指令包含高风险操作，已终止执行。")
+        history.append({"role": "user", "content": clean_message})
+        history.append({"role": "assistant", "content": f"[COMPLIANCE_BLOCK] {fallback_msg}"})
+
+        # 写入持久化存储以便可观测性识别
+        user_mem_mgr.process_assistant_output(f"[COMPLIANCE_BLOCK] {fallback_msg}")
+
+        choices = fetch_session_dropdown_choices(username)
+        yield history, f"🛡️ 规则拦截 [{hit_rule}]", f"🛡️ 安全拦截: {hit_rule}", get_gpu_memory_status(), gr.update(choices=choices)
+        return
+
+    user_mem_mgr.short_term.add_message("user", clean_message)
 
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
-    # agent = IntegratedReActAgent(
-    #     model_name=llm_model,
-    #     top_k_ret=top_k_ret,
-    #     top_k_rerank=top_k_rerank,
-    #     filter_str=filter_input,
-    #     memory_mgr=user_mem_mgr,
-    #     max_steps=5,
-    #     sandbox_timeout=2
-    # )
     agent = ReActAgent(
             llm_client=None,
             model_name=llm_model,
@@ -357,13 +489,15 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
             max_steps=5,
             sandbox_timeout=2,
         )
-    
+    history_context = user_mem_mgr.short_term.get_messages()[:-1]  # 排除刚刚加入的当前 prompt
+
     inspector_log = f"🚀 **Agent 任务启动 (用户: {username} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "🤖 推理中...", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
     final_reply = ""
     for step in agent.run_stream(clean_message
                                  # ,tools_schema=tool_specs
+                                #  ,history_messages=history_context
                                  ):
         stage = step.get("stage")
         content = step.get("content", "")
@@ -399,6 +533,47 @@ def create_new_session_event(user_state: dict):
         choices = [(f"💬 新对话", new_sess_id)]
 
     return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
+
+# 新建 用户点赞/点踩及意见反馈组件
+def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict):
+    """
+    处理 gr.Chatbot 逐条消息的点赞 / 点踩事件并写入 feedback_store
+    """
+    # 1. 提取当前登录的用户 ID
+    user_id = user_state.get("username", "default_user") if isinstance(user_state, dict) else "default_user"
+    
+    # 2. 判断是点赞还是点踩 ('like' | 'dislike')
+    rating = "like" if like_data.liked else "dislike"
+    response_text = like_data.value or ""
+    
+    # 3. 解析对应的 User Query
+    query_text = ""
+    try:
+        # like_data.index 可以是整数或列表 (例如 [msg_index, 1])
+        msg_idx = like_data.index[0] if isinstance(like_data.index, (list, tuple)) else like_data.index
+        
+        # 针对 Gradio 4.x+ 的 messages 格式 (list of dicts)
+        if history and 0 <= msg_idx < len(history):
+            if msg_idx > 0:
+                prev_msg = history[msg_idx - 1]
+                query_text = prev_msg.get("content", "") if isinstance(prev_msg, dict) else str(prev_msg)
+        # 针对旧版 tuple 格式 [(query, response), ...]
+        elif history and isinstance(history[0], (tuple, list)):
+            query_text = history[msg_idx][0]
+    except Exception as e:
+        print(f"⚠️ 解析 Query 索引失败: {e}")
+
+    # 4. 调用 feedback_store 写入 JSONL
+    success = feedback_store.record_feedback(
+        user_id=user_id,
+        query=query_text,
+        response=response_text,
+        rating=rating,
+        feedback_text=f"Inline message feedback: {rating}"
+    )
+    
+    if success:
+        print(f"✅ [Feedback] 用户 '{user_id}' 针对 QA 记录了 {rating} 反馈")
 
 # 在侧边栏选中历史对话时的切换处理函数
 def switch_session_event(selected_session_id: str, user_state: dict):
@@ -513,7 +688,7 @@ def get_all_registered_tool_names() -> list:
     return tools or ["search_knowledge_base"]
 
 # ==========================================
-# 🖥️ 5. 构建带“3 个完整 Tab”的 Gradio 应用
+# 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
 # ==========================================
 CUSTOM_CSS = """
 /* 全局字体设置：微软雅黑 (Microsoft YaHei) */
@@ -831,6 +1006,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 # ---------------------------------------------------------
                 # Tab 3: ReAct Agent 智能助理 (支持多 Session 清单与思维链)
                 # ---------------------------------------------------------
+                
                 with gr.Tab("🤖 Agent 智能助理 (思维链 & 沙箱)"):
                     with gr.Row():
                         # 左侧边栏
@@ -856,6 +1032,13 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                                     agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
 
                     # Tab 3 事件绑定
+                    # 用户赞踩反馈机制
+                    agent_chatbot.like(
+                        fn=handle_chatbot_like,
+                        inputs=[agent_chatbot, user_state],
+                        outputs=None  # 纯后台异步静默记录，不打扰前端输出
+                    )
+                    
                     btn_agent_send.click(
                         fn=agent_stream_predict,
                         inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
@@ -888,36 +1071,27 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         inputs=[user_state],
                         outputs=[agent_chatbot, agent_inspector_display, agent_status_box, agent_msg_input, t3_session_radio]
                     )
-                    # btn_agent_send.click(
-                    #     fn=agent_stream_predict,
-                    #     inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, gpu_box, t3_session_radio, t3_session_radio]
-                    # ).then(fn=lambda: "", inputs=None, outputs=[agent_msg_input])
 
-                    # btn_t3_new_chat.click(
-                    #     fn=create_new_session_event,
-                    #     inputs=[user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, t3_session_radio, t3_session_radio]
-                    # )
+                # ---------------------------------------------------------
+                # 🌟 Tab 4: 📊 基础运维与可观测性面板 (新增)
+                # ---------------------------------------------------------
+                with gr.Tab("📊 基础运维与可观测性"):
+                    gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
+                    with gr.Row():
+                        btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
+                    
+                    with gr.Row():
+                        with gr.Column(scale=7):
+                            obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
+                        with gr.Column(scale=5):
+                            obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
 
-                    # t3_session_radio.change(
-                    #     fn=switch_session_event,
-                    #     inputs=[t3_session_radio, user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box]
-                    # )
-
-                    # btn_t3_refresh_sess.click(
-                    #     fn=lambda st: gr.update(choices=fetch_session_dropdown_choices(st.get("username", "default"))),
-                    #     inputs=[user_state],
-                    #     outputs=[t3_session_radio]
-                    # )
-
-                    # btn_agent_clear.click(
-                    #     fn=clear_agent_memory,
-                    #     inputs=[user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, agent_msg_input, t3_session_radio, t3_session_radio]
-                    # )
-
+                    # 页面首次加载或点击刷新时更新监控指标
+                    btn_refresh_obs.click(
+                        fn=render_observability_dashboard,
+                        inputs=None,
+                        outputs=[obs_summary_display, obs_json_display]
+                    )
         # =========================================================
         # 🔑 登录视图切换逻辑绑定
         # =========================================================
@@ -958,7 +1132,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 return "❌ 新密码不能与原密码相同！"
             
             # 5. YAML 文件持久化落盘逻辑
-            yaml_path = "config/users_auth.yaml"
+            # yaml_path = "config/users_auth.yaml"
+            yaml_path = USERS_AUTH_PATH
+
             try:
                 # 读取现有 YAML 文件结构保持注释或格式
                 if os.path.exists(yaml_path):
@@ -1045,17 +1221,20 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 else:
                     default_sess = mem_mgr.session_id
 
-                valid_values = [c[1] for c in session_choices]
-                if default_sess not in valid_values and valid_values:
-                    default_sess = valid_values[0]
+                    valid_values = [c[1] for c in session_choices]
+                    if default_sess not in valid_values and valid_values:
+                        default_sess = valid_values[0]
 
                 logging.info(f"✅ [Cookie 校验] 成功免密自动登录！用户: {found_user}")
+                obs_md, obs_json = render_observability_dashboard()
                 return (
                     gr.update(visible=False),              # login_view
                     gr.update(visible=True),               # main_portal_view
                     banner_text,                           # user_info_banner
                     new_state,                             # user_state
-                    gr.update(choices=session_choices, value=default_sess)  # t3_session_radio
+                    gr.update(choices=session_choices, value=default_sess),  # t3_session_radio
+                    obs_md,
+                    obs_json
                 )
             else:
                 logging.warning("⚠️ [Cookie 校验] 未找到合法 Cookie，返回登录页")
@@ -1064,7 +1243,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     gr.update(visible=False),
                     "# 🤖 FineBI QA 智能问答",
                     {"is_logged_in": False, "username": ""},
-                    gr.update(choices=[], value=None)
+                    gr.update(choices=[], value=None),
+                    "*点击上方刷新按钮同步最新统计数据...*",
+                    {}
                 )
 
         # 关键修改：绑定 demo.load 时必须包含 Request 隐式/显式传入逻辑
@@ -1099,10 +1280,11 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 else:
                     default_sess = mem_mgr.session_id
 
-                valid_values = [c[1] for c in session_choices]
-                if default_sess not in valid_values and valid_values:
-                    default_sess = valid_values[0]
+                    valid_values = [c[1] for c in session_choices]
+                    if default_sess not in valid_values and valid_values:
+                        default_sess = valid_values[0]
 
+                obs_md, obs_json = render_observability_dashboard()
                 return (
                     gr.update(visible=False),              # login_view 隐藏
                     gr.update(visible=True),               # main_portal_view 显示
@@ -1110,6 +1292,8 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     new_state,                             # user_state
                     "✅ 登录成功！",                       # login_msg
                     gr.update(choices=session_choices, value=default_sess), # t3_session_radio
+                    obs_md,
+                    obs_json
                 )
             else:
                 return (
