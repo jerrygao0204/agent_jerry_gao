@@ -144,7 +144,7 @@ class FineBIRetriever:
             ranker=RRFRanker(k=60),
             limit=top_k,
             output_fields=[
-                "chunk_id", "content", "section_id", "file_name", 
+                "chunk_id", "content", "section_id", "file_url", 
                 "full_hierarchy_array", "biz_summary", "next_chunk_id", "prev_chunk_id"
             ]
         )
@@ -198,7 +198,7 @@ class FineBIRetriever:
                 "up_content": up_content,
                 "down_content": down_content,
                 "section_id": entity.get("section_id"),
-                "file_name": entity.get("file_name"),
+                "file_url": entity.get("file_url"),
                 "hierarchy": hierarchy_str,
                 "biz_summary": entity.get("biz_summary"),
                 "content": base_content  # 映射通用接口
