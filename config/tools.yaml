@@ -1,17 +1,24 @@
 domains:
   rag_knowledge:
     description: "处理用户手册、排错指南、FAQ 等非结构化文档检索"
+    role_whitelist: ["admin", "analyst", "user"]
+
   finebi_system:
     description: "查询 FineBI 系统仪表板、数据集元数据、表结构及行数信息"
+    role_whitelist: ["admin", "analyst"] # 限制仅管理员与分析师可见
     packages:
       metadata_pkg: "查询数据集元数据、表结构、行数及字段明细"
       dashboard_pkg: "查询系统仪表板、看板、报表组件列表"
+
   data_analytics:
     description: "对业务数据进行二次统计分析、指标计算与报表生成"
+    role_whitelist: ["admin", "analyst", "user"]
     packages:
       chart_pkg: "针对报表渲染、图表生成的可视化工具包"
+
   web_search:
     description: "进行网络搜索与公网实时信息查询"
+    role_whitelist: ["admin", "analyst", "user"]
 
 tools:
   - name: search_knowledge_base
@@ -25,15 +32,16 @@ tools:
     module: factory.tools.api_tool
     class: FineBIDashboardTool
     domain: finebi_system
-    package: dashboard_pkg  # 📌 修改归属包
+    package: dashboard_pkg
     enabled: true
 
   - name: get_dataset_summary
     module: factory.tools.dataset_summary
     class: DatasetSummaryTool
-    domain: finebi_system   # 📌 修改归属领域
-    package: metadata_pkg   # 📌 修改归属包（挂到 metadata_pkg）
+    domain: finebi_system
+    package: metadata_pkg
     enabled: true
+    role_whitelist: ["admin"] # 📌 特例覆盖：该高危元数据工具仅允许 admin 触发
 
   - name: web_search
     module: factory.tools.web_search_tool
