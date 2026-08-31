@@ -34,6 +34,7 @@ class ReActAgent:
         router_prompt_template: Optional[str] = None,
         package_router_prompt_template: Optional[str] = None,
         max_iterations: int = 5,
+        user_role: Optional[str] = None,
         memory_mgr: Optional[MemoryManager] = None,
         sandbox_timeout: int = 2,
         top_k_ret: int = 5,
@@ -53,6 +54,7 @@ class ReActAgent:
 
         self.tool_factory = tool_factory or default_tool_factory
         self.prompt_hub = prompt_hub
+        self.user_role = user_role
         # 优先使用 max_steps，无则使用 max_iterations
         self.max_iterations = max_steps if max_steps is not None else max_iterations
         
@@ -65,6 +67,7 @@ class ReActAgent:
         self.min_query_length = min_query_length
 
         self._init_prompts(system_prompt_template, router_prompt_template, package_router_prompt_template)
+        
 
     def _format_packages_summary(self, packages_summary: List[Dict[str, Any]]) -> str:
         """将 Package 与 Tool 描述格式化为结构化 Markdown DSL，提升 LLM 的上下文感知力"""
@@ -365,7 +368,7 @@ class ReActAgent:
                 pkg_names = [pkg for _, pkg in selected_packages]
                 yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
 
-                tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages)
+                tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages, user_role=self.user_role)
            
             scratchpad = ""
 
@@ -421,7 +424,7 @@ class ReActAgent:
                             raise ValueError(f"安全沙箱检测到高危指令: {sandbox_res['error']}")
                         observation = sandbox_res["result"]
                     else:
-                        tool_obj = self.tool_factory.get_tool(tool_name)
+                        tool_obj = self.tool_factory.get_tool(tool_name, user_role=self.user_role)
                         if tool_obj:
                             observation = tool_obj.run(**kwargs) if hasattr(tool_obj, "run") else tool_obj.execute(**kwargs)
                         else:
