@@ -304,6 +304,13 @@ class ReActAgent:
         self.memory_mgr.begin_transaction()
         self.memory_mgr.process_user_input(query)
 
+        # 从 MemoryManager 取出历史消息，组成标准多轮 messages（排除刚存进去的这次 query）
+        context_data = self.memory_mgr.get_context_for_llm()
+        history_msgs = context_data.get("messages", [])[:-1]
+        chat_history_messages: List[Dict[str, str]] = [
+            {"role": m["role"], "content": m["content"]} for m in history_msgs
+        ]
+
         # 📌【修复 1】：在入口处安全初始化变量，防范 UnboundLocalError
         selected_packages: List[Tuple[str, str]] = []
         pkg_names: List[str] = ["injected_custom_schema"]
@@ -315,7 +322,8 @@ class ReActAgent:
                 yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
                 
                 full_response = ""
-                for chunk in self.llm_client.stream_generate(query=query, context=""):
+                turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+                for chunk in self.llm_client.stream_generate(messages=turn_messages):
                     full_response += chunk
                 
                 final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
@@ -372,7 +380,8 @@ class ReActAgent:
                 )
 
                 full_response = ""
-                for chunk in self.llm_client.stream_generate(query=prompt, context=""):
+                turn_messages = chat_history_messages + [{"role": "user", "content": prompt}]
+                for chunk in self.llm_client.stream_generate(messages=turn_messages):
                     full_response += chunk
 
                 clean_response = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
