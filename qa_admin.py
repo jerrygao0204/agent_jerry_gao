@@ -19,6 +19,7 @@ import uuid
 import logging
 import time
 import torch
+import re
 import yaml
 from typing import Dict, Any, List, Tuple, Generator, Optional
 from urllib.parse import unquote
@@ -33,11 +34,12 @@ if SCRIPT_DIR not in sys.path:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
 from factory.model_factory import ModelFactory
+from factory.tool_factory import tool_factory, load_tools_from_yaml, BaseTool
 from generator.qa_chain import QAChain
 from generator.llm_client import FineBILLMClient
 from search.retriever import FineBIRetriever
 from search.reranker import FineBIReranker
-from factory import init_tools, tool_factory
+from factory import init_tools
 from agent.sandbox import SandboxExecutor
 from agent.react_agent import ReActAgent 
 from memory.memory_manager import MemoryManager
@@ -76,18 +78,50 @@ global_compliance_checker = None
 # 缓存活跃的 MemoryManager 实例: {user_id: MemoryManager}
 user_memory_managers: Dict[str, MemoryManager] = {}
 
-def load_user_credentials() -> Dict[str, str]:
-    """从 yaml 文件安全加载用户凭证"""
-    if os.path.exists(USERS_AUTH_PATH):
-        try:
-            with open(USERS_AUTH_PATH, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-                return data.get("users", {"admin": "admin123"})
-        except Exception as e:
-            logging.error(f"加载 users_auth.yaml 失败: {e}")
-    return {"admin": "admin123"}
+import os
+import yaml
+import logging
+from typing import Dict, Any, Tuple
 
-VALID_USERS = load_user_credentials()
+# 📌 1. 通用安全 YAML 解析函数 (带兜底数据)
+def safe_load_yaml(file_path: str, default_payload: Dict[str, Any]) -> Dict[str, Any]:
+    if not os.path.exists(file_path):
+        logging.warning(f"⚠️ 配置文件不存在: [{file_path}]，启用默认配置。")
+        return default_payload
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or default_payload
+    except Exception as e:
+        logging.error(f"❌ 读取配置文件失败 [{file_path}]: {e}")
+        return default_payload
+
+
+# 📌 2. 精简后的 load_user_credentials
+def load_user_credentials() -> Tuple[Dict[str, str], Dict[str, str], Dict[str, str]]:
+    default_auth = {"users": {"admin": {"password": "123456", "role": "admin"}}}
+    data = safe_load_yaml(USERS_AUTH_PATH, default_auth)
+    users_dict = data.get("users", {})
+
+    valid_passwords: Dict[str, str] = {}
+    user_roles: Dict[str, str] = {}
+    raw_key_map: Dict[str, str] = {}
+
+    for username, info in users_dict.items():
+        username_str = str(username).strip()
+        if isinstance(info, dict):
+            pwd = str(info.get("password", ""))
+            role = str(info.get("role", "user")).strip()
+        else:
+            pwd = str(info)
+            role = "user"
+
+        valid_passwords[username_str] = pwd
+        user_roles[username_str] = role
+        raw_key_map[username_str] = f"{username_str}({role})"
+
+    return valid_passwords, user_roles, raw_key_map
+
+VALID_USERS_PWD, USER_ROLES, RAW_KEY_MAP = load_user_credentials()
 
 def get_or_create_user_memory(username: str, session_id: Optional[str] = None) -> MemoryManager:
     """获取或初始化对应用户的 MemoryManager"""
@@ -193,29 +227,29 @@ def clear_agent_memory(user_state: dict):
 # ==========================================
 # 📊 监控可观测性面板逻辑 (Tab 4 专用)
 # ==========================================
-def render_tab3_monitor_dashboard() -> str:
-    """直接复用 scan_metrics 读取系统的真实监控指标，仅在 Tab 3 右侧展示"""
-    try:
-        metrics = scan_metrics(data_dir=DATA_DIR)
-        total_users = metrics.get('total_users', 0)
-        total_sessions = metrics.get('total_sessions', 0)
-        total_queries = metrics.get('total_queries', 0)
-        compliance_interceptions = metrics.get('compliance_interceptions', 0)
-        interception_rate = metrics.get('interception_rate', '0.00%')
-    except Exception as e:
-        logging.error(f"读取监控指标失败: {e}")
-        return "*📊 监控指标读取异常*"
+# def render_tab3_monitor_dashboard() -> str:
+#     """直接复用 scan_metrics 读取系统的真实监控指标，仅在 Tab 3 右侧展示"""
+#     try:
+#         metrics = scan_metrics(data_dir=DATA_DIR)
+#         total_users = metrics.get('total_users', 0)
+#         total_sessions = metrics.get('total_sessions', 0)
+#         total_queries = metrics.get('total_queries', 0)
+#         compliance_interceptions = metrics.get('compliance_interceptions', 0)
+#         interception_rate = metrics.get('interception_rate', '0.00%')
+#     except Exception as e:
+#         logging.error(f"读取监控指标失败: {e}")
+#         return "*📊 监控指标读取异常*"
 
-    return f"""
-> **📊 系统实时运行指标**
-- **👥 累计活跃用户**: `{total_users}` 人
-- **💬 累计会话总数**: `{total_sessions}` 个
-- **❓ 累计提问总次**: `{total_queries}` 次
+#     return f"""
+# > **📊 系统实时运行指标**
+# - **👥 累计活跃用户**: `{total_users}` 人
+# - **💬 累计会话总数**: `{total_sessions}` 个
+# - **❓ 累计提问总次**: `{total_queries}` 次
 
-> **🛡️ 风控安全监控**
-- **🚨 触发安全拦截**: `{compliance_interceptions}` 次
-- **📉 安全拦截比例**: `{interception_rate}`
-"""
+# > **🛡️ 风控安全监控**
+# - **🚨 触发安全拦截**: `{compliance_interceptions}` 次
+# - **📉 安全拦截比例**: `{interception_rate}`
+# """
 
 def render_observability_dashboard():
     """读取并格式化 Observability 核心指标"""
@@ -336,7 +370,7 @@ def format_sources_log(llm_choice: str, top_k_ret: int, top_k_rerank: int, filte
 
 
 # Tab 1: 向量库快速检索与 RAG 流式生成（无持久化保存、无 LLM 降级）
-def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str, user_state: dict):
+def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str):
     clean_message = user_message.strip()
 
     if not clean_message:
@@ -451,6 +485,8 @@ def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choi
 def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rerank, filter_input, user_state: dict):
     clean_message = user_message.strip() if user_message else ""
     username = user_state.get("username", "default")
+    user_role = user_state.get("role", "user")
+
     user_mem_mgr = get_or_create_user_memory(username)
 
     if not clean_message:
@@ -486,12 +522,14 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
             top_k_rerank=top_k_rerank,
             filter_str=filter_input,
             memory_mgr=user_mem_mgr,
+            user_role=user_role,
             max_steps=5,
             sandbox_timeout=2,
         )
+    raw_user_key = RAW_KEY_MAP.get(username, f"{username}({user_role})")
     history_context = user_mem_mgr.short_term.get_messages()[:-1]  # 排除刚刚加入的当前 prompt
 
-    inspector_log = f"🚀 **Agent 任务启动 (用户: {username} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
+    inspector_log = f"🚀 **Agent 任务启动 (用户: {username}     {raw_user_key} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "🤖 推理中...", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
     final_reply = ""
@@ -587,14 +625,29 @@ def switch_session_event(selected_session_id: str, user_state: dict):
     
     return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
 
-def test_tool_execution(tool_name, tool_input_json):
+def test_tool_execution(tool_name, tool_input_json, user_state: dict):
     start_time = time.time()
+    user_role = user_state.get("role", "user") if isinstance(user_state, dict) else "user"
+    username = user_state.get("username", "unknown") if isinstance(user_state, dict) else "unknown"
+    print(f"\n🚨 [DEBUG 3: 沙盒测试运行鉴权]")
+    print(f"👉 用户: '{username}' | 识别到的角色 user_role: '{user_role}'")
+    print(f"👉 请求调用的工具: '{tool_name}'")
+    print(f"👉 user_state 完整字典: {user_state}")
     try:
         params = json.loads(tool_input_json) if tool_input_json.strip() else {}
-        tool_instance = tool_factory.get_tool(tool_name) if hasattr(tool_factory, "get_tool") else None
-        print(f'找到工具:{tool_instance}')
+        # tool_instance = tool_factory.get_tool(tool_name) if hasattr(tool_factory, "get_tool") else None
+        tool_instance = tool_factory.get_tool(tool_name, user_role=user_role)
         if not tool_instance:
-            return json.dumps({"status": "error", "message": f"未找到工具: {tool_name}"}, ensure_ascii=False, indent=2), "❌ 失败"
+            return (
+                json.dumps({
+                    "status": "error", 
+                    "message": f"未找到工具 [{tool_name}] 或当前角色 [{user_role}] 无权访问！"
+                }, ensure_ascii=False, indent=2), 
+                "❌ 鉴权失败/工具不存在"
+            )
+        print(f'找到工具:{tool_instance}')
+        # if not tool_instance:
+        #     return json.dumps({"status": "error", "message": f"未找到工具: {tool_name}"}, ensure_ascii=False, indent=2), "❌ 失败"
         
         result_payload = tool_instance.run(**params) if hasattr(tool_instance, "run") else tool_instance(**params)
         return json.dumps(result_payload, ensure_ascii=False, indent=2, default=str), f"✅ 成功 (耗时: {time.time()-start_time:.2f}s)"
@@ -607,8 +660,10 @@ def stream_agent_sandbox_execution(
     top_k_ret: int,
     top_k_rerank: int,
     filter_input: str,
+    user_state: dict,
 ):
     clean_query = user_query.strip() if user_query else ""
+    user_role = user_state.get("role", "user") if user_state else "user"
     if not clean_query:
         yield "⚠️ 请输入有效的测试问题！"
         return
@@ -616,7 +671,7 @@ def stream_agent_sandbox_execution(
     # ==================== 🔍 DEBUG PRINT 开始 ====================
     print("\n" + "=" * 60)
     print("🐞 [Tab 2 沙盒 Debug] 启动 ReAct Agent 推理诊断")
-    print(f"👉 输入 Query: {clean_query}")
+    print(f"👉 输入 Query: {clean_query} | 当前用户 Role: {user_role}")
     print(f"👉 当前模型 (LLM): {llm_model}")
     print(f"👉 Top-K 检索/重排: {top_k_ret} / {top_k_rerank}")
     print(f"👉 Filter 过滤词: {filter_input}")
@@ -632,6 +687,7 @@ def stream_agent_sandbox_execution(
         top_k_ret=top_k_ret,
         top_k_rerank=top_k_rerank,
         filter_str=filter_input,
+        user_role=user_role,
         max_steps=5,
         sandbox_timeout=2,
     )
@@ -652,7 +708,8 @@ def stream_agent_sandbox_execution(
         # 确保 ToolFactory 返回的是 as_json_string=False 的格式 (即 List[Dict])
         tool_names_str, tool_specs = agent.tool_factory.get_tools_metadata_by_packages(
             selected_packages, 
-            as_json_string=False
+            as_json_string=False,
+            user_role=user_role
         )
 
         # # Level 3 工具 Schema 提取
@@ -661,7 +718,7 @@ def stream_agent_sandbox_execution(
 
         print(f"🎯 [Level 1 命中领域 (Domain)]: {selected_domains}")
         print(f"📦 [Level 2 锁定工具包 (Package)]: {[pkg for _, pkg in selected_packages]}")
-        print(f"⚡ [Level 3 按需加载的工具清单]: {scoped_tool_names}")
+        print(f"⚡ [Level 3 按角色 ({user_role}) 过滤后的工具]: {scoped_tool_names}")
         print(f"📋 [Level 3 注入 LLM 的 Schema 总数]: {len(tool_specs)}")
 
         if "web_search" not in scoped_tool_names:
@@ -680,12 +737,33 @@ def stream_agent_sandbox_execution(
         logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
         yield full_log + f"\n\n🚨 异常: {str(e)}"
 
-
-def get_all_registered_tool_names() -> list:
+# def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
+#     """按角色动态过滤可展示的工具列表"""
+#     tools = []
+#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
+#         for name, tool_obj in tool_factory._flat_tools.items():
+#             if tool_factory._is_tool_visible(tool_obj, user_role):
+#                 tools.append(name)
+#     return tools or ["search_knowledge_base"]
+def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     tools = []
+    print(f"\n---------------- [DEBUG 2: 下拉框过滤] ----------------")
+    print(f"👉 入参 user_role: '{user_role}'")
+    
     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
-        tools = list(tool_factory._flat_tools.keys())
+        for name, tool_obj in tool_factory._flat_tools.items():
+            is_vis = tool_factory._is_tool_visible(tool_obj, user_role)
+            print(f"   - 工具 [{name}] 对角色 [{user_role}] 可见性: {is_vis}")
+            if is_vis:
+                tools.append(name)
+    print(f"👉 最终生成下拉框列表: {tools}")
+    print(f"-------------------------------------------------------\n")
     return tools or ["search_knowledge_base"]
+# def get_all_registered_tool_names() -> list:
+#     tools = []
+#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
+#         tools = list(tool_factory._flat_tools.keys())
+#     return tools or ["search_knowledge_base"]
 
 # ==========================================
 # 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
@@ -863,20 +941,48 @@ JS_CLEAR_COOKIE = """
 }
 """
 
-
-
 def build_qa_admin_ui(qa_chain: Optional[Any] = None):
+    # 📌 1. 显式加载 tools.yaml，确保配置文件中的工具与角色白名单全量载入
+    yaml_path = os.path.join(SCRIPT_DIR, "config", "tools.yaml")
+    print(f"\n================ [DEBUG 1: YAML 路径与解析] ================")
+    print(f"👉 读取的 YAML 路径: {yaml_path}")
+    if os.path.exists(yaml_path):
+        try:
+            load_tools_from_yaml(yaml_path, tool_factory)
+            logging.info("✅ 成功从 tools.yaml 装载动态工具元数据")
+        except Exception as e:
+            logging.error(f"❌ 加载 tools.yaml 失败: {e}")
+    print(f"===========================================================\n")
     try:
         if qa_chain is not None:
             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
         else:
-            retriever = FineBIRetriever(milvus_host=DEFAULT_QA_CONFIG["milvus_host"], milvus_port=DEFAULT_QA_CONFIG["milvus_port"], collection_name=DEFAULT_QA_CONFIG["collection_name"], cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+            retriever = FineBIRetriever(
+                milvus_host=DEFAULT_QA_CONFIG["milvus_host"], 
+                milvus_port=DEFAULT_QA_CONFIG["milvus_port"], 
+                collection_name=DEFAULT_QA_CONFIG["collection_name"], 
+                cuda_device=DEFAULT_QA_CONFIG["cuda_device"]
+            )
             reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
             init_tools(retriever=retriever, reranker=reranker)
     except Exception as e:
         logging.warning(f"⚠️ 工具初始化说明: {e}")
 
     registered_tools = get_all_registered_tool_names()
+
+# def build_qa_admin_ui(qa_chain: Optional[Any] = None):
+#     yaml_path = os.path.join(SCRIPT_DIR, "tools.yaml")
+#     try:
+#         if qa_chain is not None:
+#             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
+#         else:
+#             retriever = FineBIRetriever(milvus_host=DEFAULT_QA_CONFIG["milvus_host"], milvus_port=DEFAULT_QA_CONFIG["milvus_port"], collection_name=DEFAULT_QA_CONFIG["collection_name"], cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+#             reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+#             init_tools(retriever=retriever, reranker=reranker)
+#     except Exception as e:
+#         logging.warning(f"⚠️ 工具初始化说明: {e}")
+
+#     registered_tools = get_all_registered_tool_names()
 
 
     with gr.Blocks(title="FineBI QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
@@ -962,7 +1068,8 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         fn=qa_stream_predict,
                         inputs=[msg_input, chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
                         # outputs=[chatbot, sources_display, status_box, gpu_box, t1_session_radio, t1_session_radio]
-                        outputs=[chatbot, sources_display, status_box, gpu_box, gpu_box, gpu_box]
+                        outputs=[chatbot, sources_display, status_box, gpu_box]
+                        # outputs=[chatbot, sources_display, status_box, gpu_box, gpu_box, gpu_box]
                     ).then(fn=lambda: "", inputs=None, outputs=[msg_input])
 
                     btn_clear.click(
@@ -975,11 +1082,20 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 # ---------------------------------------------------------
                 # Tab 2: 沙盒测试 (无需多 Session 侧边栏，保留纯工具测试)
                 # ---------------------------------------------------------
+                # 📌 1. 初始化时使用安全角色 ('user') 获取默认列表，防止未登录状态露出高权工具
+                safe_tools = get_all_registered_tool_names(user_role="user")
+
                 with gr.Tab("🛠️ Tools & Agent 沙盒测试"):
                     gr.Markdown("### 🧪 1. 原子工具 (Tool) 独立功能测试")
                     with gr.Row():
                         with gr.Column(scale=6):
-                            tool_select = gr.Dropdown(choices=registered_tools, value=registered_tools[0] if registered_tools else None, label="🔧 选择工具")
+                            # 📌 将 choices 指向 safe_tools
+                            tool_select = gr.Dropdown(
+                                choices=safe_tools, 
+                                value=safe_tools[0] if safe_tools else None, 
+                                label="🔧 选择工具",
+                                interactive=True
+                            )
                             tool_json_input = gr.Code(label="📥 输入参数 (JSON)", value='{\n  "query": "定时任务配置失败",\n  "limit": 3\n}', language="json", lines=7)
                             btn_run_tool = gr.Button("⚡ 运行测试", variant="primary")
                         with gr.Column(scale=6):
@@ -995,11 +1111,10 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         with gr.Column(scale=8):
                             react_log_markdown = gr.Markdown(value="等待启动诊断...")
 
-                    btn_run_tool.click(fn=test_tool_execution, inputs=[tool_select, tool_json_input], outputs=[tool_json_output, tool_status])
-                    # run_btn.click(fn=stream_agent_sandbox_execution, inputs=[test_input], outputs=[react_log_markdown])
+                    btn_run_tool.click(fn=test_tool_execution, inputs=[tool_select, tool_json_input, user_state], outputs=[tool_json_output, tool_status])
                     run_btn.click(
                         fn=stream_agent_sandbox_execution, 
-                        inputs=[test_input, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input], 
+                        inputs=[test_input, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
                         outputs=[react_log_markdown]
                     )
 
@@ -1116,11 +1231,11 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 return "❌ 所有字段都必须填写！"
             
             # 1. 校验内存/字典中的用户是否存在
-            if u_clean not in VALID_USERS:
+            if u_clean not in VALID_USERS_PWD:
                 return f"❌ 用户 `{u_clean}` 不存在！"
             
             # 2. 校验原密码
-            if VALID_USERS[u_clean] != old_pwd:
+            if VALID_USERS_PWD[u_clean] != old_pwd:
                 return "❌ 原密码错误！"
                 
             # 3. 校验两次新密码一致性
@@ -1154,7 +1269,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     yaml.safe_dump(yaml_data, f, allow_unicode=True, sort_keys=False)
 
                 # 同步更新当前运行时的内存字典
-                VALID_USERS[u_clean] = new_pwd
+                VALID_USERS_PWD[u_clean] = new_pwd
                 
                 return "✅ 密码修改成功！YAML 文件已更新，请返回登录。"
                 
@@ -1175,11 +1290,14 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
             if not request or not hasattr(request, "headers"):
                 logging.warning("⚠️ [Cookie 校验] 未获取到有效 request 对象")
                 return (
-                    gr.update(visible=True),
-                    gr.update(visible=False),
-                    "# 🤖 FineBI QA 智能问答",
-                    {"is_logged_in": False, "username": ""},
-                    gr.update(choices=[], value=None)
+                    gr.update(visible=True),                   # login_view
+                    gr.update(visible=False),                  # main_portal_view
+                    "# 🤖 FineBI QA 智能问答",                  # user_info_banner
+                    {"is_logged_in": False, "username": ""},   # user_state
+                    gr.update(choices=[], value=None),         # t3_session_radio
+                    gr.update(choices=[], value=None),         # tool_select (新增)
+                    "*点击上方刷新按钮同步最新统计数据...*",        # obs_md
+                    {}                                         # obs_json
                 )
 
             # 2. 读取 Cookie Header 并打印日志
@@ -1198,9 +1316,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                             # 关键修改：必须解出真实用户名（防止 %20 等转义）
                             user_val = unquote(raw_val)
                             
-                            logging.info(f"🔍 [Cookie 诊断] 解析到用户名: '{user_val}' | VALID_USERS 匹配结果: {user_val in VALID_USERS}")
+                            logging.info(f"🔍 [Cookie 诊断] 解析到用户名: '{user_val}' | VALID_USERS 匹配结果: {user_val in VALID_USERS_PWD}")
                             
-                            if user_val in VALID_USERS:
+                            if user_val in VALID_USERS_PWD:
                                 found_user = user_val
                                 break
                 except Exception as e:
@@ -1208,10 +1326,10 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
 
             # 4. 渲染界面分支
             if found_user:
+                found_role = USER_ROLES.get(found_user, "user")
                 mem_mgr = get_or_create_user_memory(found_user)
-                new_state = {"is_logged_in": True, "username": found_user}
-                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{found_user}`)"
-                
+                new_state = {"is_logged_in": True, "username": found_user, "role": found_role}
+                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{found_user}` | 角色: `{found_role}`)"                
                 session_choices = fetch_session_dropdown_choices(found_user)
                 if not session_choices:
                     default_sess = str(uuid.uuid4())
@@ -1224,17 +1342,20 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     valid_values = [c[1] for c in session_choices]
                     if default_sess not in valid_values and valid_values:
                         default_sess = valid_values[0]
-
-                logging.info(f"✅ [Cookie 校验] 成功免密自动登录！用户: {found_user}")
+                # 📌 关键追加：根据当前用户的 Role 过滤工具列表
+                role_tools = get_all_registered_tool_names(user_role=found_role)
+                default_tool = role_tools[0] if role_tools else None
+                logging.info(f"✅ [Cookie 校验] 成功免密自动登录！用户: {found_user}| 角色: {found_role}")
                 obs_md, obs_json = render_observability_dashboard()
                 return (
-                    gr.update(visible=False),              # login_view
-                    gr.update(visible=True),               # main_portal_view
-                    banner_text,                           # user_info_banner
-                    new_state,                             # user_state
-                    gr.update(choices=session_choices, value=default_sess),  # t3_session_radio
-                    obs_md,
-                    obs_json
+                    gr.update(visible=False),                                 # login_view
+                    gr.update(visible=True),                                  # main_portal_view
+                    banner_text,                                              # user_info_banner
+                    new_state,                                                # user_state
+                    gr.update(choices=session_choices, value=default_sess),     # t3_session_radio
+                    gr.update(choices=role_tools, value=default_tool),        # 👈 tool_select (动态同步工具)
+                    obs_md,                                                   # obs_summary_display
+                    obs_json                                                  # obs_json_display
                 )
             else:
                 logging.warning("⚠️ [Cookie 校验] 未找到合法 Cookie，返回登录页")
@@ -1243,7 +1364,8 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     gr.update(visible=False),
                     "# 🤖 FineBI QA 智能问答",
                     {"is_logged_in": False, "username": ""},
-                    gr.update(choices=[], value=None),
+                    gr.update(choices=[], value=None),                        # t3_session_radio
+                    gr.update(choices=[], value=None),                        # tool_select
                     "*点击上方刷新按钮同步最新统计数据...*",
                     {}
                 )
@@ -1258,6 +1380,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 user_info_banner,
                 user_state,
                 t3_session_radio,
+                tool_select,
+                obs_summary_display,
+                obs_json_display
             ],
         )
 
@@ -1266,10 +1391,13 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
         # =========================================================
         def perform_login(username, password):
             username_clean = username.strip() if username else ""
-            if username_clean in VALID_USERS and VALID_USERS[username_clean] == password:
+            if username_clean in VALID_USERS_PWD and VALID_USERS_PWD[username_clean] == password:
                 mem_mgr = get_or_create_user_memory(username_clean)
-                new_state = {"is_logged_in": True, "username": username_clean}
-                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{username_clean}`)"
+                found_role = USER_ROLES.get(username_clean, "user")
+                role_tools = get_all_registered_tool_names(user_role=found_role)
+                default_tool = role_tools[0] if role_tools else None
+                new_state = {"is_logged_in": True, "username": username_clean, "role": found_role}
+                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{username_clean}` | 角色: `{found_role}`)"
 
                 session_choices = fetch_session_dropdown_choices(username_clean)
                 if not session_choices:
@@ -1292,6 +1420,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     new_state,                             # user_state
                     "✅ 登录成功！",                       # login_msg
                     gr.update(choices=session_choices, value=default_sess), # t3_session_radio
+                    gr.update(choices=role_tools, value=default_tool),
                     obs_md,
                     obs_json
                 )
@@ -1321,6 +1450,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 user_state,
                 login_msg,
                 t3_session_radio,
+                tool_select,
+                obs_summary_display, # 📌 必须补充此项，与 perform_login 返回值对齐
+                obs_json_display     # 📌 必须补充此项，与 perform_login 返回值对齐
             ]
         )
 
@@ -1367,7 +1499,7 @@ if __name__ == "__main__":
     
     qa_ui.queue().launch(
         server_name="0.0.0.0",
-        server_port=7862,
+        server_port=7865,
         root_path="/qa"
         # share=True
     )
