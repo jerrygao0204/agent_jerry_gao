@@ -29,7 +29,7 @@ import re
 from pathlib import Path
 from typing import Any
 from path_config import UserMemoryPathConfig
-
+from atomic_io import file_lock_for, atomic_dump_json
 # ==========================================
 # 1. 扩充的 Schema (新增 user_profile)
 # ==========================================
@@ -212,20 +212,20 @@ class LayerMapper:
 
     def run(self, facts_path: str, output_path: str) -> dict[str, dict[str, list]]:
         facts_file = Path(facts_path)
-        if not facts_file.exists():
-            return json.loads(json.dumps(STANDARD_SCHEMA))
-
-        with open(facts_file, "r", encoding="utf-8") as f:
-            raw_data = json.load(f)
-        facts = raw_data.get("facts", []) if isinstance(raw_data, dict) else (raw_data if isinstance(raw_data, list) else [])
-
         output_file = Path(output_path)
-        existing_context = self._load_existing_context(output_file)
-        layered = self.map_facts(facts, existing_context)
 
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(layered, f, ensure_ascii=False, indent=2)
+        with file_lock_for(output_file):
+            if not facts_file.exists():
+                return json.loads(json.dumps(STANDARD_SCHEMA))
+
+            with open(facts_file, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+            facts = raw_data.get("facts", []) if isinstance(raw_data, dict) else (raw_data if isinstance(raw_data, list) else [])
+
+            existing_context = self._load_existing_context(output_file)
+            layered = self.map_facts(facts, existing_context)
+
+            atomic_dump_json(output_file, layered)
 
         return layered
 

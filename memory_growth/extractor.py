@@ -19,6 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # ----------------- 以下是原来的 import 语句 -----------------
 from generator.qa_chain import QAChain
 from path_config import UserMemoryPathConfig
+from atomic_io import file_lock_for, atomic_dump_json
 
 import json
 import re
@@ -333,40 +334,40 @@ class FactExtractor:
     def run(self, user_id: str, output_path: str) -> list[dict]:
         run_started_at = datetime.now().strftime(TIMESTAMP_FMT)
         output_file = Path(output_path)
+        # 把"读取旧数据 -> 抽取 -> 合并去重 -> 写入"整个流程包在同一把锁里，
+        # 避免两次并发运行各自基于同一份旧 facts.json 算出不同结果、
+        # 后写入的把先写入的覆盖掉
+        with file_lock_for(output_file):
+            # 1. 直接从输出文件中获取水位线 last_run_at 和已有事实
+            metadata, existing_facts = self._load_facts_and_metadata(output_file)
+            since_str = metadata.get("last_run_at")
+            since = self._parse_ts(since_str) if since_str else None
 
-        # 1. 直接从输出文件中获取水位线 last_run_at 和已有事实，不再依赖 extraction_state.json
-        metadata, existing_facts = self._load_facts_and_metadata(output_file)
-        since_str = metadata.get("last_run_at")
-        since = self._parse_ts(since_str) if since_str else None
+            # 2. 检索并分析增量会话
+            candidate_sessions = self._candidate_sessions(user_id, since)
 
-        # 2. 检索并分析增量会话
-        candidate_sessions = self._candidate_sessions(user_id, since)
+            all_new_facts: list[dict] = []
+            for session_id in candidate_sessions:
+                new_messages = self._new_messages(user_id, session_id, since)
+                if not new_messages:
+                    continue
+                facts = self._extract_from_messages(new_messages)
+                all_new_facts.extend(facts)
 
-        all_new_facts: list[dict] = []
-        for session_id in candidate_sessions:
-            new_messages = self._new_messages(user_id, session_id, since)
-            if not new_messages:
-                continue
-            facts = self._extract_from_messages(new_messages)
-            all_new_facts.extend(facts)
+            # 3. 数据合并与去重
+            new_unique_facts = self._dedup(all_new_facts, existing_facts)
+            merged_facts = existing_facts + new_unique_facts
 
-        # 3. 数据合并与去重
-        new_unique_facts = self._dedup(all_new_facts, existing_facts)
-        merged_facts = existing_facts + new_unique_facts
+            # 4. 原子写入：临时文件 + os.replace，避免写一半崩溃损坏文件
+            save_payload = {
+                "metadata": {
+                    "last_run_at": run_started_at,
+                    "updated_at": datetime.now(timezone.utc).strftime(TIMESTAMP_FMT),
+                },
+                "facts": merged_facts,
+            }
 
-        # 4. 原子更新：同时写入 Metadata (最新水位线) 与 Facts 列表
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        save_payload = {
-            "metadata": {
-                "last_run_at": run_started_at,
-                "updated_at": datetime.now(timezone.utc).strftime(TIMESTAMP_FMT),
-            },
-            "facts": merged_facts,
-        }
-
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(save_payload, f, ensure_ascii=False, indent=2)
-
+            atomic_dump_json(output_file, save_payload)
         return new_unique_facts
 
 
