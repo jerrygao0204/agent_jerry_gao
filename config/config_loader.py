@@ -1,3 +1,4 @@
+# config/config_labder.py
 import os
 import yaml
 import logging
@@ -15,6 +16,12 @@ class ConfigLoader:
         self.config_dir = os.path.abspath(config_dir)
         self.prompt_hub_path = os.path.join(self.config_dir, "prompt_hub.yaml")
         self.patterns_path = os.path.join(self.config_dir, "patterns.yaml")
+        # 新增：数据根目录。优先读环境变量 DATA_ROOT；
+        # 未设置时回退为 <项目根目录>/data —— 这跟你现在硬编码的
+        # /workspace/hf-conda/RAG/问答机器人/data 是同一个目录，只是换成动态计算，
+        # 不设环境变量的情况下行为完全不变，换机器部署时只需要设一个环境变量。
+        project_root = os.path.dirname(self.config_dir)
+        self.data_root = os.environ.get("DATA_ROOT", os.path.join(project_root, "data"))
 
     def load_prompts_raw(self) -> Dict[str, Any]:
         """加载原始 YAML 数据结构 (保持 list/dict 原貌)"""
@@ -71,7 +78,8 @@ class ConfigLoader:
         return {
             "prompts_hub_path": self.prompt_hub_path,
             "patterns_path": self.patterns_path,
-            "config_dir": self.config_dir
+            "config_dir": self.config_dir,
+            "data_root": self.data_root, 
         }
 
 # 全局单例对象供快捷调用
