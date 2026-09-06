@@ -16,6 +16,7 @@ from typing import Dict, Any, Generator, Optional, List, Tuple, Union
 from factory.tool_factory import HierarchicalToolFactory, BaseTool, tool_factory as default_tool_factory
 from memory.memory_manager import MemoryManager
 from agent.sandbox import SandboxExecutor
+from agent.tool_transport import ToolDispatcher
 
 logger = logging.getLogger("ReActAgent")
 
@@ -60,6 +61,12 @@ class ReActAgent:
         
         self.memory_mgr = memory_mgr if memory_mgr is not None else MemoryManager(max_messages=20)
         self.sandbox = SandboxExecutor(timeout=sandbox_timeout)
+        self.tool_dispatcher = ToolDispatcher(
+            tool_factory=self.tool_factory,
+            user_role=self.user_role,
+            kwargs_preprocessor=self._prepare_tool_kwargs,
+            result_postprocessor=self._postprocess_tool_result,
+        )
 
         self.top_k_ret = top_k_ret
         self.top_k_rerank = top_k_rerank
@@ -96,14 +103,6 @@ class ReActAgent:
                         tool_lines.append(f"    * `{t}`: {t_desc}")
             
             tool_str = "\n".join(tool_lines) if tool_lines else "    * 无可用下属工具"
-
-
-            # # 解析工具列表及具体功能
-            # if isinstance(tools, list) and len(tools) > 0 and isinstance(tools[0], dict):
-            #     tool_lines = [f"    * `{t['name']}`: {t.get('description', '无工具描述')}" for t in tools]
-            #     tool_str = "\n" + "\n".join(tool_lines)
-            # else:
-            #     tool_str = ", ".join(tools) if isinstance(tools, list) else str(tools)
             
             formatted.append(
                 f"- **Package 名称**: `{pkg_name}`\n"
@@ -121,20 +120,47 @@ class ReActAgent:
             self.system_prompt_template = getattr(prompt_obj, "content", str(prompt_obj))
         else:
             self.system_prompt_template = (
-                "尽可能回答以下问题。你可以使用以下工具：\n{tools_description}\n\n"
-                "请严格按照以下格式进行思考和调用工具：\n"
-                "Question: 你需要回答的输入问题\n"
-                "Thought: 你应该总是思考下一步要做什么\n"
-                "Action: 要调用的工具名称（必须是 [{tool_names}] 中的一个）\n"
-                "Action Input: 传递给工具的 JSON 格式参数\n"
-                "Observation: 工具返回的结果\n"
-                "... (这个 Thought/Action/Action Input/Observation 过程可以重复 N 次)\n"
-                "Thought: 我现在知道最终答案了\n"
-                "Final Answer: 针对原始输入问题的最终回答\n\n"
+                "你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。\n\n"
+                "你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：\n"
+                "{tools_description}\n\n"
+                "### 执行规范与纠错指令：\n"
+                "1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。\n"
+                "2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。\n"
+                "3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**\n"
+                "4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。\n\n"
+                "示例：\n"
+                "<reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>\n"
+                "```python\n"
+                "res = search_knowledge_base(query=\"怎么创建预警用户\")\n"
+                "print(res)\n"
+                "FINAL_RESULT = res\n"
+                "```\n\n"
                 "开始！\n\n"
                 "Question: {input}\n"
-                "Thought: {agent_scratchpad}"
+                "{agent_scratchpad}"
             )
+            # self.system_prompt_template = (
+            #     "你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务，"
+            #     "而不是使用固定格式的 Action/Action Input。\n\n"
+            #     "你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：\n"
+            #     "{tools_description}\n\n"
+            #     "请严格按照以下格式输出：\n"
+            #     "1. 先用 <reflection></reflection> 标签做简短自检：这一步要做什么？"
+            #     "代码里是否包含 print() 打印关键中间结果？逻辑是否已经能回答问题？\n"
+            #     "2. 然后输出一个 ```python 代码块，这段代码会被安全沙箱执行，"
+            #     "执行时的 print() 输出和最终的 FINAL_RESULT 变量会作为 Observation 返回给你。\n"
+            #     "3. 如果已经得到最终答案，不要再输出代码块，直接输出 Final Answer。\n\n"
+            #     "示例：\n"
+            #     "<reflection>需要检索知识库获取创建预警用户的步骤，并打印结果方便确认。</reflection>\n"
+            #     "```python\n"
+            #     "res = search_knowledge_base(query=\"怎么创建预警用户\")\n"
+            #     "print(res)\n"
+            #     "FINAL_RESULT = res\n"
+            #     "```\n\n"
+            #     "开始！\n\n"
+            #     "Question: {input}\n"
+            #     "{agent_scratchpad}"
+            # )
 
         # 1. Level 1 Router Prompt (Domain Selection)
         if router_prompt_template:
@@ -187,6 +213,15 @@ class ReActAgent:
             kwargs.setdefault("filter", self.filter_str)
         return kwargs
 
+    def _postprocess_tool_result(self, tool_name: str, result: Any) -> Any:
+        """工具结果的统一后处理：RAG 检索相关度过低时替换为提示文案（原逻辑迁移，语义不变）"""
+        RERANK_THRESHOLD = 0.4
+        if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+            score = result[0].get("rerank_score") or result[0].get("score", 1.0)
+            if 0.1 <= score < RERANK_THRESHOLD:
+                return "【系统提示】: 本地知识库检索相关度得分过低，无匹配结果。"
+        return result
+
     def _route_domains(self, query: str) -> List[str]:
         """Level 1 路由：选出命中的 Domains"""
         domains_summary = self.tool_factory.get_domains_summary()
@@ -221,17 +256,9 @@ class ReActAgent:
     def _route_packages(self, query: str, target_domains: List[str]) -> List[Tuple[str, str]]:
         """Level 2 路由：基于选定的 Domain 选出命中的 (Domain, Package) 二元组"""
         packages_summary = self.tool_factory.get_packages_summary_by_domains(target_domains)
-        # ==================== 🔍 DEBUG 打印开始 ====================
-        print("\n" + "🔍" * 25 + " [TOOL FACTORY 结构诊断] " + "🔍" * 25)
-        print(f"👉 目标 Domains: {target_domains}")
-        print(f"👉 ToolFactory 返回的 packages_summary 原始数据类型: {type(packages_summary)}")
-        print("👉 packages_summary 完整内容:")
-        print(json.dumps(packages_summary, ensure_ascii=False, indent=2, default=str))
-        print("🔍" * 68 + "\n")
-        # ==================== 🔍 DEBUG 打印结束 ====================
 
         if not packages_summary:
-            print("⚠️ [WARNING] packages_summary 为空！")
+            logger.warning("⚠️ [WARNING] packages_summary 为空！")
             return []
         
         # 1. 转化为结构化 Markdown 描述，消除纯 JSON 的符号噪音
@@ -243,10 +270,6 @@ class ReActAgent:
             input=query
         )
 
-        # 💡 [调试新增]: 打印/日志输出最终送入 LLM 的完整 Prompt，用于人工检查
-        print("\n" + "=" * 30 + " [DEBUG] Package Router Prompt to LLM " + "=" * 30)
-        print(package_prompt)
-        print("=" * 82 + "\n")
         logger.info(f"[Package Router] Prompt 打印检查完成，Length: {len(package_prompt)}")
 
         try:
@@ -272,16 +295,28 @@ class ReActAgent:
 
         # 兜底降级：暴露当前 Domain 下的所有 Package
         return [(item["domain"], item["package"]) for item in packages_summary]
-    
-    def _parse_action_input(self, raw_str: str) -> Dict[str, Any]:
-        cleaned = raw_str.strip()
-        cleaned = re.sub(r"^```(?:json)?|```$", "", cleaned, flags=re.IGNORECASE).strip()
-        if cleaned.startswith("{") and cleaned.endswith("}"):
-            try:
-                return json.loads(cleaned)
-            except json.JSONDecodeError:
-                pass
-        return {"query": cleaned}
+
+    def _extract_reflection_and_code(self, response_text: str) -> Tuple[str, Optional[str]]:
+        """从 LLM 输出中提取 <reflection> 内容和 ```python 代码块"""
+        reflection_match = re.search(r"<reflection>(.*?)</reflection>", response_text, re.DOTALL)
+        reflection = reflection_match.group(1).strip() if reflection_match else ""
+
+        code_match = re.search(r"```python\s*(.*?)```", response_text, re.DOTALL)
+        code = code_match.group(1).strip() if code_match else None
+        return reflection, code
+
+    def _build_observation(self, sandbox_res: Dict[str, Any]) -> str:
+        """把沙箱执行结果（stdout/result/error/warnings）组装成喂给下一轮 LLM 的 Observation 文本"""
+        parts = []
+        if sandbox_res.get("stdout"):
+            parts.append(f"[stdout]\n{sandbox_res['stdout'].strip()}")
+        if sandbox_res["status"] == "success":
+            parts.append(f"[执行结果 FINAL_RESULT] {sandbox_res.get('result')}")
+        else:
+            parts.append(f"[执行异常] status={sandbox_res['status']} error={sandbox_res.get('error')}")
+        if sandbox_res.get("warnings"):
+            parts.append(f"[提示] {'; '.join(sandbox_res['warnings'])}")
+        return "\n".join(parts) if parts else "(无输出)"
 
     # -------------------------------------------------------------------------
     # 💡 [适配 2]: 辅助生成器函数，保证同时输出 type 和 stage 两个 key
@@ -317,7 +352,7 @@ class ReActAgent:
         # 📌【修复 1】：在入口处安全初始化变量，防范 UnboundLocalError
         selected_packages: List[Tuple[str, str]] = []
         pkg_names: List[str] = ["injected_custom_schema"]
-
+        available_tool_names: List[str] = []
 
         try:
             # 1. 短文本拦截
@@ -352,12 +387,17 @@ class ReActAgent:
                         tool_names_list.append(name)
                         descriptions.append(f"- **{name}**: {desc}\n  参数规范: {json.dumps(params, ensure_ascii=False)}")
                     
-                    tool_names = ", ".join(tool_names_list)
+                    # tool_names = ", ".join(tool_names_list)
                     tools_description = "\n".join(descriptions)
+                    available_tool_names = tool_names_list  # 💡 修复：正确填充沙箱白名单
+                    pkg_names = tool_names_list
+
                     pkg_names = tool_names_list  # 给报错打印提示用
                 else:
                     tools_description = str(tools_schema)
-                    tool_names = "已加载工具"
+                    # tool_names = "已加载工具"
+                    available_tool_names = []  # 若为纯字符串描述，由沙箱自行处理或默认放行
+
             else:
                 yield self._yield_step("thought", "正在分析用户意图，匹配业务领域 (Domain)...")
                 selected_domains = self._route_domains(query)
@@ -369,15 +409,15 @@ class ReActAgent:
                 yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
 
                 tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages, user_role=self.user_role)
+                available_tool_names = [t.strip() for t in tool_names.split(",") if t.strip()]
            
             scratchpad = ""
 
-            # 3. 核心 ReAct 循环
+            # 3. 核心 CodeAct 循环：LLM 生成代码 -> AST 预检 -> 沙箱执行 -> Observation 喂回
             for iteration in range(1, self.max_iterations + 1):
-                logger.info(f"[ReAct Step] 开始第 {iteration}/{self.max_iterations} 轮推理/调用...")
+                logger.info(f"[CodeAct Step] 开始第 {iteration}/{self.max_iterations} 轮推理/执行...")
                 prompt = self.system_prompt_template.format(
                     tools_description=tools_description,
-                    tool_names=tool_names,
                     input=query,
                     agent_scratchpad=scratchpad
                 )
@@ -390,12 +430,11 @@ class ReActAgent:
                 clean_response = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
                 think_match = re.search(r"<think>(.*?)</think>", full_response, re.DOTALL)
                 extracted_think = think_match.group(1).strip() if think_match else ""
-                
-                action_match = re.search(r"Action:\s*([^\n]+)", clean_response)
-                action_input_match = re.search(r"Action Input:\s*(\{.*?\}|```.*?```|[^\n]+)", clean_response, re.DOTALL)
+
+                reflection, code = self._extract_reflection_and_code(clean_response)
                 final_answer_match = re.search(r"Final Answer:\s*(.*)", clean_response, re.DOTALL)
 
-                if final_answer_match and not action_match:
+                if final_answer_match and not code:
                     final_ans = final_answer_match.group(1).strip()
                     if extracted_think:
                         yield self._yield_step("thought", extracted_think)
@@ -405,187 +444,216 @@ class ReActAgent:
                     self.memory_mgr.commit()
                     return
 
-                if action_match and action_input_match:
-                    tool_name = action_match.group(1).strip()
-                    raw_input = action_input_match.group(1).strip()
+                if code:
+                    yield self._yield_step("thought", f"【第 {iteration}/{self.max_iterations} 步】{reflection or extracted_think or '准备执行代码...'}")
+                    yield self._yield_step("code", f"```python\n{code}\n```")
 
-                    thought_content = clean_response.split("Action:")[0].replace("Thought:", "").strip()
-                    yield self._yield_step("thought", f"【第 {iteration}/{self.max_iterations} 步】{thought_content or extracted_think or '准备调用工具...'}")
+                    sandbox_res = self.sandbox.run(
+                        code_str=code,
+                        tool_names=available_tool_names,
+                        tool_dispatcher=self.tool_dispatcher,
+                    )
+                    if sandbox_res["status"] == "security_blocked":
+                        raise ValueError(f"安全沙箱检测到高危指令: {sandbox_res['error']}")
 
-                    raw_kwargs = self._parse_action_input(raw_input)
-                    kwargs = self._prepare_tool_kwargs(tool_name, raw_kwargs)
+                    observation = self._build_observation(sandbox_res)
+                    yield self._yield_step("observation", observation)
 
-                    yield self._yield_step("action", f"调用工具: `{tool_name}` | 执行参数: `{json.dumps(kwargs, ensure_ascii=False)}`")
+                    # 💡 [收敛机制 1]: 纯变量计算自动收敛
+                    is_pure_calc = sandbox_res["status"] == "success" and not any(t in code for t in available_tool_names)
+                    if is_pure_calc and sandbox_res.get("result") is not None:
+                        final_ans = f"计算完成，执行结果为: {sandbox_res['result']}"
+                        yield self._yield_step("final_answer", final_ans)
+                        self.memory_mgr.process_assistant_output(final_ans)
+                        self.memory_mgr.commit()
+                        return
 
-                    if tool_name == "python_sandbox_executor":
-                        code_str = kwargs.get("code") or raw_input
-                        sandbox_res = self.sandbox.run(code_str)
-                        if sandbox_res["status"] == "security_blocked":
-                            raise ValueError(f"安全沙箱检测到高危指令: {sandbox_res['error']}")
-                        observation = sandbox_res["result"]
-                    else:
-                        tool_obj = self.tool_factory.get_tool(tool_name, user_role=self.user_role)
-                        if tool_obj:
-                            observation = tool_obj.run(**kwargs) if hasattr(tool_obj, "run") else tool_obj.execute(**kwargs)
-                        else:
-                            observation = f"错误: 在工具包 {pkg_names} 中未找到工具 [{tool_name}]"
+                    # 💡 [收敛机制 2]: 工具已成功返回结果且无异常，若 LLM 代码未包含后续操作逻辑，标记可收敛上下文
+                    if sandbox_res["status"] == "success" and sandbox_res.get("result") is not None:
+                        logger.info(f"[CodeAct] 工具执行成功并获取结果: {sandbox_res['result']}")
+
+                    scratchpad += (
+                        f"<reflection>{reflection}</reflection>\n"
+                        f"```python\n{code}\n```\n"
+                        f"Observation: {observation}\n\n"
+                    )
+
+                    # # 💡 [自动终止判断]: 若没有工具调用且非报错执行（例如纯变量计算），直接收敛输出，无需死循环
+                    # is_pure_calc = sandbox_res["status"] == "success" and not any(t in code for t in available_tool_names)
+                    # if is_pure_calc and sandbox_res.get("result") is not None:
+                    #     final_ans = f"计算完成，执行结果为: {sandbox_res['result']}"
+                    #     yield self._yield_step("final_answer", final_ans)
+                    #     self.memory_mgr.process_assistant_output(final_ans)
+                    #     self.memory_mgr.commit()
+                    #     return
+
+                    # # 记录轨迹供下一轮 Self-Correction 纠错
 
 
-                    RERANK_THRESHOLD = 0.4
-                    if isinstance(observation, list) and len(observation) > 0 and isinstance(observation[0], dict):
-                        score = observation[0].get("rerank_score") or observation[0].get("score", 1.0)
-                        if 0.1 <= score < RERANK_THRESHOLD:
-                            observation = "【系统提示】: 本地知识库检索相关度得分过低，无匹配结果。"
-
-                    yield self._yield_step("observation", str(observation))
-                    scratchpad += f"{thought_content}\nAction: {tool_name}\nAction Input: {json.dumps(kwargs, ensure_ascii=False)}\nObservation: {observation}\nThought: "
+                    # scratchpad += (
+                    #     f"<reflection>{reflection}</reflection>\n"
+                    #     f"```python\n{code}\n```\n"
+                    #     f"Observation: {observation}\n\n"
+                    # )
                 else:
-                    final_ans = clean_response.replace("Thought:", "").strip()
+                    final_ans = clean_response.strip()
                     yield self._yield_step("final_answer", final_ans)
                     self.memory_mgr.process_assistant_output(final_ans)
                     self.memory_mgr.commit()
                     return
 
         except Exception as e:
-            logger.error(f"ReAct 运行捕获异常: {e}")
+            logger.error(f"CodeAct 运行捕获异常: {e}")
             self.memory_mgr.rollback()
             yield self._yield_step("rollback", f"🚨 运行异常已触发 Memory Rollback: {str(e)}")
 
 
-# ==============================================================================
-# 🧪 本地功能与参数透传精准测试套件 (精确隔离 Mock 条件)
-# ==============================================================================
+# =============================================================================
+# 单元测试桩
+# =============================================================================
 if __name__ == "__main__":
-    import time
-    from pydantic import BaseModel, Field
+    from typing import Generator, List, Dict, Any, Optional, Tuple
 
-    # 1. 注册带参数打印日志的测试工具
-    class WebSearchInput(BaseModel):
-        query: str = Field(description="网络检索关键词")
+    class DynamicCodeActMockLLM:
+        def __init__(self):
+            self.codeact_step = 0
 
-    class WebSearchTool(BaseTool):
-        name = "web_search"
-        description = "在公网上检索实时信息，如天气、新闻、最新资讯等"
-        domain = "web_search"
-        package = "search_pkg"
-        args_schema = WebSearchInput
+        def reset_step(self):
+            self.codeact_step = 0
 
-        def run(self, query: str, **kwargs) -> Any:
-            return "【模拟网页搜索结果】: 华盛顿州西雅图今天天气晴朗，气温 18°C - 24°C。"
+        def stream_generate(self, query: str = None, messages: List[Dict[str, str]] = None, context: str = "") -> Generator[str, None, None]:
+            prompt_str = query if query else (messages[-1]["content"] if messages else "")
 
-    class RAGSearchInput(BaseModel):
-        query: str = Field(description="知识库检索问题")
-        top_k: Optional[int] = Field(default=5, description="向量检索数量")
-        top_k_rerank: Optional[int] = Field(default=3, description="重排序数量")
-        filter: Optional[str] = Field(default="", description="过滤条件")
+            # 1. 路由阶段拦截 (Domain Router & Package Router)
+            if "你是一个意图路由专家" in prompt_str:
+                yield '["rag_domain"]'
+                return
+            if "通用 Agent 工具包分类路由专家" in prompt_str:
+                yield '["rag_pkg"]'
+                return
 
-    class KnowledgeSearchTool(BaseTool):
-        name = "search_knowledge_base"
-        description = "检索 FineBI 系统手册、用户指南与业务术语"
-        domain = "rag_knowledge"
-        package = "knowledge_pkg"
-        args_schema = RAGSearchInput
+            # 2. 通用问候直连拦截
+            if "你好" in prompt_str and "Question:" not in prompt_str:
+                yield "你好！我是 CodeAct 智能助手，请问有什么可以帮您？"
+                return
 
-        def run(self, query: str, top_k: int = 5, top_k_rerank: int = 3, filter: str = "", **kwargs) -> Any:
-            # 💡 [验证断言]: 捕获底层透传参数
-            print("\n" + "🔥" * 40)
-            print("⚙️  [RAG 物理执行器成功捕获参数透传]:")
-            print(f"    - query: '{query}'")
-            print(f"    - top_k: {top_k} (预期: 10)")
-            print(f"    - top_k_rerank: {top_k_rerank} (预期: 4)")
-            print(f"    - filter: '{filter}' (预期: 'department == \'IT\'')")
-            print("🔥" * 40 + "\n")
-            return [{"content": "FineBI 创建预警用户的步骤：1. 进入管理系统；2. 选择用户管理；3. 新增预警用户。", "rerank_score": 0.88}]
+            # 3. 场景 4: 变量计算 Mock
+            if "a = 10" in prompt_str or "计算两个数的和" in prompt_str or "缺失变量" in prompt_str:
+                yield (
+                    "<reflection>计算两个数的和。</reflection>\n"
+                    "```python\n"
+                    "a = 10\n"
+                    "b = 20\n"
+                    "FINAL_RESULT = a + b\n"
+                    "```"
+                )
+                return
 
-    default_tool_factory.register_tool(WebSearchTool())
-    default_tool_factory.register_tool(KnowledgeSearchTool())
-
-    # 2. 严谨判定的 Mock LLM Client
-    class MockLLMClient:
-        def stream_generate(self, query: str, context: str = "") -> Generator[str, None, None]:
-            clean_q = query.strip().lower()
-
-            # A. 短文本直连
-            if clean_q in ["你好", "您好", "在吗", "hi"]:
-                response = "你好！我是你的 AI 智能助手，请问今天有什么我可以帮你的？"
-            
-            # B. Stage 1 路由匹配
-            elif "意图路由专家" in query:
-                if "天气" in query:
-                    response = "```json\n[\"web_search_tool\"]\n```"
+            # 4. 场景 3: 代码报错自纠错 Mock (同步兼容 "触发自纠错" 与 "报错自纠错测试")
+            if "触发自纠错" in prompt_str or "报错自纠错测试" in prompt_str:
+                self.codeact_step += 1
+                
+                # 第 1 步: 故意写错函数名，触发 NameError 异常
+                if self.codeact_step == 1:
+                    yield (
+                        "<reflection>尝试调用知识库检索，故意写错函数名以测试自纠错机制。</reflection>\n"
+                        "```python\n"
+                        "res = search_knowledge_error_name(query='报错自纠错测试')\n"
+                        "```"
+                    )
+                    return
+                # 第 2 步: 捕获异常后纠错，输出正确的函数名
+                elif self.codeact_step == 2:
+                    yield (
+                        "<reflection>上一轮函数名写错了，观察到报错 NameError，现修正为 search_knowledge_base。</reflection>\n"
+                        "```python\n"
+                        "res = search_knowledge_base(query='报错自纠错测试')\n"
+                        "print(res)\n"
+                        "FINAL_RESULT = res\n"
+                        "```"
+                    )
+                    return
+                # 第 3 步: 获取正确结果，吐出 Final Answer 闭环
                 else:
-                    response = "```json\n[\"rag_knowledge\"]\n```"
-            
-            # C. Stage 2 Step 2: Observation 返回后的总结阶段 (判断是否包含工具返回结果)
-            elif "Observation:" in query and "FineBI 创建预警用户的步骤" in query:
-                response = "<think>根据 RAG 检索结果得出创建预警用户步骤。</think>\nFinal Answer: 创建预警用户的步骤如下：1. 进入管理系统；2. 选择用户管理；3. 新增预警用户。"
-            
-            # D. Stage 2 Step 1: 首次 ReAct 推理阶段 (匹配具体的用户提问尾部)
-            elif "Question: 怎么创建预警用户？" in query:
-                response = (
-                    "Thought: 需要查询 FineBI 知识库中关于预警用户的创建方法。\n"
-                    "Action: search_knowledge_base\n"
-                    "Action Input: {\"query\": \"怎么创建预警用户\"}"
-                )
-            elif "Question: 华盛顿州西雅图今天的天气如何?" in query:
-                response = (
-                    "Thought: 需要在公网搜索西雅图今日天气。\n"
-                    "Action: web_search\n"
-                    "Action Input: {\"query\": \"西雅图今天天气\"}"
-                )
+                    yield "Final Answer: 已成功通过纠错后的接口检索到内容。"
+                    return
+
+            # 5. 场景 2: CodeAct 多轮工具调用 Mock
+            if "Observation:" in prompt_str or "FINAL_RESULT" in prompt_str:
+                yield "Final Answer: 根据知识库检索结果，创建预警用户的步骤为：1. 打开系统设置；2. 点击新增预警用户。"
             else:
-                response = "Final Answer: 处理完成。"
+                yield (
+                    "<reflection>需要调用 search_knowledge_base 函数检索创建预警用户的步骤，并打印结果。</reflection>\n"
+                    "```python\n"
+                    "res = search_knowledge_base(query='怎么创建预警用户')\n"
+                    "print(res)\n"
+                    "FINAL_RESULT = res\n"
+                    "```"
+                )
+    # 2. Mock 工具工厂 (修复 BaseTool 抽象类实例化问题)
+    class MockTool:
+        """使用鸭子类型 Mock 工具，实现 name, description 和 run 方法，无需继承 BaseTool"""
+        def __init__(self, name: str = "search_knowledge_base", description: str = "检索知识库内容"):
+            self.name = name
+            self.description = description
 
-            for char in response:
-                yield char
-                time.sleep(0.001)
+        def run(self, query: str = "", **kwargs) -> Any:
+            return f"【知识库文档】: 步骤1. 打开系统设置；步骤2. 点击新增预警用户。(query={query})"
 
-    # 3. 初始化配置显式 RAG 参数的 Agent
-    mock_llm = MockLLMClient()
-    memory_manager = MemoryManager(max_messages=10)
-    
+        def _run(self, query: str = "", **kwargs) -> Any:
+            return self.run(query=query, **kwargs)
+
+    class MockToolFactory(HierarchicalToolFactory):
+        def __init__(self):
+            mock_tool = MockTool()
+            self._tools = {"search_knowledge_base": mock_tool}
+            self._flat_tools = self._tools  # 补全私有属性防范 fallback 崩溃
+
+        def get_tool(self, name: str, user_role: Optional[str] = None) -> Optional[Any]:
+            return self._tools.get(name)
+
+        def get_domains_summary(self) -> List[Dict[str, Any]]:
+            return [{"domain": "rag_domain", "description": "知识库问答领域"}]
+
+        def get_packages_summary_by_domains(self, domains: List[str]) -> List[Dict[str, Any]]:
+            return [{
+                "package": "rag_pkg",
+                "domain": "rag_domain",
+                "description": "知识库检索工具包",
+                "tools": [{"name": "search_knowledge_base", "description": "检索知识库内容"}]
+            }]
+
+        def get_tools_metadata_by_packages(self, packages: List[Tuple[str, str]], user_role: Optional[str] = None) -> Tuple[str, str]:
+            return "search_knowledge_base", "- `search_knowledge_base(query: str)`: 检索知识库内容。"
+
+        def execute_tool(self, tool_name: str, kwargs: Dict[str, Any], user_role: Optional[str] = None) -> Any:
+            tool = self.get_tool(tool_name)
+            if tool:
+                return tool.run(**kwargs)
+            return f"Unknown tool: {tool_name}"
+
+    mock_llm = DynamicCodeActMockLLM()
+    mock_factory = MockToolFactory()
+
     agent = ReActAgent(
         llm_client=mock_llm,
-        tool_factory=default_tool_factory,
-        memory_mgr=memory_manager,
+        tool_factory=mock_factory,
         max_iterations=3,
-        # 💡 [注入自定义检索参数]
-        top_k_ret=10,
-        top_k_rerank=4,
-        filter_str="department == 'IT'",
-        min_query_length=3
+        sandbox_timeout=3
     )
 
-    print("\n" + "=" * 80)
-    print("🚀 [Suite 1]: 测试短文本 / 通用问候语快速收敛 (应跳过 Router 与 Tools)")
-    print("=" * 80)
+    print("\n=================== 场景 1: 短文本/通用问候拦截测试 ===================")
     for step in agent.run_stream("你好"):
         print(f"[{step['type'].upper()}]: {step['content']}")
 
-    print("\n" + "=" * 80)
-    print("🚀 [Suite 2]: 测试 RAG 知识库检索 & 检验 top_k_ret / top_k_rerank / filter 自动透传")
-    print("=" * 80)
-    for step in agent.run_stream("怎么创建预警用户？"):
-        print(f"[{step['type'].upper()}]: {step['content']}")
+    print("\n=================== 场景 2: CodeAct 多轮工具调用 + Final Answer 闭环 ===================")
+    for step in agent.run_stream("请问怎么创建预警用户？"):
+        print(f"[{step['type'].upper()}] ({step['stage']}):\n{step['content']}\n" + "-"*50)
 
-    print("\n" + "=" * 80)
-    print("🚀 [Suite 3]: 测试恶意代码沙箱拦截与 Memory Rollback")
-    print("=" * 80)
-    
-    def test_sandbox_rollback():
-        agent.memory_mgr.begin_transaction()
-        agent.memory_mgr.process_user_input("帮我执行命令: import os; os.system('rm -rf /')")
-        
-        bad_code = "import os\nos.system('rm -rf /')"
-        sandbox_res = agent.sandbox.run(bad_code)
-        
-        if sandbox_res["status"] == "security_blocked":
-            print(f"🛡️ [Sandbox Guardrail]: 成功拦截高危代码 -> {sandbox_res['error']}")
-            agent.memory_mgr.rollback()
-            print("🚨 [Memory Manager]: 已成功触发事务回滚 (Rollback)！")
+    print("\n=================== 场景 3: 代码报错 (Runtime Error) 自动纠错测试 ===================")
+    for step in agent.run_stream("触发自纠错"):
+        print(f"[{step['type'].upper()}]:\n{step['content']}\n" + "-"*50)
 
-    test_sandbox_rollback()
-
-    print("\n" + "=" * 80)
-    print("✅ 全套 Agent 改造验证完成！所有新特性运行正常。")
-    print("=" * 80)
+    print("\n=================== 场景 4: 变量计算自动终止测试 ===================")
+    for step in agent.run_stream("缺失变量"):
+        print(f"[{step['type'].upper()}]:\n{step['content']}\n" + "-"*50)

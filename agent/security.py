@@ -39,7 +39,7 @@ class ASTCodeChecker(ast.NodeVisitor):
                 logger.error(f"⚠️ 读取安全配置文件失败 ({config_path}): {e}")
         else:
             # 兜底默认规则
-            self.allowed_imports = {"math", "datetime", "time", "json", "re"}
+            self.allowed_imports = {"math", "datetime", "time", "json", "re", "pandas", "numpy"}
             self.forbidden_calls = {"eval", "exec", "open", "__import__"}
             self.forbidden_attrs = {"os", "sys", "subprocess", "__builtins__"}
 
@@ -82,32 +82,44 @@ class ASTCodeChecker(ast.NodeVisitor):
             self.violations.append(f"禁止访问敏感属性: '.{node.attr}'")
         self.generic_visit(node)
 
-    def check_code(self, code_str: str) -> Tuple[bool, List[str]]:
-        """
-        审查入口：解析并检查代码字符串
-        :return: (is_safe, violations_list)
-        """
+    def _check_observability(self, tree: ast.AST) -> List[str]:
+        warnings = []
+        has_print = any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "print"
+            for node in ast.walk(tree)
+        )
+        if not has_print:
+            warnings.append("⚠️ 未检测到 print() 观测点：建议在关键步骤打印中间结果。")
+        return warnings
+
+    def check_code(self, code_str: str) -> Tuple[bool, List[str], List[str]]:
         self.violations = []
         try:
             tree = ast.parse(code_str)
             self.visit(tree)
             is_safe = len(self.violations) == 0
-            return is_safe, self.violations
+            warnings = self._check_observability(tree) if is_safe else []
+            return is_safe, self.violations, warnings
         except SyntaxError as e:
-            return False, [f"SyntaxError 语法错误，拒绝执行: {e}"]
+            return False, [f"SyntaxError 语法错误，拒绝执行: {e}"], []
         except Exception as e:
-            return False, [f"AST 解析异常: {str(e)}"]
+            return False, [f"AST 解析异常: {str(e)}"], []
 
 # 单元测试桩
 if __name__ == "__main__":
     checker = ASTCodeChecker()
     
-    # 恶性代码测试
+    # 1. 恶性代码测试
     bad_code = "import os; os.system('rm -rf /')"
-    safe, msgs = checker.check_code(bad_code)
-    print(f"恶意代码拦截测试 -> Safe: {safe}, Msgs: {msgs}")
+    safe, violations, warnings = checker.check_code(bad_code)
+    print(f"恶意代码拦截测试 -> Safe: {safe}, Violations: {violations}, Warnings: {warnings}")
     
-    # 良性代码测试
-    good_code = "import math\nx = math.sqrt(16)\nFINAL_RESULT = x"
-    safe, msgs = checker.check_code(good_code)
-    print(f"合法代码通过测试 -> Safe: {safe}, Msgs: {msgs}")
+    # 2. 无 print 缺失观测点测试
+    good_code_no_print = "import math\nx = math.sqrt(16)\nFINAL_RESULT = x"
+    safe, violations, warnings = checker.check_code(good_code_no_print)
+    print(f"缺乏 print 警告测试 -> Safe: {safe}, Violations: {violations}, Warnings: {warnings}")
+
+    # 3. 正常带 print 代码测试
+    good_code_with_print = "import math\nx = math.sqrt(16)\nprint(x)"
+    safe, violations, warnings = checker.check_code(good_code_with_print)
+    print(f"完整正常代码测试 -> Safe: {safe}, Violations: {violations}, Warnings: {warnings}")
