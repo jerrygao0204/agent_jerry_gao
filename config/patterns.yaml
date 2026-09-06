@@ -36,6 +36,8 @@ security_sandbox:
     - random
     - collections
     - itertools
+    - pandas
+    - numpy
 
   # 严禁调用的内置函数黑名单
   forbidden_ast_calls:
