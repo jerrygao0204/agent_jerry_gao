@@ -1,4 +1,4 @@
-# memory_growth/atomic_io.py
+# atomic_io.py
 """
 atomic_io.py - 跨进程安全的原子 JSON 写入工具
 
