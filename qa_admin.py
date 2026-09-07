@@ -7,11 +7,13 @@ def install_package(package):
 
 try:
     import gradio as gr
-
+    from fastapi import Response, status
     import plotly.express as px
 except ImportError:
     install_package("gradio")
     install_package("plotly")
+    install_package("fastapi")
+    install_package("uvicorn")
     import gradio as gr
     import plotly.express as px
 
@@ -19,6 +21,8 @@ import os
 import sys
 import gc
 import json
+import atexit
+from fastapi import Response, status
 import uuid
 import logging
 import time
@@ -62,20 +66,32 @@ CONFIG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_config.json")
 USERS_AUTH_PATH = os.path.join(SCRIPT_DIR, "config", "users_auth.yaml")
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 LOG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_system.log")
-# 確保日誌目錄與檔案被自動建立
-root_logger = logging.getLogger()
-for handler in root_logger.handlers[:]:
-    root_logger.removeHandler(handler)
+# # 確保日誌目錄與檔案被自動建立
+# root_logger = logging.getLogger()
+# for handler in root_logger.handlers[:]:
+#     root_logger.removeHandler(handler)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"), # 强行创建与写入日志文件
-        logging.StreamHandler(sys.stdout)                     # 同时输出至控制台
-    ],
-    force=True  # Python 3.8+ 支持强行覆盖现有配置
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s [%(levelname)s] %(message)s",
+#     handlers=[
+#         logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"), # 强行创建与写入日志文件
+#         logging.StreamHandler(sys.stdout)                     # 同时输出至控制台
+#     ],
+#     force=True  # Python 3.8+ 支持强行覆盖现有配置
+# )
+from factory.log_factory import setup_logger
+
+# 初始化並取得統一輪轉 Logger (按 10MB 切割，最多保留 5 個歷史檔)
+logger = setup_logger(
+    name="QA_Admin",
+    log_file=LOG_FILE_PATH,
+    max_bytes=10 * 1024 * 1024,  # 10 MB
+    backup_count=5,
+    level=logging.INFO
 )
+logging.root.handlers = logger.handlers
+logging.root.setLevel(logging.INFO)
 
 DEFAULT_QA_CONFIG = {
     "prompts_hub_path": os.getenv(
@@ -1716,18 +1732,60 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
 # ==========================================
 if __name__ == "__main__":
     import atexit
-    
+    import uvicorn
+    from fastapi import FastAPI
+    import gradio as gr
+
     def on_app_shutdown():
-        logging.info("⚡ 关闭 QA 服务，清除 GPU 显存...")
+        logging.info("⚡关闭QA服务，清除GPU显存...")
         emergency_force_cleanup()
 
     atexit.register(on_app_shutdown)
 
+    # 1. 建立獨立的 FastAPI 實例
+    app = FastAPI(title="QA Admin API")
+
+    # 2. 掛載 /health 端點
+    @app.get("/health", tags=["System Health"])
+    def health_check():
+        return {
+            "status": "healthy",
+            "service": "qa_admin",
+            "port": 7865,
+            "root_path": "/qa"
+        }
+
+    # 3. 建構 Gradio UI 介面
     qa_ui = build_qa_admin_ui()
-    
-    qa_ui.queue().launch(
-        server_name="0.0.0.0",
-        server_port=7865,
-        root_path="/qa"
-        # share=True
+
+    # 4. 將 Gradio UI 掛載到 FastAPI 應用中
+    app = gr.mount_gradio_app(
+        app=app,
+        blocks=qa_ui,
+        path="/qa"  # 對應原有的 root_path
     )
+
+    # 5. 使用 Uvicorn 啟動服務
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=7865,
+        log_level="info"
+    )
+# if __name__ == "__main__":
+#     import atexit
+    
+#     def on_app_shutdown():
+#         logging.info("⚡ 关闭 QA 服务，清除 GPU 显存...")
+#         emergency_force_cleanup()
+
+#     atexit.register(on_app_shutdown)
+
+#     qa_ui = build_qa_admin_ui()
+    
+#     qa_ui.queue().launch(
+#         server_name="0.0.0.0",
+#         server_port=7865,
+#         root_path="/qa"
+#         # share=True
+#     )
