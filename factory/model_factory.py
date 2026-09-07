@@ -7,6 +7,7 @@ import subprocess
 import yaml
 import torch
 from PIL import Image
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
@@ -32,6 +33,7 @@ class ModelFactory:
     模型与环境配置中心工厂（系统终极底座）
     全局接管：环境软链接、离线模型物理路径寻址、硬件算力分配、以及 VLM/LLM/Embedding 引擎的生命周期管理
     """
+    load_dotenv()
     
     # 🔒 静态类变量（全局唯一句柄）
     _LLM_MODEL = None
@@ -54,7 +56,7 @@ class ModelFactory:
             cls._instance = super(ModelFactory, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, prompt_hub_path: str = "prompt_hub.yaml", cache_dir: str = "/workspace/hf-conda/hf_cache/hub"):
+    def __init__(self, prompt_hub_path: str = "prompt_hub.yaml", cache_dir: str = None):
 
         if getattr(self, '_initialized', False):
             return
@@ -65,15 +67,24 @@ class ModelFactory:
                 self.prompts = self._load_prompts()
             return
         
-        # 🌟 1. 将传入的路径统一转换为绝对路径
+        # 🌟 1. 动态获取缓存路径环境变量（去除硬编码）
+        self.cache_dir = cache_dir or os.getenv(
+            "HF_CACHE_DIR", 
+            "/workspace/hf-conda/hf_cache/hub"
+        )
+        self.datalab_dir = os.getenv(
+            "HF_CACHE_DATALAB", 
+            "/workspace/hf-conda/hf_cache/datalab"
+        )
+
+        # 🌟 2. 将传入的路径统一转换为绝对路径
         self.prompt_hub_path = self._resolve_path(prompt_hub_path)
-        self.cache_dir = cache_dir
         
-        # 🌟 2. 使用绝对路径加载 Prompts
+        # 🌟 3. 使用绝对路径加载 Prompts
         self.prompts = self._load_prompts()
 
-        # 建立全局软链接
-        self._ensure_symlink("/workspace/hf-conda/hf_cache/datalab", "/root/.cache/datalab")
+        # 建立全局软链接（从环境变量路径链接到系统默认缓存路径）
+        self._ensure_symlink(self.datalab_dir, "/root/.cache/datalab")
         self._ensure_symlink(self.cache_dir, "/root/.cache/huggingface")
         
         self._initialized = True
