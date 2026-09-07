@@ -1,0 +1,112 @@
+[
+  {
+    "id": "q_001",
+    "query_id": "q_001",
+    "query": "什么是数据预警插件？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_0"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Definition"
+    }
+  },
+  {
+    "id": "q_002",
+    "query_id": "q_002",
+    "query": "数据预警支持哪些推送方式和图表类型？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_1"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Constraint"
+    }
+  },
+  {
+    "id": "q_003",
+    "query_id": "q_003",
+    "query": "数据预警是否保留仪表板过滤效果由哪个参数控制？该参数的取值含义是什么？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_2"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Table",
+      "note": "原版本 query 提到的'检测频次'在文档中不存在，'预警对象'实际出现在 h_19/h_21，属于标注错误，已改为匹配 h_2 真实内容（SystemOptimizationConfig.useAllVisibleDataForSentinel 参数）"
+    }
+  },
+  {
+    "id": "q_004",
+    "query_id": "q_004",
+    "query": "异常数据推送条数控制的规则是什么？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_3"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Definition"
+    }
+  },
+  {
+    "id": "q_005",
+    "query_id": "q_005",
+    "query": "如何安装数据预警插件？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_4"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Procedure"
+    }
+  },
+  {
+    "id": "q_006",
+    "query_id": "q_006",
+    "query": "数据预警插件需要什么授权？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_5"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Constraint"
+    }
+  },
+  {
+    "id": "q_007",
+    "query_id": "q_007",
+    "query": "如何为用户配置数据预警权限？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_6"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Procedure"
+    }
+  },
+  {
+    "id": "q_008",
+    "query_id": "q_008",
+    "query": "设置数据预警权限的步骤是什么？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_7"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Procedure"
+    }
+  },
+  {
+    "id": "q_009",
+    "query_id": "q_009",
+    "query": "分级授权功能依赖什么权限？如果不开启分级授权，预警的创建和责任人选择会受到什么限制？",
+    "expected_chunk_ids": [
+      "数据预警.pdf_h_8"
+    ],
+    "metadata": {
+      "file_name": "数据预警.pdf",
+      "chunk_type": "Constraint",
+      "note": "原版本同时期望 h_9，但 h_9 的 content 仅为图片占位符 ![IMAGE_PLACEHEADER]，无实质文字，属于上游 PDF/VLM 解析未提取图片文字的数据缺陷，不适合作为检索 ground truth，已移除"
+    }
+  }
+]

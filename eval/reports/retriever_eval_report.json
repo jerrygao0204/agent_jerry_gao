@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "total_samples": 9,
+    "top_k_retrieval": 10,
+    "top_k_rerank": 3,
+    "hit_rate": 1.0,
+    "mrr": 0.8148,
+    "avg_retrieval_ms": 94.44,
+    "avg_rerank_ms": 123.25,
+    "avg_latency_ms": 217.68
+  },
+  "details": [
+    {
+      "sample_id": "q_001",
+      "query": "什么是数据预警插件？",
+      "expected_ids": [
+        "数据预警.pdf_h_0"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_1",
+        "数据预警.pdf_h_19",
+        "数据预警.pdf_h_0"
+      ],
+      "hit": 1,
+      "mrr": 0.3333,
+      "retrieval_ms": 92.72,
+      "rerank_ms": 108.14,
+      "latency_ms": 200.86
+    },
+    {
+      "sample_id": "q_002",
+      "query": "数据预警支持哪些推送方式和图表类型？",
+      "expected_ids": [
+        "数据预警.pdf_h_1"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_21",
+        "数据预警.pdf_h_1",
+        "数据预警.pdf_h_16"
+      ],
+      "hit": 1,
+      "mrr": 0.5,
+      "retrieval_ms": 92.06,
+      "rerank_ms": 145.39,
+      "latency_ms": 237.46
+    },
+    {
+      "sample_id": "q_003",
+      "query": "数据预警是否保留仪表板过滤效果由哪个参数控制？该参数的取值含义是什么？",
+      "expected_ids": [
+        "数据预警.pdf_h_2"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_2",
+        "数据预警.pdf_h_3",
+        "数据预警.pdf_h_16"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 104.65,
+      "rerank_ms": 165.02,
+      "latency_ms": 269.67
+    },
+    {
+      "sample_id": "q_004",
+      "query": "异常数据推送条数控制的规则是什么？",
+      "expected_ids": [
+        "数据预警.pdf_h_3"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_3",
+        "数据预警.pdf_h_18",
+        "数据预警.pdf_h_19"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 91.87,
+      "rerank_ms": 144.31,
+      "latency_ms": 236.18
+    },
+    {
+      "sample_id": "q_005",
+      "query": "如何安装数据预警插件？",
+      "expected_ids": [
+        "数据预警.pdf_h_4"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_4",
+        "数据预警.pdf_h_13",
+        "数据预警.pdf_h_5"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 91.5,
+      "rerank_ms": 94.45,
+      "latency_ms": 185.95
+    },
+    {
+      "sample_id": "q_006",
+      "query": "数据预警插件需要什么授权？",
+      "expected_ids": [
+        "数据预警.pdf_h_5"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_5",
+        "数据预警.pdf_h_6",
+        "数据预警.pdf_h_7"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 93.58,
+      "rerank_ms": 96.49,
+      "latency_ms": 190.07
+    },
+    {
+      "sample_id": "q_007",
+      "query": "如何为用户配置数据预警权限？",
+      "expected_ids": [
+        "数据预警.pdf_h_6"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_6",
+        "数据预警.pdf_h_22",
+        "数据预警.pdf_h_11"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 90.49,
+      "rerank_ms": 96.75,
+      "latency_ms": 187.25
+    },
+    {
+      "sample_id": "q_008",
+      "query": "设置数据预警权限的步骤是什么？",
+      "expected_ids": [
+        "数据预警.pdf_h_7"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_8",
+        "数据预警.pdf_h_7",
+        "数据预警.pdf_h_15"
+      ],
+      "hit": 1,
+      "mrr": 0.5,
+      "retrieval_ms": 93.53,
+      "rerank_ms": 94.52,
+      "latency_ms": 188.06
+    },
+    {
+      "sample_id": "q_009",
+      "query": "分级授权功能依赖什么权限？如果不开启分级授权，预警的创建和责任人选择会受到什么限制？",
+      "expected_ids": [
+        "数据预警.pdf_h_8"
+      ],
+      "retrieved_ids": [
+        "数据预警.pdf_h_8",
+        "数据预警.pdf_h_7",
+        "数据预警.pdf_h_22"
+      ],
+      "hit": 1,
+      "mrr": 1.0,
+      "retrieval_ms": 99.52,
+      "rerank_ms": 164.14,
+      "latency_ms": 263.66
+    }
+  ]
+}

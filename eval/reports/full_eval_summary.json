@@ -1,0 +1,20 @@
+{
+  "retriever_metrics": {
+    "total_samples": 9,
+    "top_k_retrieval": 10,
+    "top_k_rerank": 3,
+    "hit_rate": 1.0,
+    "mrr": 0.8148,
+    "avg_retrieval_ms": 94.44,
+    "avg_rerank_ms": 123.25,
+    "avg_latency_ms": 217.68
+  },
+  "generator_metrics": {
+    "total_samples": 9,
+    "avg_faithfulness": 1.0,
+    "avg_answer_relevance": 1.0,
+    "avg_ttft_ms": 8011.45,
+    "avg_generation_latency_ms": 47703.99,
+    "p95_generation_latency_ms": 94816.59
+  }
+}
