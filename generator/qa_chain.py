@@ -19,6 +19,8 @@ from search.reranker import FineBIReranker
 from generator.llm_client import FineBILLMClient
 # 🛡️ 引入合规与安全检查模块
 from agent.compliance import ComplianceChecker
+# ⏱️ 引入超时保护模块
+from utils.timeout_ctx import timeout, TimeoutException
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
@@ -186,24 +188,33 @@ class QAChain:
                 )
                 yield {"type": "text", "data": fallback_response}
                 return
-
+            
         # 2. 执行混合检索 (或直接使用预检索结果)
         if pre_retrieved_chunks is not None:
             logging.info(f"🚀 开始 QA 链推理，Query: {query} | History 轮数: {len(history) if history else 0}")
             reranked_chunks = pre_retrieved_chunks
         else:
-            raw_chunks = self.retriever.hybrid_search(
-                query=query, 
-                top_k=self.top_k_retrieval, 
-                filter_expr=filter_expr
-            )
+            try:
+                # ⏱️ 为 Milvus 混合检索与重排添加 130 秒超时保护
+                with timeout(130, label="Milvus 混合检索与交叉重排"):
+                    raw_chunks = self.retriever.hybrid_search(
+                        query=query, 
+                        top_k=self.top_k_retrieval, 
+                        filter_expr=filter_expr
+                    )
 
-            # 2. 执行交叉重排
-            reranked_chunks = self.reranker.rerank(
-                query=query, 
-                documents=raw_chunks, 
-                top_n=self.top_k_rerank
-            )
+                    # 执行交叉重排
+                    reranked_chunks = self.reranker.rerank(
+                        query=query, 
+                        documents=raw_chunks, 
+                        top_n=self.top_k_rerank
+                    )
+            except TimeoutException as e:
+                logging.error(f"⚠️ [qa_chain] 检索阶段超时: {e}")
+                # 超时降级：返回空文档块，提示前端，并继续或优雅退出
+                reranked_chunks = []
+                yield {"type": "sources", "data": []}
+                yield {"type": "text", "data": "⚠️ [系统提示] 知识库检索超时，已为您切至无背景知识回答模式。\n\n"}
 
         # 先吐出 sources 召回来源消息包
         yield {"type": "sources", "data": reranked_chunks}
@@ -217,7 +228,8 @@ class QAChain:
 
         # 4. 流式生成与合规脱敏
         accumulated_text = ""
-        for response in self.llm_client.stream_generate(query=query, context=full_prompt):
+        # for response in self.llm_client.stream_generate(query=query, context=full_prompt):
+        for response in self.llm_client.stream_generate(query=full_prompt):
             # 获取文本内容
             token = response.get("data", "") if isinstance(response, dict) else str(response)
             accumulated_text += token
