@@ -1,0 +1,484 @@
+2026-09-07 03:58:56,448 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 03:58:56,448 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 03:58:56,448 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 03:58:56,448 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 03:58:56,448 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 03:58:56,449 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 03:58:56,449 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 03:58:56,449 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 03:58:56,449 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 03:58:56,453 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 03:58:56,453 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 03:58:56,463 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 03:58:56,464 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 03:58:56,464 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 03:58:56,464 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 03:58:56,464 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 03:59:08,663 [INFO] Reranker 模型加载成功。
+2026-09-07 03:59:08,665 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 03:59:08,665 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 03:59:08,665 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 03:59:08,665 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 03:59:08,665 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 03:59:08,817 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 03:59:08,835 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 03:59:12,016 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 03:59:39,380 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 03:59:39,381 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 03:59:39,381 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 03:59:39,384 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 03:59:39,385 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 03:59:39,385 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [9926fec6-39ff-41d5-82fc-760fdfd429ef] (模式: File JSON)
+2026-09-07 03:59:39,385 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 03:59:39,480 [INFO] 🔄 用户 [admin] 已切换至会话: [6938959a-6d2f-418f-82c2-3969a7696ff4]
+2026-09-07 03:59:41,427 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 03:59:41,428 [INFO] 🚀 [QA Admin] 初始化/更新全局 QAChain 句柄, 模型: Qwen/Qwen3-4B
+2026-09-07 03:59:41,428 [INFO] ⚙️ 正在初始化 QAChain 全链路问答组件...
+2026-09-07 03:59:41,428 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 03:59:41,429 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 03:59:41,429 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 03:59:41,659 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:00:18,545 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 04:00:19,515 [INFO] ✅ LLM 预热成功。
+2026-09-07 04:00:19,805 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:00:19,809 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:00:19,809 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:00:19,809 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:00:19,809 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:00:19,809 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:00:31,579 [INFO] Reranker 模型加载成功。
+2026-09-07 04:00:31,582 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 04:00:31,582 [INFO] ✅ QAChain 全链路初始化完毕，合规与安全检查模块挂载成功！
+2026-09-07 04:00:31,614 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-Embedding-8B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-Embedding-8B/snapshots/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af
+2026-09-07 04:00:31,614 [INFO] 🚀 [Offline Load] 正在冷启动加载稠密向量化模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-Embedding-8B/snapshots/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af
+2026-09-07 04:00:31,828 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:01:35,921 [INFO] ✅ Embedding 物理计算引擎预热完成。
+2026-09-07 04:01:36,018 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "hybrid_search", "elapsed_ms": 64436.14, "timestamp": "2026-09-07 04:01:36", "gpu_allocated_gb": 26.927, "top_k_ret": 10, "raw_chunks_count": 10}
+2026-09-07 04:01:36,228 [INFO] 重排完成：初筛 10 个 Chunk -> 过滤保留 1 个高置信度 Chunk (Top-1 概率: 82.74%) -> 截取 Top-1。
+2026-09-07 04:01:36,229 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "rerank", "elapsed_ms": 210.11, "timestamp": "2026-09-07 04:01:36", "gpu_allocated_gb": 26.928, "top_k_rerank": 3, "reranked_chunks_count": 1}
+2026-09-07 04:01:36,229 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "context_expansion", "elapsed_ms": 0.0, "timestamp": "2026-09-07 04:01:36", "gpu_allocated_gb": 26.928, "expanded_queries_count": 0}
+2026-09-07 04:01:36,229 [INFO] 🚀 开始 QA 链推理，Query: 怎麼創建預警用戶 | Filter: None
+2026-09-07 04:01:36,229 [INFO] 🚀 开始 QA 链推理，Query: 怎麼創建預警用戶 | History 轮数: 0
+2026-09-07 04:01:36,229 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "llm_ttft", "elapsed_ms": 0.08, "timestamp": "2026-09-07 04:01:36", "gpu_allocated_gb": 26.928}
+2026-09-07 04:01:36,238 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:02:01,700 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "pipeline_total", "elapsed_ms": 140276.42, "timestamp": "2026-09-07 04:02:01", "gpu_allocated_gb": 26.935, "llm_choice": "Qwen/Qwen3-4B", "total_output_chars": 724}
+2026-09-07 04:24:58,785 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:24:58,796 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:25:33,609 [INFO] [Package Router] Prompt 打印检查完成，Length: 969
+2026-09-07 04:25:33,609 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:26:13,593 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 04:26:13,593 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:33:31,000 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:33:31,000 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:33:31,143 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:33:31,144 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 04:33:31,494 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 04:33:31,775 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:33:31,912 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:33:36,742 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:33:36,742 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:33:36,742 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:33:36,742 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:33:36,743 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:33:36,743 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:33:36,743 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:33:36,743 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:33:36,743 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:33:36,748 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:33:36,748 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:33:36,757 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:33:36,758 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:33:36,758 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:33:36,758 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:33:36,758 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:33:48,527 [INFO] Reranker 模型加载成功。
+2026-09-07 04:33:48,529 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:33:48,529 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:33:48,529 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:33:48,529 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:33:48,529 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:33:48,680 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:33:48,704 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:33:51,206 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:34:23,515 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:34:23,515 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:34:23,515 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:34:23,814 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:34:23,958 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:34:28,874 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:34:28,874 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:34:28,874 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:34:28,874 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:34:28,875 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:34:28,875 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:34:28,875 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:34:28,875 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:34:28,875 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:34:28,879 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:34:28,880 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:34:28,886 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:34:28,886 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:34:28,886 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:34:28,886 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:34:28,886 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:34:35,827 [INFO] Reranker 模型加载成功。
+2026-09-07 04:34:35,829 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:34:35,829 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:34:35,829 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:34:35,829 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:34:35,829 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:34:35,981 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:34:36,003 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:34:38,144 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:35:24,090 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:35:24,090 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:35:24,090 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:35:24,366 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:35:24,492 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:35:29,006 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:35:29,006 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:35:29,006 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:35:29,006 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:35:29,007 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:35:29,007 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:35:29,007 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:35:29,007 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:35:29,007 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:35:29,011 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:35:29,011 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:35:29,037 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:35:29,037 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:35:29,037 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:35:29,038 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:35:29,038 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:35:40,860 [INFO] Reranker 模型加载成功。
+2026-09-07 04:35:40,862 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:35:40,862 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:35:40,862 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:35:40,862 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:35:40,862 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:35:41,008 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:35:41,029 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:35:42,992 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:36:03,169 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 04:36:03,169 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 04:36:03,169 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 04:36:03,173 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 04:36:03,173 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 04:36:03,173 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [bf7a62e2-1d71-4431-bef6-44c190372b56] (模式: File JSON)
+2026-09-07 04:36:03,174 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 04:36:03,266 [INFO] 🔄 用户 [admin] 已切换至会话: [6938959a-6d2f-418f-82c2-3969a7696ff4]
+2026-09-07 04:36:05,912 [INFO] 🗑️ 已成功从存储中删除用户 [admin] 的会话 [6938959a-6d2f-418f-82c2-3969a7696ff4]
+2026-09-07 04:36:05,912 [INFO] 🔄 用户 [admin] 已切换至会话: [75d106f2-68dd-4c2c-a780-ecfc595d1df2]
+2026-09-07 04:36:17,325 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 04:36:17,326 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:36:17,336 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:36:17,336 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:36:17,604 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:36:57,928 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 04:36:58,759 [INFO] ✅ LLM 预热成功。
+2026-09-07 04:37:31,649 [INFO] [Package Router] Prompt 打印检查完成，Length: 1261
+2026-09-07 04:37:31,649 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:38:09,090 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 04:38:09,090 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:40:17,857 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:40:17,857 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:40:17,857 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:40:17,857 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 04:40:18,197 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 04:40:18,474 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:40:18,611 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:40:23,473 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:40:23,473 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:40:23,473 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:40:23,473 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:40:23,474 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:40:23,474 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:40:23,474 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:40:23,474 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:40:23,474 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:40:23,478 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:40:23,478 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:40:23,485 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:40:23,485 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:40:23,485 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:40:23,485 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:40:23,485 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:40:35,503 [INFO] Reranker 模型加载成功。
+2026-09-07 04:40:35,505 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:40:35,505 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:40:35,505 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:40:35,505 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:40:35,505 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:40:35,650 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:40:35,671 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:40:38,093 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:41:50,447 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 04:41:50,447 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 04:41:50,447 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 04:41:50,451 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 04:41:50,451 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 04:41:50,451 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [1f28ee23-3373-4e18-b257-c66924edd2e2] (模式: File JSON)
+2026-09-07 04:41:50,451 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 04:41:50,544 [INFO] 🔄 用户 [admin] 已切换至会话: [75d106f2-68dd-4c2c-a780-ecfc595d1df2]
+2026-09-07 04:41:57,777 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 04:41:57,778 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:41:57,788 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:41:57,788 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:41:58,012 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:42:38,274 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 04:42:39,131 [INFO] ✅ LLM 预热成功。
+2026-09-07 04:42:48,940 [INFO] [Package Router] Prompt 打印检查完成，Length: 1261
+2026-09-07 04:42:48,940 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:43:05,062 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 04:43:05,062 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:44:06,557 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:44:06,558 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:44:06,558 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:44:06,558 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 04:44:06,896 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 04:44:07,171 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:44:07,312 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:44:12,055 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:44:12,055 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:44:12,055 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:44:12,055 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:44:12,056 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:44:12,056 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:44:12,056 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:44:12,056 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:44:12,056 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:44:12,060 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:44:12,060 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:44:12,067 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:44:12,067 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:44:12,067 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:44:12,067 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:44:12,067 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:44:24,068 [INFO] Reranker 模型加载成功。
+2026-09-07 04:44:24,070 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:44:24,070 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:44:24,070 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:44:24,070 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:44:24,070 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:44:24,218 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:44:24,235 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:44:26,350 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:44:51,909 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 04:44:51,909 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 04:44:51,909 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 04:44:51,913 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 04:44:51,913 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 04:44:51,913 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [7749eee7-74da-42e9-9b26-d2a297dd014c] (模式: File JSON)
+2026-09-07 04:44:51,913 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 04:44:52,004 [INFO] 🔄 用户 [admin] 已切换至会话: [75d106f2-68dd-4c2c-a780-ecfc595d1df2]
+2026-09-07 04:44:55,758 [INFO] 🗑️ 已成功从存储中删除用户 [admin] 的会话 [75d106f2-68dd-4c2c-a780-ecfc595d1df2]
+2026-09-07 04:44:55,758 [INFO] 🔄 用户 [admin] 已切换至会话: [273a4e54-2116-4c01-893a-457927c37a08]
+2026-09-07 04:44:57,588 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 04:44:57,589 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:44:57,597 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:44:57,597 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:44:57,821 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:45:38,277 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 04:45:39,125 [INFO] ✅ LLM 预热成功。
+2026-09-07 04:46:30,880 [INFO] [Package Router] Prompt 打印检查完成，Length: 1261
+2026-09-07 04:46:30,880 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:46:59,096 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 04:46:59,096 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:47:09,804 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 04:47:09,804 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 04:47:09,804 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 04:47:09,804 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 04:47:10,126 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 04:47:10,415 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 04:47:10,557 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 04:47:15,213 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:47:15,213 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 04:47:15,213 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 04:47:15,213 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 04:47:15,213 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:47:15,213 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 04:47:15,213 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:47:15,213 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 04:47:15,213 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 04:47:15,218 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 04:47:15,218 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:47:15,224 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 04:47:15,224 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:47:15,224 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 04:47:15,224 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:47:15,224 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 04:47:26,984 [INFO] Reranker 模型加载成功。
+2026-09-07 04:47:26,986 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 04:47:26,986 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 04:47:26,986 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 04:47:26,986 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 04:47:26,986 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 04:47:27,130 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 04:47:27,154 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 04:47:28,147 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 04:47:28,147 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 04:47:28,148 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 04:47:28,155 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 04:47:28,155 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 04:47:28,155 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [5e917acc-27d9-4f81-bc1b-fbf94c794383] (模式: File JSON)
+2026-09-07 04:47:28,156 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 04:47:28,295 [INFO] 🔄 用户 [admin] 已切换至会话: [273a4e54-2116-4c01-893a-457927c37a08]
+2026-09-07 04:47:29,125 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 04:47:41,696 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 04:47:41,696 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 04:47:41,696 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 04:47:44,308 [INFO] 🗑️ 已成功从存储中删除用户 [admin] 的会话 [273a4e54-2116-4c01-893a-457927c37a08]
+2026-09-07 04:47:44,308 [INFO] 🔄 用户 [admin] 已切换至会话: [1c8554a1-ad60-4ec6-9a34-1d56179f07e9]
+2026-09-07 04:47:46,292 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 04:47:46,292 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 04:47:46,302 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:47:46,302 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 04:47:46,540 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 04:48:26,921 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 04:48:27,771 [INFO] ✅ LLM 预热成功。
+2026-09-07 04:49:04,895 [INFO] [Package Router] Prompt 打印检查完成，Length: 753
+2026-09-07 04:49:04,895 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:49:35,588 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 04:49:35,588 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 04:49:52,417 [WARNING] ⚠️ [Agent Memory Save Warning]: ChatHistoryFileStorage.create_session() got an unexpected keyword argument 'messages'
+2026-09-07 04:49:52,417 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 126128.37, "timestamp": "2026-09-07 04:49:52", "gpu_allocated_gb": 9.595, "llm_model": "Qwen/Qwen3-4B", "username": "admin"}
+2026-09-07 05:02:39,696 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 05:02:39,696 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 05:02:39,696 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 05:02:39,696 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 05:02:39,999 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 05:02:40,270 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 05:02:40,406 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 05:02:45,261 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 05:02:45,261 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 05:02:45,261 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 05:02:45,261 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 05:02:45,262 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 05:02:45,262 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 05:02:45,262 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 05:02:45,262 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 05:02:45,262 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 05:02:45,266 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 05:02:45,266 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:02:45,273 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 05:02:45,273 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:02:45,273 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 05:02:45,273 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:02:45,273 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:02:57,132 [INFO] Reranker 模型加载成功。
+2026-09-07 05:02:57,134 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 05:02:57,134 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 05:02:57,134 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 05:02:57,134 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 05:02:57,134 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 05:02:57,260 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 05:02:57,273 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 05:03:15,384 [INFO] 🛠️ 为账号 [] 初始化 MemoryManager...
+2026-09-07 05:03:15,391 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 05:03:15,391 [INFO] 🧠 MemoryManager 已初始化 | 用户: [] | 会话: [29f721c6-1d48-43a5-bd06-7df288fdef2a] (模式: File JSON)
+2026-09-07 05:03:15,392 [INFO] 🗑️ 已成功从存储中删除用户 [] 的会话 [29f721c6-1d48-43a5-bd06-7df288fdef2a]
+2026-09-07 05:03:15,392 [INFO] 🔄 用户 [] 已切换至会话: [60072beb-cb41-4890-9e2a-7da7d2c8be78]
+2026-09-07 05:03:17,146 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 05:03:17,146 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 05:03:17,146 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 05:03:17,152 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 05:03:17,153 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 05:03:17,153 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [b0ee58ed-df86-4ca1-b425-9cea708be7f0] (模式: File JSON)
+2026-09-07 05:03:17,154 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 05:03:17,293 [INFO] 🔄 用户 [admin] 已切换至会话: [1c8554a1-ad60-4ec6-9a34-1d56179f07e9]
+2026-09-07 05:03:24,650 [INFO] 🗑️ 已成功从存储中删除用户 [admin] 的会话 [1c8554a1-ad60-4ec6-9a34-1d56179f07e9]
+2026-09-07 05:03:24,650 [INFO] 🔄 用户 [admin] 已切换至会话: [54dd9527-4570-4353-a433-79a71671dc7f]
+2026-09-07 05:03:27,515 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 05:03:27,517 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:03:27,526 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 05:03:27,526 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 05:03:27,757 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 05:04:07,739 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 05:04:08,579 [INFO] ✅ LLM 预热成功。
+2026-09-07 05:04:52,652 [INFO] [Package Router] Prompt 打印检查完成，Length: 1261
+2026-09-07 05:04:52,653 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 05:05:02,538 [INFO] [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-07 05:05:02,539 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 05:05:17,720 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 110207.93, "timestamp": "2026-09-07 05:05:17", "gpu_allocated_gb": 9.595, "llm_model": "Qwen/Qwen3-4B", "username": "admin"}
+2026-09-07 05:15:39,621 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 05:15:39,621 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 05:15:39,621 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 05:15:39,621 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 05:15:39,948 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 05:15:40,219 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 05:15:40,355 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-07 05:21:02,341 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 05:21:02,341 [INFO] 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-07 05:21:02,341 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-07 05:21:02,341 [INFO] 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-07 05:21:02,341 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 05:21:02,341 [INFO] 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-07 05:21:02,341 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 05:21:02,341 [INFO] 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-07 05:21:02,341 [INFO] ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-07 05:21:02,346 [INFO] 📂 Prompt Hub 资产加载成功，绝对路径: [/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml]，可用 keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt']
+2026-09-07 05:21:02,346 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:21:02,352 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 05:21:02,352 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:21:02,352 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 05:21:02,352 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:21:02,352 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:21:14,115 [INFO] Reranker 模型加载成功。
+2026-09-07 05:21:14,116 [INFO] 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-07 05:21:14,117 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-07 05:21:14,117 [INFO] 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-07 05:21:14,117 [INFO] 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-07 05:21:14,117 [INFO] 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-07 05:21:14,260 [INFO] HTTP Request: GET http://localhost:7865/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-09-07 05:21:14,282 [INFO] HTTP Request: HEAD http://localhost:7865/ "HTTP/1.1 200 OK"
+2026-09-07 05:21:16,483 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-07 05:21:16,920 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 05:21:16,920 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 05:21:16,920 [INFO] 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-07 05:21:16,923 [INFO] 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/问答机器人/config/patterns.yaml
+2026-09-07 05:21:16,924 [INFO] 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/问答机器人/config/users/admin_patterns.yaml
+2026-09-07 05:21:16,924 [INFO] 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [4fe133b1-8ccf-4476-bc8f-9494dca255a5] (模式: File JSON)
+2026-09-07 05:21:16,924 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 05:21:17,017 [INFO] 🔄 用户 [admin] 已切换至会话: [54dd9527-4570-4353-a433-79a71671dc7f]
+2026-09-07 05:23:20,718 [INFO] 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-07 05:23:20,718 [INFO] 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-07 05:23:20,718 [INFO] ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-07 05:23:28,634 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 05:23:28,635 [INFO] 🚀 [QA Admin] 初始化/更新全局 QAChain 句柄, 模型: Qwen/Qwen3-4B
+2026-09-07 05:23:28,636 [INFO] ⚙️ 正在初始化 QAChain 全链路问答组件...
+2026-09-07 05:23:28,636 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:23:28,636 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-4B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 05:23:28,636 [INFO] 🚀 [Offline Load] 冷启动加载纯文本大模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-4B/snapshots/1cfa9a7208912126459214e8b04321603b3df60c
+2026-09-07 05:23:28,900 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 05:24:08,774 [INFO] 💡 正在执行纯文本大模型静态显存预热...
+2026-09-07 05:24:09,625 [INFO] ✅ LLM 预热成功。
+2026-09-07 05:24:09,925 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:24:09,929 [INFO] ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-07 05:24:09,929 [INFO] 🖥️ 硬件环境已绑定设备: cuda
+2026-09-07 05:24:09,929 [INFO] Reranker 正在加载模型至设备: cuda
+2026-09-07 05:24:09,929 [INFO] 🎯 工厂自动寻址成功 -> [BAAI/bge-reranker-large] 物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:24:09,929 [INFO] 🚀 [Offline Load] Reranker 锁定物理路径: /workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312
+2026-09-07 05:24:21,667 [INFO] Reranker 模型加载成功。
+2026-09-07 05:24:21,671 [INFO] ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-07 05:24:21,671 [INFO] ✅ QAChain 全链路初始化完毕，合规与安全检查模块挂载成功！
+2026-09-07 05:24:21,675 [INFO] 🎯 工厂自动寻址成功 -> [Qwen/Qwen3-Embedding-8B] 物理路径: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-Embedding-8B/snapshots/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af
+2026-09-07 05:24:21,675 [INFO] 🚀 [Offline Load] 正在冷启动加载稠密向量化模型: /workspace/hf-conda/hf_cache/hub/models--Qwen--Qwen3-Embedding-8B/snapshots/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af
+2026-09-07 05:24:21,887 [INFO] We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2026-09-07 05:25:31,214 [INFO] ✅ Embedding 物理计算引擎预热完成。
+2026-09-07 05:25:31,306 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "hybrid_search", "elapsed_ms": 69634.99, "timestamp": "2026-09-07 05:25:31", "gpu_allocated_gb": 26.927, "top_k_ret": 10, "raw_chunks_count": 10}
+2026-09-07 05:25:31,516 [INFO] 重排完成：初筛 10 个 Chunk -> 过滤保留 1 个高置信度 Chunk (Top-1 概率: 82.74%) -> 截取 Top-1。
+2026-09-07 05:25:31,517 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "rerank", "elapsed_ms": 210.29, "timestamp": "2026-09-07 05:25:31", "gpu_allocated_gb": 26.928, "top_k_rerank": 3, "reranked_chunks_count": 1}
+2026-09-07 05:25:31,517 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "context_expansion", "elapsed_ms": 0.0, "timestamp": "2026-09-07 05:25:31", "gpu_allocated_gb": 26.928, "expanded_queries_count": 0}
+2026-09-07 05:25:31,517 [INFO] 🚀 开始 QA 链推理，Query: 怎麼創建預警用戶 | Filter: None
+2026-09-07 05:25:31,517 [INFO] 🚀 开始 QA 链推理，Query: 怎麼創建預警用戶 | History 轮数: 0
+2026-09-07 05:25:31,517 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "llm_ttft", "elapsed_ms": 0.06, "timestamp": "2026-09-07 05:25:31", "gpu_allocated_gb": 26.928}
+2026-09-07 05:25:31,526 [INFO] 🟢 复用已存在的 LLM 实例。
+2026-09-07 05:26:04,936 [INFO] 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "pipeline_total", "elapsed_ms": 156304.95, "timestamp": "2026-09-07 05:26:04", "gpu_allocated_gb": 26.935, "llm_choice": "Qwen/Qwen3-4B", "total_output_chars": 964}
+2026-09-07 05:32:17,526 [INFO] ⚡ 关闭 QA 服务，清除 GPU 显存...
+2026-09-07 05:32:17,526 [WARNING] 🚨 [QA Admin] 触发应急全量显存物理回收操作！
+2026-09-07 05:32:17,670 [INFO] 🔥 触发工厂级终极全量显存回收...
+2026-09-07 05:32:17,670 [INFO] 🧹 正在主动物理清空纯文本大模型显存...
+2026-09-07 05:32:18,012 [INFO] ✅ 纯文本大模型显存物理清理完毕。
+2026-09-07 05:32:18,285 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
+2026-09-07 05:32:18,420 [INFO] ✨ [QA Admin] 物理显存清理完毕！

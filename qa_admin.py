@@ -7,9 +7,13 @@ def install_package(package):
 
 try:
     import gradio as gr
+
+    import plotly.express as px
 except ImportError:
     install_package("gradio")
+    install_package("plotly")
     import gradio as gr
+    import plotly.express as px
 
 import os
 import sys
@@ -24,6 +28,9 @@ import yaml
 from typing import Dict, Any, List, Tuple, Generator, Optional
 from urllib.parse import unquote
 from api.observability import scan_metrics
+from dotenv import load_dotenv
+import pandas as pd
+import plotly.express as px
 # ==========================================
 # 📂 1. 动态注入系统路径与模块导入
 # ==========================================
@@ -31,7 +38,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
 from factory.model_factory import ModelFactory
 from factory.tool_factory import tool_factory, load_tools_from_yaml, BaseTool
@@ -49,21 +56,41 @@ from memory.feedback_store import feedback_store
 # ==========================================
 # ⚙️ 2. 全局配置与用户凭证加载
 # ==========================================
+load_dotenv()
+
 CONFIG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_config.json")
 USERS_AUTH_PATH = os.path.join(SCRIPT_DIR, "config", "users_auth.yaml")
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
+LOG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_system.log")
+# 確保日誌目錄與檔案被自動建立
+root_logger = logging.getLogger()
+for handler in root_logger.handlers[:]:
+    root_logger.removeHandler(handler)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"), # 强行创建与写入日志文件
+        logging.StreamHandler(sys.stdout)                     # 同时输出至控制台
+    ],
+    force=True  # Python 3.8+ 支持强行覆盖现有配置
+)
 
 DEFAULT_QA_CONFIG = {
-    "prompts_hub_path": os.path.join(SCRIPT_DIR, "config", "prompt_hub.yaml"),
-    "milvus_host": "172.17.0.1",
-    "milvus_port": "19530",
-    "collection_name": "finebi_knowledge_chunks",
-    "llm_model_name": "Qwen/Qwen3-4B",
-    "vlm_model_name": "Qwen/Qwen3-VL-32B-Instruct",
-    "emb_model_name": "Qwen/Qwen3-Embedding-8B",
-    "cuda_device": "0",
-    "top_k_retrieval": 10,
-    "top_k_rerank": 3
+    "prompts_hub_path": os.getenv(
+        "PROMPTS_HUB_PATH", 
+        os.path.join(SCRIPT_DIR, "config", "prompt_hub.yaml")
+    ),
+    "milvus_host": os.getenv("MILVUS_HOST", "172.17.0.1"),
+    "milvus_port": os.getenv("MILVUS_PORT", "19530"),
+    "collection_name": os.getenv("MILVUS_COLLECTION", "finebi_knowledge_chunks"),
+    "llm_model_name": os.getenv("LLM_MODEL", "Qwen/Qwen3-4B"),
+    "vlm_model_name": os.getenv("VLM_MODEL", "Qwen/Qwen3-VL-32B-Instruct"),
+    "emb_model_name": os.getenv("EMB_MODEL", "Qwen/Qwen3-Embedding-8B"),
+    "cuda_device": os.getenv("CUDA_DEVICE", "0"),
+    "top_k_retrieval": int(os.getenv("TOP_K_RETRIEVAL", 10)),
+    "top_k_rerank": int(os.getenv("TOP_K_RERANK", 3)),
 }
 
 LLM_OPTIONS = [
@@ -155,24 +182,58 @@ def get_gpu_memory_status() -> str:
     except Exception as e:
         return f"显存获取异常: {str(e)}"
 
+# def emergency_force_cleanup() -> str:
+#     global global_qa_chain
+#     logging.warning("🚨 [QA Admin] 触发应急显存回收操作！")
+#     global_qa_chain = None
+
+#     try:
+#         if hasattr(ModelFactory, "_instance"):
+#             ModelFactory._instance = None
+#     except Exception as e:
+#         logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
+
+#     try:
+#         ModelFactory.destroy_all_models_cls()
+#     except Exception as e:
+#         logging.error(f"调用 ModelFactory.destroy_all_models_cls 失败: {e}")
+
+#     gc.collect(2)
+
+#     if torch.cuda.is_available():
+#         try:
+#             torch.cuda.synchronize()
+#             torch.cuda.empty_cache()
+#             torch.cuda.ipc_collect()
+#         except Exception as e:
+#             logging.error(f"CUDA 显存回收异常: {e}")
+
+#     logging.info("✨ [QA Admin] 物理显存清理完毕！")
+#     return get_gpu_memory_status()
+
 def emergency_force_cleanup() -> str:
+    """
+    应急回收显存：结合 ModelFactory 的全量物理销毁与多级降级兜底
+    """
     global global_qa_chain
-    logging.warning("🚨 [QA Admin] 触发应急显存回收操作！")
+    logging.warning("🚨 [QA Admin] 触发应急全量显存物理回收操作！")
+    
+    # 1. 重置 QAChain 句柄
     global_qa_chain = None
 
-    try:
-        if hasattr(ModelFactory, "_instance"):
-            ModelFactory._instance = None
-    except Exception as e:
-        logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
-
+    # 2. 物理彻底销毁所有已加载模型（解除加速库与 PyTorch 强引用）
     try:
         ModelFactory.destroy_all_models_cls()
-    except Exception as e:
-        logging.error(f"调用 ModelFactory.destroy_all_models_cls 失败: {e}")
+    except Exception as cleanup_err:
+        logging.error(f"❌ 调用 destroy_all_models_cls 发生二次异常: {cleanup_err}")
+        # 降级方案：强制触发底层系统 GC 与 CUDA 缓存清空
+        try:
+            ModelFactory._trigger_system_gc()
+        except Exception as e:
+            logging.error(f"❌ 降级触发系统 GC 失败: {e}")
 
+    # 3. 补充 Python 原生垃圾回收与 CUDA 管道同步
     gc.collect(2)
-
     if torch.cuda.is_available():
         try:
             torch.cuda.synchronize()
@@ -224,54 +285,145 @@ def clear_agent_memory(user_state: dict):
 
     return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
-# ==========================================
-# 📊 监控可观测性面板逻辑 (Tab 4 专用)
-# ==========================================
-# def render_tab3_monitor_dashboard() -> str:
-#     """直接复用 scan_metrics 读取系统的真实监控指标，仅在 Tab 3 右侧展示"""
+def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
+    """解析 log_pipeline_metrics 輸出的 JSON 日誌（含後台 Print 驗證）"""
+    metrics_data = []
+    
+    print(f"\n================ [DEBUG METRICS] ================")
+    print(f"🔍 正在檢查日誌檔案路徑: {os.path.abspath(log_path)}")
+    
+    if not os.path.exists(log_path):
+        print(f"❌ 錯誤：日誌檔案不存在！Path: {log_path}")
+        print(f"=================================================\n")
+        return pd.DataFrame()
+
+    total_lines = 0
+    matched_lines = 0
+
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                total_lines += 1
+                if "[METRICS]" in line:
+                    matched_lines += 1
+                    try:
+                        json_str = line.split("[METRICS]")[-1].strip()
+                        payload = json.loads(json_str)
+                        metrics_data.append(payload)
+                        print(f"✅ 成功匹配並解析 Metric [{matched_lines}]: {payload}")
+                    except Exception as e:
+                        print(f"⚠️ 找到 [METRICS] 標籤但 JSON 解析失敗: {e} | 原文: {line.strip()}")
+                        
+        print(f"📊 掃描完成：總行數 = {total_lines}, 匹配 [METRICS] 行數 = {matched_lines}")
+        print(f"=================================================\n")
+        
+    except Exception as e:
+        print(f"❌ 讀取日誌檔案失敗: {e}")
+        print(f"=================================================\n")
+        return pd.DataFrame()
+
+    return pd.DataFrame(metrics_data)
+# def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
+#     """解析 log_pipeline_metrics 輸出的 JSON 日誌"""
+#     metrics_data = []
+#     if not os.path.exists(log_path):
+#         return pd.DataFrame()
 #     try:
-#         metrics = scan_metrics(data_dir=DATA_DIR)
-#         total_users = metrics.get('total_users', 0)
-#         total_sessions = metrics.get('total_sessions', 0)
-#         total_queries = metrics.get('total_queries', 0)
-#         compliance_interceptions = metrics.get('compliance_interceptions', 0)
-#         interception_rate = metrics.get('interception_rate', '0.00%')
+#         with open(log_path, "r", encoding="utf-8") as f:
+#             for line in f:
+#                 if "📊 [METRICS]" in line:
+#                     try:
+#                         json_str = line.split("📊 [METRICS] ")[-1].strip()
+#                         metrics_data.append(json.loads(json_str))
+#                     except Exception:
+#                         continue
 #     except Exception as e:
-#         logging.error(f"读取监控指标失败: {e}")
-#         return "*📊 监控指标读取异常*"
-
-#     return f"""
-# > **📊 系统实时运行指标**
-# - **👥 累计活跃用户**: `{total_users}` 人
-# - **💬 累计会话总数**: `{total_sessions}` 个
-# - **❓ 累计提问总次**: `{total_queries}` 次
-
-# > **🛡️ 风控安全监控**
-# - **🚨 触发安全拦截**: `{compliance_interceptions}` 次
-# - **📉 安全拦截比例**: `{interception_rate}`
-# """
+#         logging.error(f"解析 Metrics 日誌失敗: {e}")
+#         return pd.DataFrame()
+#     return pd.DataFrame(metrics_data)
 
 def render_observability_dashboard():
-    """读取并格式化 Observability 核心指标"""
+    """讀取並格式化 Observability 核心指標與 Plotly 圖表"""
     metrics = scan_metrics(data_dir=DATA_DIR)
     
     summary_md = f"""
-### 📈 系统运行核心指标概览
-
-| 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
+### 📈 系統運行核心指標概覽
+| 📊 監控維度 | 🔢 統計數值 | 💡 描述說明 |
 | :--- | :--- | :--- |
-| **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
-| **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
-| **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
-| **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
-| **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
+| **👥 累計活躍用戶** | `{metrics.get('total_users', 0)}` | 系統中已產生會話的獨立帳號數 |
+| **💬 累計會話總數** | `{metrics.get('total_sessions', 0)}` | 創建的歷史 Session 文件總數 |
+| **❓ 累計查詢次數** | `{metrics.get('total_queries', 0)}` | 用戶提交的用戶問題 (User Role Messages) 總數 |
+| **🚨 安全風控攔截** | `{metrics.get('compliance_interceptions', 0)}` | 觸發靜態/動態 Compliance 規則攔截的次數 |
+| **🛡️ 攔截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 風控攔截次數 / 累計查詢總次數 |
 """
-    return summary_md, metrics
+    df = parse_metrics_logs()
+    if df.empty:
+        fig_empty = px.scatter(title="⚠️ 暫無 Metrics 日誌數據，請先在 Tab 1 或 Tab 3 執行推理")
+        return summary_md, metrics, fig_empty, fig_empty
+
+    # 1. 各階段 Latency 箱線圖
+    stage_df = df[df["stage"].isin(["hybrid_search", "rerank", "context_expansion", "llm_ttft"])]
+    if not stage_df.empty:
+        fig_latency = px.box(
+            stage_df, x="stage", y="elapsed_ms", color="stage", points="all",
+            title="⚡ RAG 管道各階段 Latency 分佈 (ms)",
+            labels={"elapsed_ms": "耗時 (ms)", "stage": "管道階段"}
+        )
+    else:
+        fig_latency = px.scatter(title="⚠️ 暫無階段 Latency 數據")
+
+    # 2. GPU 顯存折線圖
+    if "gpu_allocated_gb" in df.columns:
+        fig_gpu = px.line(
+            df, x="timestamp", y="gpu_allocated_gb", markers=True,
+            title="📈 GPU VRAM 顯存動態變化 (GB)",
+            labels={"gpu_allocated_gb": "已分配顯存 (GB)", "timestamp": "時間戳"}
+        )
+    else:
+        fig_gpu = px.scatter(title="⚠️ 暫無 GPU 顯存數據")
+
+    return summary_md, metrics, fig_latency, fig_gpu
+
+# def render_observability_dashboard():
+#     """读取并格式化 Observability 核心指标"""
+#     metrics = scan_metrics(data_dir=DATA_DIR)
+    
+#     summary_md = f"""
+# ### 📈 系统运行核心指标概览
+
+# | 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
+# | :--- | :--- | :--- |
+# | **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
+# | **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
+# | **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
+# | **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
+# | **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
+# """
+#     return summary_md, metrics
 
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
 # ==========================================
 current_llm_choice = None
+
+# 📌 1. 新增：结构化 Metrics 日志输出辅助函数 (放在 qa_stream_predict 之前)
+def log_pipeline_metrics(stage: str, elapsed_ms: float, extra_info: dict = None):
+    """输出 JSON 格式的结构化耗时与显存 Metrics 日志"""
+    metrics = {
+        "event": "rag_pipeline_metrics",
+        "stage": stage,
+        "elapsed_ms": round(elapsed_ms, 2),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    # 若 CUDA 可用，采样当前 GPU 显存（已分配 GB）
+    if torch.cuda.is_available():
+        allocated_gb = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        metrics["gpu_allocated_gb"] = round(allocated_gb, 3)
+
+    if extra_info:
+        metrics.update(extra_info)
+        
+    logging.info(f"📊 [METRICS] {json.dumps(metrics, ensure_ascii=False)}")
 
 def get_qa_chain(llm_choice: str, top_k_ret: int, top_k_rerank: int):
     global global_qa_chain, current_llm_choice
@@ -369,16 +521,14 @@ def format_sources_log(llm_choice: str, top_k_ret: int, top_k_rerank: int, filte
     return "\n".join(log_lines) + "\n"
 
 
-# Tab 1: 向量库快速检索与 RAG 流式生成（无持久化保存、无 LLM 降级）
-def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str):
-    clean_message = user_message.strip()
-
+def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str, user_state: dict = None):
+    clean_message = user_message.strip() if user_message else ""
     if not clean_message:
-        # 返回 6 个值，最后两个使用 gr.skip() 保持前端组件状态不变
         yield history, "", "⚠️ 请输入有效内容！", get_gpu_memory_status(), gr.skip(), gr.skip()
         return
 
-    # 1. 安全拦截检查
+    # 1. 安全拦截检查与耗时起点记录
+    t_start = time.perf_counter()
     checker = get_compliance_checker()
     is_safe, risk_level, hit_rule = checker.check_static_rules(clean_message)
     if not is_safe:
@@ -388,99 +538,138 @@ def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choi
         yield history, f"🛡️ 静态规则拦截 [{hit_rule}]", f"🛡️ 静态规则拦截 [{hit_rule}]", get_gpu_memory_status(), gr.skip(), gr.skip()
         return
 
-    # 仅使用当前页面临时传入的上下文，不加载任何持久化 Memory
     past_history = [{"role": msg.get("role"), "content": msg.get("content")} for msg in history if msg.get("content")]
     
-    chain = get_qa_chain(llm_choice, top_k_ret, top_k_rerank)
-    filter_pattern = filter_expr.strip() if (filter_expr and filter_expr.strip()) else None
-
-    history.append({"role": "user", "content": clean_message})
-    history.append({"role": "assistant", "content": ""})
-
     try:
-        # 🎯 2. 底层向量库混合检索 + Rerank 重排
+        chain = get_qa_chain(llm_choice, top_k_ret, top_k_rerank)
+        filter_pattern = filter_expr.strip() if (filter_expr and filter_expr.strip()) else None
+
+        history.append({"role": "user", "content": clean_message})
+        history.append({"role": "assistant", "content": ""})
+
+        # 🎯 2. 混合检索与 Metrics 注入
+        t_search_start = time.perf_counter()
         raw_chunks = chain.retriever.hybrid_search(
             query=clean_message,
             top_k=top_k_ret,
             filter_expr=filter_pattern
         )
+        t_search_end = time.perf_counter()
+        log_pipeline_metrics("hybrid_search", (t_search_end - t_search_start) * 1000, {
+            "top_k_ret": top_k_ret,
+            "raw_chunks_count": len(raw_chunks)
+        })
 
+        # 🎯 3. Rerank 重排与 Metrics 注入
+        t_rerank_start = time.perf_counter()
         reranked_chunks = chain.reranker.rerank(
             query=clean_message,
             documents=raw_chunks,
             top_n=top_k_rerank
         )
+        t_rerank_end = time.perf_counter()
+        log_pipeline_metrics("rerank", (t_rerank_end - t_rerank_start) * 1000, {
+            "top_k_rerank": top_k_rerank,
+            "reranked_chunks_count": len(reranked_chunks)
+        })
 
+        # 🎯 4. 上下文扩充与 Metrics 注入
+        t_exp_start = time.perf_counter()
+        expanded_count = 0
         for chunk in reranked_chunks:
             meta = chunk.get("metadata", {})
             prev_id = meta.get("prev_chunk_id")
             next_id = meta.get("next_chunk_id")
             
-            # 根据你的 retriever 实际查 ID 的方法补全文本（例如 query_by_id 或 get_by_id）
             if prev_id and hasattr(chain.retriever, "get_by_id"):
                 prev_doc = chain.retriever.get_by_id(prev_id)
                 if prev_doc:
                     chunk["prev_content"] = prev_doc.get("content")
+                    expanded_count += 1
                     
             if next_id and hasattr(chain.retriever, "get_by_id"):
                 next_doc = chain.retriever.get_by_id(next_id)
                 if next_doc:
                     chunk["next_content"] = next_doc.get("content")
+                    expanded_count += 1
+
+        t_exp_end = time.perf_counter()
+        log_pipeline_metrics("context_expansion", (t_exp_end - t_exp_start) * 1000, {
+            "expanded_queries_count": expanded_count
+        })
 
         sources_log = format_sources_log(llm_choice, top_k_ret, top_k_rerank, filter_pattern, reranked_chunks)
 
-        # ❌ 3. 无匹配切片时直接中断提示
         if not reranked_chunks:
             no_rag_msg = "未在知识库中检索到有效参考内容。"
             history[-1]["content"] = no_rag_msg
             yield history, sources_log, "⚠️ 未在知识库检索到内容", get_gpu_memory_status(), gr.skip(), gr.skip()
             return
 
-        # ⚡ 4. 流式生成回答
+        # ⚡ 5. 流式生成与 TTFT (首字符延迟) 耗时记录
+        t_gen_start = time.perf_counter()
+        first_token_received = False
+        
         stream_gen = chain.stream_answer(
             query=clean_message, 
             history=past_history, 
             filter_expr=filter_pattern, 
             pre_retrieved_chunks=reranked_chunks
         )
-        
         accumulated_raw_text = ""
         for token_pkg in stream_gen:
+            if not first_token_received:
+                t_first_token = time.perf_counter()
+                log_pipeline_metrics("llm_ttft", (t_first_token - t_gen_start) * 1000)
+                first_token_received = True
+
             if isinstance(token_pkg, dict):
                 if token_pkg.get("type") == "sources":
                     continue
                 token_val = token_pkg.get("data", "")
             else:
                 token_val = str(token_pkg)
-
+                
             token_str = "".join([str(item) for item in token_val]) if isinstance(token_val, list) else str(token_val)
             accumulated_raw_text += token_str
-
             sanitized_display = checker.sanitize_text(accumulated_raw_text.split("</think>")[-1].strip())
             history[-1]["content"] = sanitized_display
-            
-            # 返回 6 个值，通过 gr.skip() 忽略第 5 和第 6 个下拉框组件的更新
+
             yield history, sources_log, "⚡ 正在生成回答...", get_gpu_memory_status(), gr.skip(), gr.skip()
+
+        # 🎯 6. 管道总用时 Metrics 记录
+        t_total_end = time.perf_counter()
+        log_pipeline_metrics("pipeline_total", (t_total_end - t_start) * 1000, {
+            "llm_choice": llm_choice,
+            "total_output_chars": len(accumulated_raw_text)
+        })
+
         yield history, sources_log, "🟢 就绪", get_gpu_memory_status(), gr.skip(), gr.skip()
 
-        # =========================================================
-        # 💡 5. 生成结束，挂载溯源 Accordion 证据链
-        # =========================================================
-        # final_answer = history[-1]["content"]
-        # # 渲染带 [Doc X] 及底层结构（如 section_id / source_file）的证据链
-        # final_with_citation = CitationFormatter.render_citation_accordion(final_answer, reranked_chunks)
+    except torch.cuda.OutOfMemoryError as oom_err:
+        logging.error(f"💥 [Tab 1 OOM] 触发 CUDA 显存溢出: {oom_err}", exc_info=True)
+        updated_gpu_status = emergency_force_cleanup()
+        err_msg = "⚠️ **[CUDA 显存溢出]** GPU 显存耗尽，系统已自动恢复并清空显存，请重试或更换较小模型。"
+        if history and history[-1].get("role") == "assistant":
+            history[-1]["content"] = err_msg
+        else:
+            history.append({"role": "assistant", "content": err_msg})
         
-        # history[-1]["content"] = final_with_citation
-        # yield history, sources_log, "✅ 生成完成", get_gpu_memory_status(), gr.skip(), gr.skip()
-
-
+        log_pipeline_metrics("pipeline_error_oom", (time.perf_counter() - t_start) * 1000)
+        yield history, "⚠️ 触发显存自动回收", "❌ 显存溢出并已恢复", updated_gpu_status, gr.skip(), gr.skip()
 
     except Exception as e:
-        logging.error(f"Tab 1 向量库检索异常: {e}", exc_info=True)
-        err_msg = f"❌ 检索失败: {str(e)}"
-        history[-1]["content"] = err_msg
-        yield history, f"⚠️ 推理异常: {str(e)}", f"❌ 推理错误: {str(e)}", get_gpu_memory_status(), gr.skip(), gr.skip()
-        
+        logging.error(f"❌ [Tab 1 异常] 向量库检索或推理发生未知故障: {e}", exc_info=True)
+        updated_gpu_status = emergency_force_cleanup()
+        err_msg = f"❌ **[系统异常]** 推理过程中断，已触发安全清理。细节: `{str(e)}`"
+        if history and history[-1].get("role") == "assistant":
+            history[-1]["content"] = err_msg
+        else:
+            history.append({"role": "assistant", "content": err_msg})
+            
+        log_pipeline_metrics("pipeline_error_exception", (time.perf_counter() - t_start) * 1000, {"error": str(e)})
+        yield history, f"⚠️ 推理异常: {str(e)}", "❌ 执行错误并已恢复", updated_gpu_status, gr.skip(), gr.skip()
+    
 # Tab 3: ReAct Agent 推理
 def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rerank, filter_input, user_state: dict):
     clean_message = user_message.strip() if user_message else ""
@@ -494,6 +683,7 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         yield history, "*请输入有效指令*", "就绪", get_gpu_memory_status(), gr.update(choices=choices)
         return
 
+    t_agent_start = time.perf_counter()
     # 1. 安全风控拦截检查
     checker = get_compliance_checker()
     is_safe, risk_level, hit_rule = checker.check_static_rules(clean_message)
@@ -510,7 +700,8 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         yield history, f"🛡️ 规则拦截 [{hit_rule}]", f"🛡️ 安全拦截: {hit_rule}", get_gpu_memory_status(), gr.update(choices=choices)
         return
 
-    user_mem_mgr.short_term.add_message("user", clean_message)
+    # user_mem_mgr.short_term.add_message("user", clean_message)
+    user_mem_mgr.process_user_input(clean_message)
 
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
@@ -551,9 +742,18 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         choices = fetch_session_dropdown_choices(username)
         yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
 
-    # # 持久化保存 AI 最终回答
-    # if final_reply:
-    #     user_mem_mgr.process_assistant_output(final_reply)
+    # 持久化保存 AI 最终回答
+    # 💾 【核心修正】採用 MemoryManager 封裝的合法持久化 API 落盤
+    if final_reply:
+        user_mem_mgr.process_assistant_output(final_reply)
+
+    # 📊 寫入 Agent 總 pipeline Metrics 日誌 (供 Tab 4 圖表使用)
+    t_agent_end = time.perf_counter()
+    log_pipeline_metrics("agent_execution", (t_agent_end - t_agent_start) * 1000, {
+        "llm_model": llm_model,
+        "username": username
+    })
+
 
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "✅ 任务完成", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
@@ -1190,23 +1390,46 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 # ---------------------------------------------------------
                 # 🌟 Tab 4: 📊 基础运维与可观测性面板 (新增)
                 # ---------------------------------------------------------
-                with gr.Tab("📊 基础运维与可观测性"):
-                    gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
+                # Tab 4: 📊 基礎運維與可觀測性面板
+                with gr.Tab("📊 基礎運維與可觀測性"):
+                    gr.Markdown("### 🔍 系統輕量級使用統計、效能分析與風控監控")
                     with gr.Row():
-                        btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
+                        btn_refresh_obs = gr.Button("🔄 刷新監控指標", variant="primary", scale=2)
                     
                     with gr.Row():
-                        with gr.Column(scale=7):
-                            obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
-                        with gr.Column(scale=5):
-                            obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
+                        with gr.Column(scale=6):
+                            obs_summary_display = gr.Markdown(value="*點擊上方刷新按鈕同步最新統計數據...*")
+                        with gr.Column(scale=6):
+                            obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 數據 Payload")
+                    
+                    gr.Markdown("---")
+                    with gr.Row():
+                        plot_latency = gr.Plot(label="⚡ RAG 管道各階段 Latency 分佈 (ms)")
+                        plot_gpu = gr.Plot(label="📈 GPU VRAM 顯存動態變化 (GB)")
 
-                    # 页面首次加载或点击刷新时更新监控指标
+                    # 綁定刷新事件 (注意 outputs 增加了兩組 Plot)
                     btn_refresh_obs.click(
                         fn=render_observability_dashboard,
                         inputs=None,
-                        outputs=[obs_summary_display, obs_json_display]
+                        outputs=[obs_summary_display, obs_json_display, plot_latency, plot_gpu]
                     )
+                # with gr.Tab("📊 基础运维与可观测性"):
+                #     gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
+                #     with gr.Row():
+                #         btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
+                    
+                #     with gr.Row():
+                #         with gr.Column(scale=7):
+                #             obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
+                #         with gr.Column(scale=5):
+                #             obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
+
+                #     # 页面首次加载或点击刷新时更新监控指标
+                #     btn_refresh_obs.click(
+                #         fn=render_observability_dashboard,
+                #         inputs=None,
+                #         outputs=[obs_summary_display, obs_json_display]
+                #     )
         # =========================================================
         # 🔑 登录视图切换逻辑绑定
         # =========================================================
@@ -1346,16 +1569,19 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 role_tools = get_all_registered_tool_names(user_role=found_role)
                 default_tool = role_tools[0] if role_tools else None
                 logging.info(f"✅ [Cookie 校验] 成功免密自动登录！用户: {found_user}| 角色: {found_role}")
-                obs_md, obs_json = render_observability_dashboard()
+                # obs_md, obs_json = render_observability_dashboard()
+                obs_md, obs_json, fig_lat, fig_gpu  = render_observability_dashboard()
                 return (
                     gr.update(visible=False),                                 # login_view
                     gr.update(visible=True),                                  # main_portal_view
                     banner_text,                                              # user_info_banner
                     new_state,                                                # user_state
-                    gr.update(choices=session_choices, value=default_sess),     # t3_session_radio
+                    gr.update(choices=session_choices, value=default_sess),   # t3_session_radio
                     gr.update(choices=role_tools, value=default_tool),        # 👈 tool_select (动态同步工具)
                     obs_md,                                                   # obs_summary_display
-                    obs_json                                                  # obs_json_display
+                    obs_json,                                                 # obs_json_display
+                    fig_lat,                                                  # plot_latency  <-- 補上
+                    fig_gpu                                                   # plot_gpu      <-- 補上
                 )
             else:
                 logging.warning("⚠️ [Cookie 校验] 未找到合法 Cookie，返回登录页")
@@ -1382,7 +1608,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 t3_session_radio,
                 tool_select,
                 obs_summary_display,
-                obs_json_display
+                obs_json_display,
+                plot_latency,
+                plot_gpu
             ],
         )
 
