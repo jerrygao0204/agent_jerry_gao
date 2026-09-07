@@ -501,9 +501,7 @@ class MarkdownProcessor:
                 p.set_cropbox(p.rect)
                 p.set_mediabox(p.rect)
 
-            # stitch_doc.save(str('/workspace/hf-conda/RAG/问答机器人/finebi/函数专题/1_函数新手入门/aaaa.pdf'), garbage=4, deflate=True, clean=True)
-            # 🛠️ 关键修复：把 stitch_doc 送进去，函数内部运行完会自动安全关闭它
-            # logging.info(f"✅ 长 PDF 已缝合...")
+ 
             return stitch_doc
         except Exception as e:
             logging.info(f"⚠️ 处理 PDF 时发生错误: {e}")
@@ -769,18 +767,6 @@ class MarkdownProcessor:
             if end_y == h: 
                 break
             start_y += stride
-
-        # # ─── 🚀 【新增：切片图像持久化保存功能】 ──────────────────────────
-        # save_dir = "/workspace/hf-conda/RAG/问答机器人/other/finebi/函数专题/1_函数新手入门/"
-        # os.makedirs(save_dir, exist_ok=True)
-        
-        # for idx, (t_img, t_offset) in enumerate(zip(tiles, tile_offsets)):
-        #     save_path = os.path.join(save_dir, f"tile_{idx}_y{t_offset}.png")
-        #     t_img.save(save_path, "PNG")
-            
-        # logging.info(f"💾 已成功将 {len(tiles)} 个切片图像保存至目录: {save_dir}")
-        # # ────────────────────────────────────────────────────────────────
-
 
         logging.info(f"📄 原始切片完成: {len(tiles)} 个tile，原图高宽比: {h/w:.2f}，start_y={start_y}, stride={stride}, tile_height={tile_height}, overlap={overlap}")
 
@@ -1671,8 +1657,6 @@ class MarkdownProcessor:
         return parsed_tables
     
     def main(self,pdf_path: str = None, prompt_path: str = None, vlm = 'Qwen--Qwen3-VL-32B-Instruct'):
-        if prompt_path is None:
-            prompt_path = "/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml"
 
         # 先检查 YAML 文件是否存在
         if not os.path.exists(prompt_path):
@@ -1785,19 +1769,3 @@ class MarkdownProcessor:
                 doc.close()
             if clean_doc is not None and not clean_doc.is_closed:
                 clean_doc.close()
-            # logging.info("💾 [内存清理] 原始 PDF 与内存清洗 PDF 对象已安全释放。")
-
-
-import yaml
-import os
-
-if __name__ == "__main__":
-    prompt_path = "/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml"
-    pdf_path = '/workspace/hf-conda/RAG/问答机器人/other/finebi/函数专题/1_函数新手入门/3_运算符和优先级.pdf'
-
-    # 初始化处理器
-    processor = MarkdownProcessor(prompt_hub_path=prompt_path)
-    markdown_output = processor.main(pdf_path=pdf_path, prompt_path=prompt_path, vlm="Qwen--Qwen3-VL-32B-Instruct")
-
-    logging.info(f"============================================================================\nmarkdown_output={markdown_output}")
-

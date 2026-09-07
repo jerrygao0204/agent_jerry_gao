@@ -416,20 +416,3 @@ class RAGDataValidator:
         return is_approved, total_score, report
 
 
-# =====================================================================
-# 🧪 本地链路质量体检实战验证
-# =====================================================================
-if __name__ == "__main__":
-    # 1. 初始化引擎加载器并指派 CUDA 设备
-    processor = Processor(cuda_device="0")
-    
-    # 2. 注入验证器
-    validator = RAGDataValidator(
-        processor=processor, 
-        score_threshold=80.0, 
-        llm_sample_size=25
-    )
-    
-    # 3. 运行本地验证
-    target_json = "/workspace/hf-conda/RAG/问答机器人/finebi_output/3_运算符和优先级.json"
-    is_ok, score, report = validator.validate_json_file(target_json,llm_model="Qwen/Qwen3-32B")

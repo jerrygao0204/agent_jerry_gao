@@ -451,17 +451,3 @@ class FineBIMilvusUploader:
                 
         print("-" * 60)
 
-if __name__ == "__main__":
-    DATA_SOURCE_PATH = "/workspace/hf-conda/RAG/问答机器人/finebi_output/数据预警.json"
-    uploader = FineBIMilvusUploader(
-        milvus_host="172.17.0.1",
-        collection_name="finebi_knowledge_chunks",
-        cuda_device="0"
-    )
-    
-    with open(DATA_SOURCE_PATH, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    # 写入向量库
-    uploader.upload_json_file(DATA_SOURCE_PATH)
-    # 一致性核对
-    uploader.audit_milvus_with_json(DATA_SOURCE_PATH)

@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import logging
+import threading
 from collections import Counter
 from typing import Dict, Any, List, Optional
 
@@ -30,6 +31,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 
 
 class FineBIRetriever:
+    # 🔒 1. 定義類別層級共享變數 (Class-level variables)
+    _shared_model = None
+    _shared_tokenizer = None
+    _shared_lock = threading.Lock()
+
     def __init__(
         self,
         milvus_host: str = "172.17.0.1",
@@ -51,39 +57,80 @@ class FineBIRetriever:
         # 2. 绑定硬件卡号
         self.device = self.factory.setup_cuda_device(cuda_device)
         
-        self.model = None
-        self.tokenizer = None
-        
         # 3. 建立物理向量数据库长连接
         self.client = MilvusClient(uri=f"http://{milvus_host}:{milvus_port}")
         logging.info(f"⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。")
 
+    @property
+    def model(self):
+        return FineBIRetriever._shared_model
+
+    @property
+    def tokenizer(self):
+        return FineBIRetriever._shared_tokenizer
+    
     def _init_embedding_engine(self):
-        """单例加载与预热稠密向量化模型"""
-        if self.model is None or self.tokenizer is None:
-            # 委派工厂进行统一的离线物理哈希寻址
-            model_path = self.factory.resolve_model_path(self.model_short_name)
-            logging.info(f"🚀 [Offline Load] 正在冷启动加载稠密向量化模型: {model_path}")
-            
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_path, 
-                local_files_only=True, 
-                trust_remote_code=True
-            )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_path, 
-                torch_dtype=torch.float16, 
-                device_map="auto", 
-                local_files_only=True, 
-                trust_remote_code=True
-            )
-            
-            # 执行静态预热，保证显存池空间稳定
-            warmup_prompt = "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant"
-            inputs = self.tokenizer(warmup_prompt, return_tensors="pt").to(self.model.device)
-            with torch.no_grad():
-                _ = self.model.generate(**inputs, max_new_tokens=5)
-            logging.info("✅ Embedding 物理计算引擎预热完成。")
+        """跨實例安全的單例加載與預熱稠密向量化模型"""
+        # 第一重檢查：若已完成加載，快速返回
+        if FineBIRetriever._shared_model is None or FineBIRetriever._shared_tokenizer is None:
+            # 跨實例共享線程鎖
+            with FineBIRetriever._shared_lock:
+                # 第二重檢查：防止多線程排隊等待鎖釋放後重複加載
+                if FineBIRetriever._shared_model is None or FineBIRetriever._shared_tokenizer is None:
+                    model_path = self.factory.resolve_model_path(self.model_short_name)
+                    logging.info(f"🚀 [Offline Load] 正在單例加載稠密向量化模型: {model_path}")
+                    
+                    tokenizer = AutoTokenizer.from_pretrained(
+                        model_path, 
+                        local_files_only=True, 
+                        trust_remote_code=True
+                    )
+                    model = AutoModelForCausalLM.from_pretrained(
+                        model_path, 
+                        torch_dtype=torch.float16, 
+                        device_map="auto", 
+                        local_files_only=True, 
+                        trust_remote_code=True
+                    )
+                    
+                    # 預熱
+                    warmup_prompt = "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant"
+                    inputs = tokenizer(warmup_prompt, return_tensors="pt").to(model.device)
+                    with torch.no_grad():
+                        _ = model.generate(**inputs, max_new_tokens=5)
+                    
+                    # 賦值給類別變數
+                    FineBIRetriever._shared_tokenizer = tokenizer
+                    FineBIRetriever._shared_model = model
+                    logging.info("✅ Embedding 物理計算引擎預熱完成 (類別單例已綁定)。")
+
+    # def _init_embedding_engine(self):
+    #     """单例加载与预热稠密向量化模型"""
+    #     if self.model is None or self.tokenizer is None:
+    #         with self._init_lock:
+    #             # 委派工厂进行统一的离线物理哈希寻址
+    #             model_path = self.factory.resolve_model_path(self.model_short_name)
+    #             logging.info(f"🚀 [Offline Load] 正在冷启动加载稠密向量化模型: {model_path}")
+                
+    #             self.tokenizer = AutoTokenizer.from_pretrained(
+    #                 model_path, 
+    #                 local_files_only=True, 
+    #                 trust_remote_code=True
+    #             )
+    #             self.model = AutoModelForCausalLM.from_pretrained(
+    #                 model_path, 
+    #                 torch_dtype=torch.float16, 
+    #                 device_map="auto", 
+    #                 local_files_only=True, 
+    #                 trust_remote_code=True
+    #             )
+                
+    #             # 执行静态预热，保证显存池空间稳定
+    #             warmup_prompt = "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant"
+    #             inputs = self.tokenizer(warmup_prompt, return_tensors="pt").to(self.model.device)
+    #             with torch.no_grad():
+    #                 _ = self.model.generate(**inputs, max_new_tokens=5)
+    #             logging.info("✅ Embedding 物理计算引擎预热完成。")
 
     def get_dense_embedding(self, text: str) -> List[float]:
         """计算高维稠密语义向量"""

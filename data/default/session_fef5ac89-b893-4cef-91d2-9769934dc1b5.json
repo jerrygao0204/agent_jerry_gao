@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "你好",
+    "timestamp": "2026-08-31 06:44:05"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "您好！我是 FineBI 智能助手，请问有什么可以帮您？",
+    "timestamp": "2026-08-31 06:44:05"
+  }
+]

@@ -3,7 +3,7 @@ import os
 import sys
 import torch
 import logging
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 # 📂 动态计算项目根目录，将其注入系统路径中，确保全局工厂能被顺利导入
@@ -25,8 +25,9 @@ class FineBIReranker:
         cuda_device: str = "0",
         max_length: int = 512,
         batch_size: int = 32,
-        min_prob: float = 0.60,        # 新增：概率过滤硬门槛 (60%)
-        max_score_gap: float = 2.5,    # 新增：与 Top-1 的最大 Logits 允许分差
+        min_prob: float = 0.25,        # 新增：概率过滤硬门槛 (60%)
+        max_score_gap: float = 3.5,    # 新增：与 Top-1 的最大 Logits 允许分差
+        strict_mode: float = True,
         factory: ModelFactory = None
     ):
         """
@@ -45,6 +46,7 @@ class FineBIReranker:
         self.cache_dir = cache_dir
         self.min_prob = min_prob
         self.max_score_gap = max_score_gap
+        self.strict_mode = strict_mode
 
         # 1. 初始化或获取工厂单例
         self.factory = factory if factory is not None else ModelFactory(cache_dir=cache_dir)
@@ -74,20 +76,74 @@ class FineBIReranker:
         self.model.eval()
         logging.info("Reranker 模型加载成功。")
 
+    def _build_context_aware_text(
+        self, 
+        chunk_data: Dict[str, Any], 
+        chunk_map: Dict[str, str],
+        enable_surrounding_context: bool = True
+    ) -> str:
+        """
+        针对纯文本 KV 型 chunk_map 进行高效上下文反查与组装
+        
+        :param chunk_data: 当前要处理的 Chunk 节点数据
+        :param chunk_map: 全局 chunk_id 到 content 的映射字典
+        :param enable_surrounding_context: 是否拼接上下文
+        :return: 格式化后的上下文增强文本
+        """
+        # 1. 基础字段提取
+        hierarchy: str = chunk_data.get("hierarchy", "").strip() or "全局文档"
+        biz_summary: str = chunk_data.get("biz_summary", "").strip()
+        core_content: str = (chunk_data.get("content") or chunk_data.get("base_content") or "").strip()
+
+        # 2. 构建结构化 Header
+        header_lines = [f"[文档层级 (Hierarchy)]: {hierarchy}"]
+        if biz_summary:
+            header_lines.append(f"[业务摘要 (Summary)]: {biz_summary}")
+        header_str = "\n".join(header_lines)
+
+        # 3. 关闭增强或无 chunk_map 时降级返回
+        if not enable_surrounding_context or not chunk_map:
+            return f"{header_str}\n\n[核心内容 (Core Content)]:\n{core_content}"
+
+        # 4. 执行上下文 ID 反查
+        up_id = chunk_data.get("up_content")
+        down_id = chunk_data.get("down_content")
+
+        # 直接通过 Dict 获取纯文本，找不到则返回空字符串
+        up_text = chunk_map.get(up_id, "").strip() if up_id else ""
+        down_text = chunk_map.get(down_id, "").strip() if down_id else ""
+
+        # 5. 组装完整 Body
+        body_parts = []
+        
+        if up_text:
+            body_parts.append(f"[上文补充 (Up Content - {up_id})]:\n{up_text}")
+            
+        body_parts.append(f"[核心内容 (Core Content - {chunk_data.get('chunk_id', 'Current')})]:\n{core_content}")
+        
+        if down_text:
+            body_parts.append(f"[下文补充 (Down Content - {down_id})]:\n{down_text}")
+
+        return f"{header_str}\n\n" + "\n\n".join(body_parts)
+        
     def rerank(
         self, 
         query: str, 
         documents: List[Dict[str, Any]], 
-        top_n: int = 5
+        top_n: int = 5, 
+        disable_filtering: bool = False
     ) -> List[Dict[str, Any]]:
         """
-        对初筛捞出来的文档进行精排打分：计算概率 -> Sigmoid 归一化 -> 阈值过滤 -> 排序截取 Top-N
+        對初篩撈出來的文檔進行精排打分：計算概率 -> Sigmoid 歸一化 -> 閾值過濾 -> 排序截取 Top-N
+        :param disable_filtering: 評測模式下可設為 True，停用硬性阻斷，僅做純 Top-N 排序
         """
         if not documents:
             logging.warning("传入的重排文档列表为空。")
             return []  # 保持返回 List
-
-        doc_texts = [doc.get("content", "") for doc in documents]
+        
+        chunk_map = {doc["chunk_id"]: doc.get("content", "") for doc in documents if "chunk_id" in doc}
+        # doc_texts = [doc.get("content", "") for doc in documents]
+        doc_texts = [self._build_context_aware_text(doc, chunk_map) for doc in documents]
         pairs = [[query, doc_text] for doc_text in doc_texts]
 
         scores = []
@@ -121,6 +177,12 @@ class FineBIReranker:
         # 2. 步骤一：按得分/概率降序排列，以便先确定 Top-1 得分
         sorted_docs = sorted(documents, key=lambda x: x["rerank_prob"], reverse=True)
 
+        # 🛠️ 若顯示停用過濾（如離線評測時），直接截取 Top-N 返回
+        if disable_filtering or not self.strict_mode:
+            final_results = sorted_docs[:top_n]
+            logging.debug(f"純排序模式（無阻斷）：截取 Top-{len(final_results)}")
+            return final_results
+
         # 3. 步骤二：硬性绝对阈值校验 (Check Top-1 Probability)
         top_1_prob = sorted_docs[0]["rerank_prob"]
         top_1_score = sorted_docs[0]["rerank_score"]
@@ -143,6 +205,7 @@ class FineBIReranker:
         logging.info(
             f"重排完成：初筛 {len(documents)} 个 Chunk -> 过滤保留 {len(valid_docs)} 个高置信度 Chunk (Top-1 概率: {top_1_prob:.2%}) -> 截取 Top-{len(final_results)}。"
         )
+        
         return final_results
 
 if __name__ == "__main__":

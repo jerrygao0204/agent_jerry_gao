@@ -1,7 +1,17 @@
 # config/users_auth.yaml
-# 用户登录凭证配置表 (可以随意增删账号)
 users:
-  admin: "123456"      # 管理员账号 : 密码
-  gaozheng: "123456"    # 用户张三 : 密码
-  lisi: "123456"        # 用户李四 : 密码
-  wangwu: "888888"      # 用户王五 : 密码
+  admin:
+    password: "123456"
+    role: "admin"        # 系统超级管理员：拥有全部工具与域的调用权限
+
+  gaozheng:
+    password: "123456"
+    role: "analyst"      # 架构师/数据分析师：具备 finebi_system 与数据分析能力
+
+  lisi:
+    password: "123456"
+    role: "user"         # 普通用户：仅具备基础知识库检索与公网搜索权限
+
+  wangwu:
+    password: "888888"
+    role: "user"         # 普通用户

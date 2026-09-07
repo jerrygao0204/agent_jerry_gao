@@ -10,7 +10,8 @@ class ShortTermMemory:
     def __init__(self, max_messages: int = 20):
         self.max_messages = max_messages
         self.messages: List[Dict[str, str]] = []
-
+        self.summary: str = ""
+        
     def add_user_message(self, content: str):
         self.messages.append({"role": "user", "content": content})
         self._trim()
