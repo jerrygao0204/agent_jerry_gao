@@ -69,6 +69,7 @@ agent_jerry_gao/
 │   ├── sandbox.py
 │   └── tool_transport.py
 ├── config/
+│   ├── config_loader.py
 │   ├── patterns.yaml
 │   ├── prompt_hub.yaml
 │   └── users_auth.yaml
@@ -96,6 +97,7 @@ agent_jerry_gao/
 │       ├── base_tool.py
 │       ├── rag_tool.py
 │       └── web_search_tool.py
+│       └── ...
 ├── generator/
 │   ├── llm_client.py
 │   └── qa_chain.py
@@ -246,7 +248,7 @@ agent_jerry_gao/
 `app_admin.py` → `config/config_loader.py` → `factory/model_factory.py` → `data_prep/pdf_to_markdown.py` → `data_prep/markdown_to_json.py` → `ingest/validator.py` → `ingest/db_uploader.py` → `search/retriever.py` → `search/reranker.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `Milvus`
 
 ### 2) 问答链路
-`qa_admin.py` → `factory/model_factory.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `generator/llm_client.py` → `generator/qa_chain.py` → `search/retriever.py` → `search/reranker.py` → `agent/react_agent.py` / `agent/react_agent_integrated.py` → `agent/sandbox.py` → `agent/security.py` → `agent/compliance.py` → `memory/memory_manager.py` → `memory/short_term_memory.py` → `memory/entity_memory.py` → `memory/chat_history_file.py` → `memory_feedback_store.py`
+`qa_admin.py` → `factory/model_factory.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `generator/llm_client.py` → `generator/qa_chain.py` → `search/retriever.py` → `search/reranker.py` → `agent/react_agent.py` / `agent/react_agent_integrated.py` → `agent/sandbox.py` → `agent/security.py` → `agent/compliance.py` → `memory/memory_manager.py` → `memory/short_term_memory.py` → `memory/entity_memory.py` → `memory/chat_history_file.py` → `memory/feedback_store.py`
 
 ### 3) 外部工具服务链路
 `mcp_server.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `factory/tools/__init__.py` → `factory/tools/base_tool.py` → `factory/tools/rag_tool.py` / `factory/tools/api_tool.py` / `factory/tools/web_search_tool.py` → 对外暴露工具能力
@@ -271,35 +273,170 @@ agent_jerry_gao/
 `README.md` / `tool幫助文檔.md` / `tool創建文檔.md` → 提供使用说明、工具编写说明和架构文档；  
 `Requirements.txt` → 记录仓库依赖
 
-## 快速开始
+## 使用说明
 
-```bash
+### 1) 环境准备
+
+```
 git clone https://github.com/jerrygao0204/agent_jerry_gao.git
 cd agent_jerry_gao
-pip install -r Requirements.txt
 ```
 
-版本号未锁定，建议在目标环境跑通一次后用 `pip freeze > requirements.lock.txt` 锁定验证过的版本。
+仓库依赖通过脚本内的 `install_package()` 自动安装，若你希望手动安装，可参考 `Requirements.txt`。
 
-**环境变量（可选，不设置时均有合理默认值）**：
+* * *
 
-| 变量 | 作用 | 默认值 |
-|---|---|---|
-| `DATA_ROOT` | 会话历史 / 用户原始数据的存储根目录 | `<项目根目录>/data` |
-| `MEMORY_ROOT` | 成长型记忆（`memory_growth`）的存储根目录 | `<项目根目录>/memory_growth/context/users` |
+### 2) 启动服务
 
-1. **准备向量库**：启动 Milvus（默认连接 `172.17.0.1:19530`，集合名 `finebi_knowledge_chunks`）。
-2. **离线入库**：运行 `data_prep/pdf_to_markdown.py` → `data_prep/markdown_to_json.py`，将文档（当前实现以 PDF 手册为例，是最初用于验证管线的数据源）解析、分块并经 `ingest/validator.py` 校验后由 `ingest/db_uploader.py` 写入 Milvus；换成其他数据源时只需替换解析这一步的输出，后续分块/校验/入库环节可复用。
-3. **启动问答服务**：运行 `qa_admin.py`（Gradio 界面，读取 `config/users_auth.yaml` 做用户鉴权）。
-4. **（可选）暴露 MCP 工具**：运行 `mcp_server.py`，供外部 Agent 通过 MCP 协议调用知识库检索等工具。
+#### 启动知识库建设后台
 
-## 测试
-
-```bash
-pytest              # 默认只跑轻量单元测试（mock 隔离了真实模型/GPU），几秒内完成
-pytest -m integration --override-ini="addopts=-vs --tb=short"   # 手动运行重型压测（tests/integration/），需要真实 GPU + 已加载模型
 ```
-单元测试覆盖：并发写入安全（`atomic_io`/`chat_history_file`）、内容合规拦截、检索逻辑、ReAct 路由分级、用户反馈存储。`tests/integration/` 下的压测默认被 `pytest.ini` 的 `-m "not integration"` 排除，不会拖慢日常测试。
+python app_admin.py
+```
+
+#### 启动问答系统后台
+
+```
+python qa_admin.py
+```
+
+#### 启动 MCP 工具服务
+
+```
+python mcp_server.py
+```
+
+* * *
+
+### 3) 数据处理
+
+#### PDF 转 Markdown
+
+```
+python data_prep/pdf_to_markdown.py
+```
+
+#### Markdown 转 JSON
+
+```
+python data_prep/markdown_to_json.py
+```
+
+#### 说明
+
++   这一流程通常由 `app_admin.py` 串联管理
++   `pdf_to_markdown.py` 负责把原始 PDF 转为 Markdown
++   `markdown_to_json.py` 负责把 Markdown 按标题分块为结构化 JSON
+
+* * *
+
+### 4) 运行测试
+
+测试目录为 `tests/`，使用 `pytest` 运行。
+
+#### 安装 pytest
+
+```
+pip install pytest
+```
+
+#### 执行全部测试
+
+```
+pytest
+```
+
+#### 执行指定测试文件
+
+```
+pytest tests/test_xxx.py
+```
+
+#### 执行指定测试用例
+
+```
+pytest tests/test_xxx.py::test_case_name
+```
+
+#### 说明
+
++   `tests/conftest.py` 会自动把项目根目录加入 `sys.path`
++   因此测试中可以直接导入项目内模块，例如：
+    +   `from agent.compliance import ComplianceChecker`
+    +   `from search.retriever import FineBIRetriever`
+    +   `from factory.tool_factory import tool_factory`
+
+* * *
+
+### 5) 运行评测
+
+评测目录为 `eval/`，主要包含检索评测、生成评测和总评测入口。
+
+#### 运行检索评测
+
+```
+python eval/eval_retriever.py
+```
+
+#### 运行生成评测
+
+```
+python eval/eval_generator.py
+```
+
+#### 运行全链路评测
+
+```
+python eval/run_all_eval.py
+```
+
+#### 评测说明
+
++   `eval/eval_dataset.json` 是评测数据集
++   评测结果会输出到 `eval/reports/`
++   检索评测主要关注：
+    +   Hit Rate
+    +   MRR
+    +   检索延迟
++   生成评测主要关注：
+    +   Faithfulness
+    +   Answer Relevance
+    +   TTFT
+    +   生成总延迟
+
+* * *
+
+### 6) 成长型记忆处理
+
+#### 抽取历史事实
+
+```
+python memory_growth/extractor.py
+```
+
+#### 构建分层语境
+
+```
+python memory_growth/layer_mapper.py
+python memory_growth/context_builder.py
+```
+
+#### 说明
+
++   `memory_growth/context/users/<user_id>/` 下会生成：
+    +   `facts.json`
+    +   `layered_context.json`
+    +   `user_prompt_context.txt`
++   这些内容会被注入到问答系统的 Prompt 中，用于跨会话长期记忆
+
+* * *
+
+### 7) 使用建议
+
++   首次运行前，确认 `config/users_auth.yaml`、`config/patterns.yaml`、`config/prompt_hub.yaml` 已正确配置
++   如果路径包含硬编码项，记得根据实际部署环境调整
++   如果只想验证单元能力，优先运行 `tests/`
++   如果想验证整体效果，优先运行 `eval/run_all_eval.py`
 
 ## 记忆与安全机制详解
 
@@ -318,7 +455,7 @@ pytest -m integration --override-ini="addopts=-vs --tb=short"   # 手动运行�
 2. **事实抽取** `extractor.py` 的 `FactExtractor` 从会话中抽取事实，并把抽取水位线 `last_run_at` 记在 `facts.json` 的 `metadata` 字段里，避免重复处理；读取-抽取-写入整个流程通过 `atomic_io.py` 的 `file_lock_for` 加锁，写入用 `atomic_dump_json` 原子替换，避免并发运行或崩溃导致数据丢失/损坏
 3. **四层语境映射** `layer_mapper.py` 将扁平事实映射进标准 schema（`user_profile` 静态画像 + 三层动态语境），写入 `layered_context.json`，支持增量合并与去重，同样接入了加锁+原子写
 4. **语境渲染** `context_builder.py` 按 11 个模块做防御性渲染（处理空字段、字典列表、字符串列表等），产出 `user_prompt_context.txt`，最终被 `QAChain` 注入到系统提示词中，让 Agent 具备跨会话的持续用户认知
-5. 路径统一由 `config/config_loader.py` 管理（`data_root`/`memory_root`，支持环境变量覆盖），`path_config.py` 的 `UserMemoryPathConfig` 在此基础上按用户隔离
+5. 路径统一由 `memory_growth/path_config.py` 与 `config/` 中的配置共同管理，支持按用户隔离与环境切换。
 
 ### Agent 安全防护：沙箱执行 + 内容合规
 
@@ -339,3 +476,4 @@ pytest -m integration --override-ini="addopts=-vs --tb=short"   # 手动运行�
 - **`FeedbackStore` 的并发保护范围有限**：`memory/feedback_store.py` 用的是 Python `threading.Lock`，只保护同一进程内的线程并发，如果未来把服务改成多进程部署（如 `gunicorn` 多 worker），需要换成 `filelock.FileLock`，否则并发安全会悄悄失效。
 - **依赖版本未锁定**：`Requirements.txt` 列出了依赖项但未固定版本号，建议在目标环境验证通过后用 `pip freeze` 锁定。
 - **`users_auth.yaml` 当前为占位测试凭证**：仓库中的账号密码是开发测试用的示例数据，不代表真实生产凭证，正式对外使用前需要替换为真实、经过妥善管理的凭证。
+
