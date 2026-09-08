@@ -31,3 +31,6 @@ fastmcp
 
 # 在多进程或多线程环境中提供跨平台的文件锁定
 filelock
+
+# 併發測試
+pytest-asyncio
