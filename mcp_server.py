@@ -3,11 +3,6 @@ import subprocess
 import sys
 import os
 
-def install_package(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-install_package("mcp")
-install_package("fastmcp")
-
 # 注入根目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
@@ -17,10 +12,6 @@ import asyncio
 import logging
 from mcp.server.fastmcp import FastMCP
 from factory import init_tools, tool_factory
-
-
-
-
 
 # 创建 MCP Server 实例
 mcp = FastMCP("FineBI-Agent-MCP-Server")
