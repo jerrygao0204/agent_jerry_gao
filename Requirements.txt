@@ -1,36 +1,94 @@
-# 由扫描仓库内所有 import 语句 + 硬编码的 install_package() 调用整理生成。
-# 未标注具体版本号：仓库中没有任何版本约束（各脚本运行时用 install_package() 直接装最新版），
-# 建议在实际环境里先跑通一次，再用 `pip freeze > requirements.lock.txt` 把验证过的版本锁定下来。
+# --- Deep Learning & Acceleration ---
+torch>=2.10.0
+torchvision>=0.25.0
+torch-tensorrt>=2.10.0
+torchao>=0.15.0
+torchdata==0.11.0
+torchprofile==0.0.4
+torchtitan==0.2.0
+flash-attn>=2.7.4
+transformer-engine>=2.10.0
+tensorrt==10.14.1.48
+triton-kernels>=1.0.0
+apex>=0.1
+nvfuser>=0.2.34
+lightning-thunder>=0.2.7
+lightning-utilities==0.15.2
+nvidia-dali-cuda130==1.52.0
+nvidia-ml-py==13.590.44
+nvidia-modelopt==0.39.0
+onnx==1.18.0
+onnxscript==0.5.7
+polygraphy==0.49.26
 
-# 深度学习与模型推理
-torch
-transformers
-accelerate
+# --- LLM & Agent Frameworks ---
+transformers==4.57.6
+datasets==4.4.1
+huggingface-hub==0.36.2
+tokenizers==0.22.1
+safetensors==0.7.0
+accelerate==1.12.0
+openai==1.109.1
+anthropic==0.46.0
+google-genai==1.65.0
+langchain-core==1.6.2
+langchain-text-splitters==1.1.2
+langsmith==0.12.2
+mcp==2.2.0
+pymilvus==3.0.1
+sentencepiece==0.2.1
+einops==0.8.1
 
-# 向量数据库
-pymilvus
+# --- OCR, Document & Audio ---
+surya-ocr==0.17.1
+pymupdf==1.28.2
+pypdfium2==4.30.0
+marker-pdf==1.10.2
+pdftext==0.6.3
+librosa==0.11.0
+pydub==0.25.1
+soundfile==0.13.1
+soxr==1.0.0
+opencv-python-headless==4.11.0.86
+pillow==10.4.0
+pycocotools>=2.0.0
 
-# PDF / 文档解析
-PyMuPDF          # import 名为 fitz
-pdfplumber
-beautifulsoup4   # import 名为 bs4
-Pillow           # import 名为 PIL
+# --- Data Science & Computing ---
+numpy==2.1.0
+pandas==2.3.3
+scipy==1.16.3
+scikit-learn==1.8.0
+pyarrow==22.0.0
+sympy==1.14.0
+numba==0.63.1
+matplotlib==3.10.8
+plotly==7.0.0
+PuLP==3.3.0
 
-# 文本分块
-langchain_text_splitters
+# --- Web, Serving & Monitoring ---
+fastapi==0.141.1
+starlette==1.6.0
+uvicorn==0.52.4
+gradio==6.26.0
+tensorboard==2.20.0
+prometheus-client==0.23.1
+opentelemetry-api==1.44.0
+grpcio==1.76.0
+sse-starlette==3.4.11
 
-# 数据校验与配置
-pydantic
-PyYAML           # import 名为 yaml
-openpyxl
-
-# Web / Agent 服务
-gradio
-mcp
-fastmcp
-
-# 在多进程或多线程环境中提供跨平台的文件锁定
-filelock
-
-# 併發測試
-pytest-asyncio
+# --- Core Utilities ---
+pydantic==2.12.5
+pydantic-settings==2.13.1
+python-dotenv==1.2.2
+httpx==0.28.1
+aiohttp==3.13.2
+requests==2.32.5
+rich==14.2.0
+tqdm==4.67.1
+PyYAML==6.0.3
+click==8.5.0
+typer==0.24.1
+psutil==7.1.3
+fsspec==2025.10.0
+filelock==3.25.0
+cryptography==46.0.5
