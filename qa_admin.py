@@ -198,35 +198,6 @@ def get_gpu_memory_status() -> str:
     except Exception as e:
         return f"显存获取异常: {str(e)}"
 
-# def emergency_force_cleanup() -> str:
-#     global global_qa_chain
-#     logging.warning("🚨 [QA Admin] 触发应急显存回收操作！")
-#     global_qa_chain = None
-
-#     try:
-#         if hasattr(ModelFactory, "_instance"):
-#             ModelFactory._instance = None
-#     except Exception as e:
-#         logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
-
-#     try:
-#         ModelFactory.destroy_all_models_cls()
-#     except Exception as e:
-#         logging.error(f"调用 ModelFactory.destroy_all_models_cls 失败: {e}")
-
-#     gc.collect(2)
-
-#     if torch.cuda.is_available():
-#         try:
-#             torch.cuda.synchronize()
-#             torch.cuda.empty_cache()
-#             torch.cuda.ipc_collect()
-#         except Exception as e:
-#             logging.error(f"CUDA 显存回收异常: {e}")
-
-#     logging.info("✨ [QA Admin] 物理显存清理完毕！")
-#     return get_gpu_memory_status()
-
 def emergency_force_cleanup() -> str:
     """
     应急回收显存：结合 ModelFactory 的全量物理销毁与多级降级兜底
@@ -339,24 +310,6 @@ def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
         return pd.DataFrame()
 
     return pd.DataFrame(metrics_data)
-# def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
-#     """解析 log_pipeline_metrics 輸出的 JSON 日誌"""
-#     metrics_data = []
-#     if not os.path.exists(log_path):
-#         return pd.DataFrame()
-#     try:
-#         with open(log_path, "r", encoding="utf-8") as f:
-#             for line in f:
-#                 if "📊 [METRICS]" in line:
-#                     try:
-#                         json_str = line.split("📊 [METRICS] ")[-1].strip()
-#                         metrics_data.append(json.loads(json_str))
-#                     except Exception:
-#                         continue
-#     except Exception as e:
-#         logging.error(f"解析 Metrics 日誌失敗: {e}")
-#         return pd.DataFrame()
-#     return pd.DataFrame(metrics_data)
 
 def render_observability_dashboard():
     """讀取並格式化 Observability 核心指標與 Plotly 圖表"""
@@ -399,23 +352,6 @@ def render_observability_dashboard():
         fig_gpu = px.scatter(title="⚠️ 暫無 GPU 顯存數據")
 
     return summary_md, metrics, fig_latency, fig_gpu
-
-# def render_observability_dashboard():
-#     """读取并格式化 Observability 核心指标"""
-#     metrics = scan_metrics(data_dir=DATA_DIR)
-    
-#     summary_md = f"""
-# ### 📈 系统运行核心指标概览
-
-# | 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
-# | :--- | :--- | :--- |
-# | **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
-# | **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
-# | **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
-# | **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
-# | **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
-# """
-#     return summary_md, metrics
 
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
@@ -757,12 +693,7 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
 
         choices = fetch_session_dropdown_choices(username)
         yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
-
-    # 持久化保存 AI 最终回答
-    # 💾 【核心修正】採用 MemoryManager 封裝的合法持久化 API 落盤
-    if final_reply:
-        user_mem_mgr.process_assistant_output(final_reply)
-
+                                     
     # 📊 寫入 Agent 總 pipeline Metrics 日誌 (供 Tab 4 圖表使用)
     t_agent_end = time.perf_counter()
     log_pipeline_metrics("agent_execution", (t_agent_end - t_agent_start) * 1000, {
@@ -775,7 +706,7 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     yield history, inspector_log, "✅ 任务完成", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
     
 
-# 新建 Session 切换函数（容错处理防止 Radio 报错）
+# 容错处理防止 Radio 报错
 def create_new_session_event(user_state: dict):
     username = user_state.get("username", "default")
     new_sess_id = str(uuid.uuid4())
@@ -788,7 +719,7 @@ def create_new_session_event(user_state: dict):
 
     return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
 
-# 新建 用户点赞/点踩及意见反馈组件
+# 用户点赞/点踩及意见反馈组件
 def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict):
     """
     处理 gr.Chatbot 逐条消息的点赞 / 点踩事件并写入 feedback_store
@@ -953,14 +884,6 @@ def stream_agent_sandbox_execution(
         logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
         yield full_log + f"\n\n🚨 异常: {str(e)}"
 
-# def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
-#     """按角色动态过滤可展示的工具列表"""
-#     tools = []
-#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
-#         for name, tool_obj in tool_factory._flat_tools.items():
-#             if tool_factory._is_tool_visible(tool_obj, user_role):
-#                 tools.append(name)
-#     return tools or ["search_knowledge_base"]
 def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     tools = []
     print(f"\n---------------- [DEBUG 2: 下拉框过滤] ----------------")
@@ -975,11 +898,6 @@ def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     print(f"👉 最终生成下拉框列表: {tools}")
     print(f"-------------------------------------------------------\n")
     return tools or ["search_knowledge_base"]
-# def get_all_registered_tool_names() -> list:
-#     tools = []
-#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
-#         tools = list(tool_factory._flat_tools.keys())
-#     return tools or ["search_knowledge_base"]
 
 # ==========================================
 # 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
@@ -1185,21 +1103,6 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
         logging.warning(f"⚠️ 工具初始化说明: {e}")
 
     registered_tools = get_all_registered_tool_names()
-
-# def build_qa_admin_ui(qa_chain: Optional[Any] = None):
-#     yaml_path = os.path.join(SCRIPT_DIR, "tools.yaml")
-#     try:
-#         if qa_chain is not None:
-#             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
-#         else:
-#             retriever = FineBIRetriever(milvus_host=DEFAULT_QA_CONFIG["milvus_host"], milvus_port=DEFAULT_QA_CONFIG["milvus_port"], collection_name=DEFAULT_QA_CONFIG["collection_name"], cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
-#             reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
-#             init_tools(retriever=retriever, reranker=reranker)
-#     except Exception as e:
-#         logging.warning(f"⚠️ 工具初始化说明: {e}")
-
-#     registered_tools = get_all_registered_tool_names()
-
 
     with gr.Blocks(title="FineBI QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
         # 用户状态存取 State
@@ -1429,23 +1332,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         inputs=None,
                         outputs=[obs_summary_display, obs_json_display, plot_latency, plot_gpu]
                     )
-                # with gr.Tab("📊 基础运维与可观测性"):
-                #     gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
-                #     with gr.Row():
-                #         btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
-                    
-                #     with gr.Row():
-                #         with gr.Column(scale=7):
-                #             obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
-                #         with gr.Column(scale=5):
-                #             obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
-
-                #     # 页面首次加载或点击刷新时更新监控指标
-                #     btn_refresh_obs.click(
-                #         fn=render_observability_dashboard,
-                #         inputs=None,
-                #         outputs=[obs_summary_display, obs_json_display]
-                #     )
+             
         # =========================================================
         # 🔑 登录视图切换逻辑绑定
         # =========================================================
@@ -1772,20 +1659,3 @@ if __name__ == "__main__":
         port=7865,
         log_level="info"
     )
-# if __name__ == "__main__":
-#     import atexit
-    
-#     def on_app_shutdown():
-#         logging.info("⚡ 关闭 QA 服务，清除 GPU 显存...")
-#         emergency_force_cleanup()
-
-#     atexit.register(on_app_shutdown)
-
-#     qa_ui = build_qa_admin_ui()
-    
-#     qa_ui.queue().launch(
-#         server_name="0.0.0.0",
-#         server_port=7865,
-#         root_path="/qa"
-#         # share=True
-#     )
