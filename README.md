@@ -10,6 +10,8 @@
 - **工具能力可对外复用**：`ToolFactory` 里注册的工具（如知识库检索）不仅供内部 `ReActAgent` 调用，还通过 `mcp_server.py` 原样暴露给外部 Agent，同一套能力两处复用。
 - **记忆体追踪的是轨迹而非流水账**：`memory_growth` 把用户信息拆成身份（无轨迹，单独存 profile）、稳定语境（长期目标/能力树）、动态语境（当前偏好/卡点）、成长语境（前三层如何随时间演变）四层，渲染为 Prompt 注入 Agent——做到的是"共同成长"式的持续认知积累，而不只是更大的聊天记录库。这与会话内的短期记忆（`memory/`）是互补的两个时间尺度。
 - **双重安全防护，分而治之**：代码类工具调用走 AST 静态审查 + 子进程沙箱隔离；文本类输入输出走正则脱敏 + LLM 语义二次审查。两条链路共用 `config/patterns.yaml` 规则源，但审查对象和执行方式完全独立，互不影响。
+- **工具级权限控制**：`config/tools.yaml` 支持按 domain/工具粒度配置 `role_whitelist`，不同角色（`admin`/`analyst`/`user`）能看到的工具域不同，避免普通用户误触高危元数据类工具。
+- **用户反馈闭环 + 运行观测**：`memory/feedback_store.py` 记录每次回答的 👍/👎 反馈，`api/observability.py` 定期聚合查询量、compliance 拦截率等基础运行指标。
 
 ## 系统架构
 
@@ -49,45 +51,255 @@ flowchart TD
 
 三个入口共享同一套三工厂底座，底座之下再连接向量知识库（供检索）与分层成长记忆（供跨会话用户认知）两大支撑系统；安全防护（AST 审查+沙箱、正则脱敏+LLM 语义审查）贯穿代码执行与文本内容两条链路，未在图中单独画出但作用于 Agent 输出的每一环。
 
+## 目录樹
+
+```bash
+agent_jerry_gao/
+├── README.md
+├── Requirements.txt
+├── app_admin.py
+├── qa_admin.py
+├── mcp_server.py
+├── api/
+│   └── observability.py
+├── agent/
+│   ├── compliance.py
+│   ├── react_agent.py
+│   ├── react_agent_integrated.py
+│   ├── sandbox.py
+│   └── tool_transport.py
+├── config/
+│   ├── patterns.yaml
+│   ├── prompt_hub.yaml
+│   └── users_auth.yaml
+├── data/
+│   └── <user_id>/
+│       ├── session_*.json
+│       └── sessions_index.json
+├── data_prep/
+│   ├── markdown_to_json.py
+│   └── pdf_to_markdown.py
+├── eval/
+│   ├── eval_dataset.json
+│   ├── eval_generator.py
+│   ├── eval_retriever.py
+│   ├── reports/
+│   └── run_all_eval.py
+├── factory/
+│   ├── agent_factory.py
+│   ├── model_factory.py
+│   ├── tool_factory.py
+│   ├── tool_registry.py
+│   └── tools/
+│       ├── __init__.py
+│       ├── api_tool.py
+│       ├── base_tool.py
+│       ├── rag_tool.py
+│       └── web_search_tool.py
+├── generator/
+│   ├── llm_client.py
+│   └── qa_chain.py
+├── ingest/
+│   ├── db_uploader.py
+│   └── validator.py
+├── memory/
+│   ├── chat_history_file.py
+│   ├── entity_memory.py
+│   ├── feedback_store.py
+│   ├── memory_manager.py
+│   └── short_term_memory.py
+├── memory_growth/
+│   ├── atomic_io.py
+│   ├── context/
+│   │   └── users/
+│   │       └── <user_id>/
+│   │           ├── facts.json
+│   │           ├── layered_context.json
+│   │           └── user_prompt_context.txt
+│   ├── context_builder.py
+│   ├── extractor.py
+│   ├── layer_mapper.py
+│   └── path_config.py
+├── search/
+│   ├── reranker.py
+│   └── retriever.py
+├── tests/
+│   ├── conftest.py
+│   └── ...
+├── tool幫助文檔.md
+└── tool創建文檔.md
+```
 ## 目录结构与模块职责
+
+### 1) 入口层 / 应用层
 
 | 目录/文件 | 职责 |
 |---|---|
-| `app_admin.py` | 知识库管理后台（Gradio）：配置文档处理与入库参数（目前主体被注释，处于重构中） |
-| `qa_admin.py` | 问答系统主后台（Gradio）：加载模型、检索器、Agent、记忆与合规模块，提供带用户鉴权的问答界面 |
-| `mcp_server.py` | 基于 FastMCP 将内部工具（如知识库检索、仪表板查询）暴露为 MCP Tool，供外部 Agent 调用 |
-| `data_prep/pdf_to_markdown.py` | 使用 VLM（多模态模型）解析 PDF 版面与图片，输出 Markdown；采用自研的滑动窗口识别机制对长 PDF 做分片处理，并通过跨窗口表格合并解决了长文档中表格跨页断裂的问题 |
-| `data_prep/markdown_to_json.py` | 按标题分块 Markdown，产出带元数据的 JSON chunk |
-| `ingest/validator.py` | 写入前的数据校验（字段完整性、长度、结构） |
-| `ingest/db_uploader.py` | 连接 Milvus，写入向量与元数据，并做检索验证 |
-| `search/retriever.py` | 基于 `MilvusClient` 的向量/关键词混合检索 |
-| `search/reranker.py` | 交叉编码器重排序，按概率阈值与得分差过滤结果 |
-| `factory/model_factory.py` | 全局模型与算力工厂：统一管理 LLM/VLM/Embedding 模型的加载、显卡分配与生命周期 |
-| `factory/tool_factory.py` / `factory/tool_registry.py` | 三级（领域/工具包/工具）分级工具工厂与具体工具注册 |
-| `factory/agent_factory.py` | `RouterAgent`（意图路由到业务领域）与 `ReActAgent` 的组装入口 |
-| `generator/llm_client.py` / `generator/qa_chain.py` | 面向业务的推理客户端与端到端问答链（检索→重排→生成） |
-| `agent/react_agent.py` | 两阶段分级路由 + 动态 Prompt 绑定的 ReAct Agent 实现 |
-| `agent/react_agent_integrated.py` | 接入沙箱与事务型 Memory 的强约束版本 ReAct Agent |
-| `agent/security.py` | 基于 AST 的代码静态安全审查（导入/调用/属性白名单与黑名单） |
-| `agent/sandbox.py` | 子进程隔离执行受限代码，配合 `security.py` 做二次防护 |
-| `agent/compliance.py` | 双重合规引擎：正则脱敏 + LLM 语义二次审查 |
-| `memory/` | 会话级记忆：短期消息窗口（`short_term_memory.py`）、实体抽取（`entity_memory.py`）、JSON 文件持久化（`chat_history_file.py`），由 `memory_manager.py` 统一编排并支持事务快照 |
-| `memory_growth/` | 跨会话“成长型语境”系统：`extractor.py` 从历史会话抽取事实 → `layer_mapper.py` 映射进三层语境 schema → `context_builder.py` 渲染为 11 模块的 System Context |
-| `config/` | `prompt_hub.yaml`（Prompt 模板中心）、`patterns.yaml`（合规/安全正则规则）、`users_auth.yaml` 与按用户的个性化规则 |
+| `app_admin.py` | 知识库建设后台（Gradio）：负责文档解析、清洗、分块、校验与入库流程的管理入口 |
+| `qa_admin.py` | 问答系统主后台（Gradio）：负责检索增强问答、记忆注入、合规审计、沙箱执行与用户鉴权 |
+| `mcp_server.py` | 对外 MCP 工具服务入口：将内部工具能力暴露给外部 Agent |
+| `api/observability.py` | 轻量级可观测性扫描：统计会话数、用户数、查询数、合规拦截数等指标 |
+
+### 2) 文档处理与入库管线
+
+| 目录/文件 | 职责 |
+|---|---|
+| `data_prep/pdf_to_markdown.py` | 使用 VLM 解析 PDF 为 Markdown，支持长文档滑动窗口识别与跨页表格合并 |
+| `data_prep/markdown_to_json.py` | 将 Markdown 按标题/层级切分成结构化 JSON chunk |
+| `ingest/validator.py` | 入库前校验：检查字段完整性、长度、结构合法性等 |
+| `ingest/db_uploader.py` | 将向量和元数据写入 Milvus，并执行基础检索验证 |
+
+### 3) 检索与生成链路
+
+| 目录/文件 | 职责 |
+|---|---|
+| `search/retriever.py` | 基于 Milvus 的向量/关键词混合检索器 |
+| `search/reranker.py` | 交叉编码器重排序模块，对候选结果做相关性过滤和排序 |
+| `generator/llm_client.py` | 对底层 LLM 推理调用的统一封装 |
+| `generator/qa_chain.py` | 端到端问答链：检索 → 重排 → 生成，并集成合规与超时控制 |
+
+### 4) 三工厂底座
+
+| 目录/文件 | 职责 |
+|---|---|
+| `factory/model_factory.py` | 模型与算力工厂：统一管理 LLM / VLM / Embedding 的加载和显卡分配 |
+| `factory/tool_factory.py` | 工具工厂：按领域、工具包、工具三级管理工具注册与元数据导出 |
+| `factory/tool_registry.py` | 工具注册初始化：从配置或具体实现模块加载工具到工厂体系 |
+| `factory/agent_factory.py` | Agent 组装入口：将路由器、ReAct Agent、工具、模型组合为完整工作流 |
+| `factory/tools/__init__.py` | 工具包导出入口，统一暴露可注册工具类 |
+| `factory/tools/base_tool.py` | 工具基类：定义统一的工具接口与元数据规范 |
+| `factory/tools/rag_tool.py` | 知识库检索工具：封装 RAG 检索能力供 Agent/MCP 调用 |
+| `factory/tools/api_tool.py` | 仪表板/业务接口工具：封装外部 API 或内部看板查询能力 |
+| `factory/tools/web_search_tool.py` | Web 搜索工具：用于补充外部互联网信息检索 |
+
+### 5) Agent 层
+
+| 目录/文件 | 职责 |
+|---|---|
+| `agent/react_agent.py` | ReAct Agent 主实现：两阶段路由、动态 Prompt 绑定、工具调用与推理循环 |
+| `agent/react_agent_integrated.py` | 强约束版 ReAct Agent：集成沙箱与事务型 Memory |
+| `agent/security.py` | AST 代码静态审查：限制危险导入、危险调用和属性访问 |
+| `agent/sandbox.py` | 子进程隔离执行受限代码，增强工具调用安全性 |
+| `agent/compliance.py` | 内容合规模块：正则脱敏 + LLM 语义二次审查 |
+| `agent/tool_transport.py` | Agent 与工具之间的调度/转发层，负责工具调用传输 |
+
+### 6) 会话记忆层
+
+| 目录/文件 | 职责 |
+|---|---|
+| `memory/memory_manager.py` | 会话级记忆总控，统一编排短期记忆、实体记忆与历史存储 |
+| `memory/short_term_memory.py` | 短期上下文窗口，用于当前对话轮次记忆 |
+| `memory/entity_memory.py` | 实体抽取与实体级上下文维护 |
+| `memory/chat_history_file.py` | JSON 文件形式的会话历史持久化 |
+| `memory/feedback_store.py` | 用户反馈收集与存储 |
+
+### 7) 成长型记忆层
+
+| 目录/文件 | 职责 |
+|---|---|
+| `memory_growth/extractor.py` | 从历史会话中抽取事实，生成结构化成长记忆素材 |
+| `memory_growth/layer_mapper.py` | 将抽取事实映射到分层语境 schema |
+| `memory_growth/context_builder.py` | 将分层语境渲染成 Prompt 可直接注入的系统上下文 |
+| `memory_growth/path_config.py` | 用户记忆路径配置与隔离管理 |
+| `memory_growth/atomic_io.py` | 原子写入与文件锁辅助工具 |
+| `memory_growth/context/` | 成长型语境落盘目录 |
+| `memory_growth/context/users/` | 按用户隔离的成长语境数据目录 |
+| `memory_growth/context/users/<user_id>/facts.json` | 事实抽取结果 |
+| `memory_growth/context/users/<user_id>/layered_context.json` | 分层语境结构化结果 |
+| `memory_growth/context/users/<user_id>/user_prompt_context.txt` | 渲染后的最终 Prompt 上下文 |
+
+### 8) 配置层
+
+| 目录/文件 | 职责 |
+|---|---|
+| `config/prompt_hub.yaml` | Prompt 模板中心 |
+| `config/patterns.yaml` | 合规与安全正则规则 |
+| `config/users_auth.yaml` | 用户鉴权配置 |
+| `config/` 下其他 YAML | 用户个性化规则或运行参数配置 |
+
+### 9) 测试与评估
+
+| 目录/文件 | 职责 |
+|---|---|
+| `tests/conftest.py` | pytest 公共测试配置，负责把项目根目录加入 `sys.path` |
+| `tests/` 下其他测试文件 | 单元测试与集成测试入口，覆盖核心模块行为 |
+| `eval/eval_retriever.py` | 检索器评估脚本：测试召回、MRR、延迟等指标 |
+| `eval/eval_generator.py` | 生成质量评估脚本：使用 LLM-as-a-Judge 评估回答质量 |
+| `eval/run_all_eval.py` | 一键执行检索 + 生成评估的总入口 |
+| `eval/eval_dataset.json` | 评测样本数据集 |
+| `eval/reports/` | 评测结果导出目录，包含 JSON/Markdown 报告 |
+
+### 10) 文档与辅助说明
+
+| 目录/文件 | 职责 |
+|---|---|
+| `README.md` | 项目总说明文档与架构说明 |
+| `Requirements.txt` | 依赖清单 |
+| `tool幫助文檔.md` | 工具开发流程、注册机制、目录规范说明 |
+| `tool創建文檔.md` | 工具创建示例与实现规范 |
+
+## 实际系统主线
+
+如果按“运行主链路”看，这个仓库可以理解为：
+
+### 1) 文档入库链路
+`app_admin.py` → `config/config_loader.py` → `factory/model_factory.py` → `data_prep/pdf_to_markdown.py` → `data_prep/markdown_to_json.py` → `ingest/validator.py` → `ingest/db_uploader.py` → `search/retriever.py` → `search/reranker.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `Milvus`
+
+### 2) 问答链路
+`qa_admin.py` → `factory/model_factory.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `generator/llm_client.py` → `generator/qa_chain.py` → `search/retriever.py` → `search/reranker.py` → `agent/react_agent.py` / `agent/react_agent_integrated.py` → `agent/sandbox.py` → `agent/security.py` → `agent/compliance.py` → `memory/memory_manager.py` → `memory/short_term_memory.py` → `memory/entity_memory.py` → `memory/chat_history_file.py` → `memory_feedback_store.py`
+
+### 3) 外部工具服务链路
+`mcp_server.py` → `factory/tool_factory.py` → `factory/tool_registry.py` → `factory/tools/__init__.py` → `factory/tools/base_tool.py` → `factory/tools/rag_tool.py` / `factory/tools/api_tool.py` / `factory/tools/web_search_tool.py` → 对外暴露工具能力
+
+### 4) 长期成长记忆链路
+`memory_growth/extractor.py` → `memory_growth/layer_mapper.py` → `memory_growth/context_builder.py` → `memory_growth/path_config.py` → `memory_growth/atomic_io.py` → `data/<user_id>/session_*.json` → `memory_growth/context/users/<user_id>/facts.json` → `memory_growth/context/users/<user_id>/layered_context.json` → `memory_growth/context/users/<user_id>/user_prompt_context.txt` → 注入 `generator/qa_chain.py` / `qa_admin.py` 的系统 Prompt
+
+### 5) 可观测性与评测链路
+`api/observability.py` → 扫描 `data/` 下的会话文件；  
+`eval/eval_retriever.py` → `search/retriever.py` / `search/reranker.py`；  
+`eval/eval_generator.py` → `generator/qa_chain.py` / `generator/llm_client.py`；  
+`eval/run_all_eval.py` → 串联检索评测与生成评测并输出报告
+
+### 6) 配置与规则链路
+`config/prompt_hub.yaml` → 提供 Prompt 模板；  
+`config/patterns.yaml` → 提供合规/安全规则；  
+`config/users_auth.yaml` → 提供用户鉴权；  
+这些配置被 `qa_admin.py`、`agent/compliance.py`、`agent/security.py`、`memory_growth/` 等模块共同使用
+
+### 7) 工程支撑链路
+`tests/conftest.py` → 为 `tests/` 下所有测试注入项目根路径；  
+`README.md` / `tool幫助文檔.md` / `tool創建文檔.md` → 提供使用说明、工具编写说明和架构文档；  
+`Requirements.txt` → 记录仓库依赖
 
 ## 快速开始
 
 ```bash
 git clone https://github.com/jerrygao0204/agent_jerry_gao.git
 cd agent_jerry_gao
+pip install -r Requirements.txt
 ```
 
-依赖通过各脚本内的 `install_package()` 在运行时自动 `pip install`（当前仓库未附带 `requirements.txt`），核心依赖包括：`transformers`、`torch`、`pymilvus`、`gradio`、`fastmcp`、`langchain_text_splitters`、`pydantic`、`PyMuPDF` 等。
+版本号未锁定，建议在目标环境跑通一次后用 `pip freeze > requirements.lock.txt` 锁定验证过的版本。
+
+**环境变量（可选，不设置时均有合理默认值）**：
+
+| 变量 | 作用 | 默认值 |
+|---|---|---|
+| `DATA_ROOT` | 会话历史 / 用户原始数据的存储根目录 | `<项目根目录>/data` |
+| `MEMORY_ROOT` | 成长型记忆（`memory_growth`）的存储根目录 | `<项目根目录>/memory_growth/context/users` |
 
 1. **准备向量库**：启动 Milvus（默认连接 `172.17.0.1:19530`，集合名 `finebi_knowledge_chunks`）。
 2. **离线入库**：运行 `data_prep/pdf_to_markdown.py` → `data_prep/markdown_to_json.py`，将文档（当前实现以 PDF 手册为例，是最初用于验证管线的数据源）解析、分块并经 `ingest/validator.py` 校验后由 `ingest/db_uploader.py` 写入 Milvus；换成其他数据源时只需替换解析这一步的输出，后续分块/校验/入库环节可复用。
 3. **启动问答服务**：运行 `qa_admin.py`（Gradio 界面，读取 `config/users_auth.yaml` 做用户鉴权）。
 4. **（可选）暴露 MCP 工具**：运行 `mcp_server.py`，供外部 Agent 通过 MCP 协议调用知识库检索等工具。
+
+## 测试
+
+```bash
+pytest              # 默认只跑轻量单元测试（mock 隔离了真实模型/GPU），几秒内完成
+pytest -m integration --override-ini="addopts=-vs --tb=short"   # 手动运行重型压测（tests/integration/），需要真实 GPU + 已加载模型
+```
+单元测试覆盖：并发写入安全（`atomic_io`/`chat_history_file`）、内容合规拦截、检索逻辑、ReAct 路由分级、用户反馈存储。`tests/integration/` 下的压测默认被 `pytest.ini` 的 `-m "not integration"` 排除，不会拖慢日常测试。
 
 ## 记忆与安全机制详解
 
@@ -103,10 +315,10 @@ cd agent_jerry_gao
 处理链路：
 
 1. **历史会话** `data/<user_id>/session_*.json`
-2. **事实抽取** `extractor.py` 的 `FactExtractor` 从会话中抽取事实，并把抽取水位线 `last_run_at` 记在 `facts.json` 的 `metadata` 字段里，避免重复处理
-3. **四层语境映射** `layer_mapper.py` 将扁平事实映射进标准 schema（`user_profile` 静态画像 + 三层动态语境），写入 `layered_context.json`，支持增量合并与去重
+2. **事实抽取** `extractor.py` 的 `FactExtractor` 从会话中抽取事实，并把抽取水位线 `last_run_at` 记在 `facts.json` 的 `metadata` 字段里，避免重复处理；读取-抽取-写入整个流程通过 `atomic_io.py` 的 `file_lock_for` 加锁，写入用 `atomic_dump_json` 原子替换，避免并发运行或崩溃导致数据丢失/损坏
+3. **四层语境映射** `layer_mapper.py` 将扁平事实映射进标准 schema（`user_profile` 静态画像 + 三层动态语境），写入 `layered_context.json`，支持增量合并与去重，同样接入了加锁+原子写
 4. **语境渲染** `context_builder.py` 按 11 个模块做防御性渲染（处理空字段、字典列表、字符串列表等），产出 `user_prompt_context.txt`，最终被 `QAChain` 注入到系统提示词中，让 Agent 具备跨会话的持续用户认知
-5. 路径统一由 `path_config.py` 的 `UserMemoryPathConfig` 管理，支持多用户隔离
+5. 路径统一由 `config/config_loader.py` 管理（`data_root`/`memory_root`，支持环境变量覆盖），`path_config.py` 的 `UserMemoryPathConfig` 在此基础上按用户隔离
 
 ### Agent 安全防护：沙箱执行 + 内容合规
 
@@ -117,9 +329,13 @@ cd agent_jerry_gao
 
 两条链路共用 `config/patterns.yaml` 作为规则来源，但审查对象和执行方式完全独立。
 
+## 已知的有意排除项
+
+- **路由置信度不足时的主动反问**：`react_agent.py` 两阶段路由在候选分差不明显时反问用户，而不是硬答——这个功能经评估后主动排除，原因是当前用户规模小、彼此可触达培训，用一份使用指南 + 用户培训替代运行时反问的收益更高，且当前部署条件下无法同时加载两个模型。相关测试（`tests/test_react_agent.py` 里依赖 `max_score_gap` 参数的用例）已标记 `@pytest.mark.skip` 并注明原因，不是遗留缺陷。
+
 ## 需要注意的现状
 
-- **硬编码路径**：多处默认路径指向 `/workspace/hf-conda/RAG/问答机器人/...`（如 `memory/chat_history_file.py`、`memory_growth/path_config.py`），迁移环境时需要替换。
-- **在演/在重构文件**：`app_admin.py`、`agent/react_agent_integrated.py`、`factory/tool_registry.py`、`generator/qa_chain.py` 等文件中存在整段注释掉的历史实现，与当前生效代码并存，阅读时需以未注释部分为准。
-- **依赖清单**：仓库本身没有 `requirements.txt`（依赖靠各脚本运行时 `install_package()` 现装），已根据代码里的 import 与 `install_package()` 调用整理出一份 `requirements.txt`（未锁定具体版本，建议实际环境验证后用 `pip freeze` 锁定）。
-- **存储引擎为测试态**：`memory/chat_history_file.py` 当前使用 JSON 文件存储对话历史，注释中说明后续可替换为数据库存储。
+- **存储介质仍是 JSON 文件**：`memory/chat_history_file.py`、`memory_growth/` 已通过 `atomic_io.py` 解决了并发写坏、写入中途崩溃损坏文件的问题（原子替换 + 按路径加锁），但尚未替换为数据库，大规模并发或多进程部署前建议评估是否需要迁移。
+- **`FeedbackStore` 的并发保护范围有限**：`memory/feedback_store.py` 用的是 Python `threading.Lock`，只保护同一进程内的线程并发，如果未来把服务改成多进程部署（如 `gunicorn` 多 worker），需要换成 `filelock.FileLock`，否则并发安全会悄悄失效。
+- **依赖版本未锁定**：`Requirements.txt` 列出了依赖项但未固定版本号，建议在目标环境验证通过后用 `pip freeze` 锁定。
+- **`users_auth.yaml` 当前为占位测试凭证**：仓库中的账号密码是开发测试用的示例数据，不代表真实生产凭证，正式对外使用前需要替换为真实、经过妥善管理的凭证。
