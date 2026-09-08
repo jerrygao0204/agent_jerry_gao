@@ -3,7 +3,15 @@
 path_config.py - 统一管理多用户的输入与输出路径
 """
 
+import sys
 from pathlib import Path
+from typing import Optional
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from config.config_loader import config_loader
 
 
 class UserMemoryPathConfig:
@@ -12,10 +20,16 @@ class UserMemoryPathConfig:
     def __init__(
         self,
         user_id: str,
-        data_root: str = "/workspace/hf-conda/RAG/问答机器人/data",
-        memory_root: str = "/workspace/hf-conda/RAG/问答机器人/memory_growth/context/users",
+        data_root: Optional[str] = None,
+        memory_root: Optional[str] = None,
     ):
         self.user_id = user_id
+
+        config_dict = config_loader.get_config_dict()
+        if data_root is None:
+            data_root = config_dict["data_root"]
+        if memory_root is None:
+            memory_root = config_dict["memory_root"]
 
         # 1. 输入路径：该用户的原始聊天记录目录 (data/gaozheng, data/jiyun 等)
         self.data_dir = Path(data_root) / user_id
