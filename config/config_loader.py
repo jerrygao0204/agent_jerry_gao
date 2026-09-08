@@ -22,6 +22,13 @@ class ConfigLoader:
         # 不设环境变量的情况下行为完全不变，换机器部署时只需要设一个环境变量。
         project_root = os.path.dirname(self.config_dir)
         self.data_root = os.environ.get("DATA_ROOT", os.path.join(project_root, "data"))
+        # 新增：成长记忆根目录。优先读环境变量 MEMORY_ROOT；
+        # 未设置时回退为 <项目根目录>/memory_growth/context/users，
+        # 跟 memory_growth/path_config.py 现在硬编码的路径是同一个目录，只是换成动态计算。
+        self.memory_root = os.environ.get(
+            "MEMORY_ROOT",
+            os.path.join(project_root, "memory_growth", "context", "users"),
+        )
 
     def load_prompts_raw(self) -> Dict[str, Any]:
         """加载原始 YAML 数据结构 (保持 list/dict 原貌)"""
@@ -80,6 +87,7 @@ class ConfigLoader:
             "patterns_path": self.patterns_path,
             "config_dir": self.config_dir,
             "data_root": self.data_root, 
+            "memory_root": self.memory_root,
         }
 
 # 全局单例对象供快捷调用
