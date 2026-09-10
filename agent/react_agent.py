@@ -139,28 +139,6 @@ class ReActAgent:
                 "Question: {input}\n"
                 "{agent_scratchpad}"
             )
-            # self.system_prompt_template = (
-            #     "你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务，"
-            #     "而不是使用固定格式的 Action/Action Input。\n\n"
-            #     "你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：\n"
-            #     "{tools_description}\n\n"
-            #     "请严格按照以下格式输出：\n"
-            #     "1. 先用 <reflection></reflection> 标签做简短自检：这一步要做什么？"
-            #     "代码里是否包含 print() 打印关键中间结果？逻辑是否已经能回答问题？\n"
-            #     "2. 然后输出一个 ```python 代码块，这段代码会被安全沙箱执行，"
-            #     "执行时的 print() 输出和最终的 FINAL_RESULT 变量会作为 Observation 返回给你。\n"
-            #     "3. 如果已经得到最终答案，不要再输出代码块，直接输出 Final Answer。\n\n"
-            #     "示例：\n"
-            #     "<reflection>需要检索知识库获取创建预警用户的步骤，并打印结果方便确认。</reflection>\n"
-            #     "```python\n"
-            #     "res = search_knowledge_base(query=\"怎么创建预警用户\")\n"
-            #     "print(res)\n"
-            #     "FINAL_RESULT = res\n"
-            #     "```\n\n"
-            #     "开始！\n\n"
-            #     "Question: {input}\n"
-            #     "{agent_scratchpad}"
-            # )
 
         # 1. Level 1 Router Prompt (Domain Selection)
         if router_prompt_template:
@@ -408,8 +386,37 @@ class ReActAgent:
                 pkg_names = [pkg for _, pkg in selected_packages]
                 yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
 
-                tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(selected_packages, user_role=self.user_role)
+                # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_BEGIN 🧩✨ ====================
+                logger.info(f"🔧 [Tool Schema Loading] 开始装载工具元数据，共 {len(selected_packages)} 个工具包...")
+                for domain, pkg in selected_packages:
+                    logger.info(f"  → 加载 [{domain}] - [{pkg}]...")
+
+                import time as time_module
+                t_schema_start = time_module.time()
+                try:
+                    tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(
+                        selected_packages, 
+                        user_role=self.user_role
+                    )
+                    t_schema_end = time_module.time()
+                    logger.info(f"✅ [Tool Schema Loading] 完成！耗时 {(t_schema_end - t_schema_start):.2f}s，共获取 {len(tool_names.split(','))} 个工具。")
+                except Exception as e:
+                    t_schema_end = time_module.time()
+                    logger.error(f"❌ [Tool Schema Loading] 异常耗时 {(t_schema_end - t_schema_start):.2f}s：{str(e)}", exc_info=True)
+                    yield self._yield_step("thought", f"⚠️ 工具元数据加载异常: {str(e)}，降级到通用回复模式...")
+                    # 降级处理：跳过工具调用，直接 LLM 回复
+                    full_response = ""
+                    turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+                    for chunk in self.llm_client.stream_generate(messages=turn_messages):
+                        full_response += chunk
+                    final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+                    yield self._yield_step("final_answer", final_ans)
+                    self.memory_mgr.process_assistant_output(final_ans)
+                    self.memory_mgr.commit()
+                    return
+
                 available_tool_names = [t.strip() for t in tool_names.split(",") if t.strip()]
+                # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_END 🧩✨ ====================
            
             scratchpad = ""
 
