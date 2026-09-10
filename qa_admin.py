@@ -18,9 +18,13 @@ except ImportError:
     import plotly.express as px
 
 import os
-import sys
+
+# 避免 Hugging Face tokenizers 在 fork 后触发并行度警告，尤其是 Gradio / Agent 重算时出现多线程 / fork 场景。
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 import gc
 import json
+import time as time_module
 import atexit
 from fastapi import Response, status
 import uuid
@@ -35,6 +39,9 @@ from api.observability import scan_metrics
 from dotenv import load_dotenv
 import pandas as pd
 import plotly.express as px
+import atexit
+import uvicorn
+from fastapi import FastAPI
 # ==========================================
 # 📂 1. 动态注入系统路径与模块导入
 # ==========================================
@@ -121,25 +128,22 @@ global_compliance_checker = None
 # 缓存活跃的 MemoryManager 实例: {user_id: MemoryManager}
 user_memory_managers: Dict[str, MemoryManager] = {}
 
-import os
-import yaml
-import logging
-from typing import Dict, Any, Tuple
-
-# 📌 1. 通用安全 YAML 解析函数 (带兜底数据)
+# 📌 1. 安全加载 YAML 配置文件
 def safe_load_yaml(file_path: str, default_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """安全加载 YAML 配置文件，如果文件不存在或读取失败返回默认值"""
     if not os.path.exists(file_path):
-        logging.warning(f"⚠️ 配置文件不存在: [{file_path}]，启用默认配置。")
+        logging.warning(f"⚠️  配置文件不存在: [{file_path}]，启用默认配置。")
         return default_payload
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or default_payload
+            content = yaml.safe_load(f)
+            return content if content is not None else default_payload
     except Exception as e:
         logging.error(f"❌ 读取配置文件失败 [{file_path}]: {e}")
         return default_payload
 
 
-# 📌 2. 精简后的 load_user_credentials
+# 📌 2. load_user_credentials（从 YAML 配置文件读取用户信息）
 def load_user_credentials() -> Tuple[Dict[str, str], Dict[str, str], Dict[str, str]]:
     default_auth = {"users": {"admin": {"password": "123456", "role": "admin"}}}
     data = safe_load_yaml(USERS_AUTH_PATH, default_auth)
@@ -197,6 +201,35 @@ def get_gpu_memory_status() -> str:
         return f"GPU 0: 已分配 {allocated:.2f} GB | 已预留 {reserved:.2f} GB | 总显存 {total:.2f} GB"
     except Exception as e:
         return f"显存获取异常: {str(e)}"
+
+# def emergency_force_cleanup() -> str:
+#     global global_qa_chain
+#     logging.warning("🚨 [QA Admin] 触发应急显存回收操作！")
+#     global_qa_chain = None
+
+#     try:
+#         if hasattr(ModelFactory, "_instance"):
+#             ModelFactory._instance = None
+#     except Exception as e:
+#         logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
+
+#     try:
+#         ModelFactory.destroy_all_models_cls()
+#     except Exception as e:
+#         logging.error(f"调用 ModelFactory.destroy_all_models_cls 失败: {e}")
+
+#     gc.collect(2)
+
+#     if torch.cuda.is_available():
+#         try:
+#             torch.cuda.synchronize()
+#             torch.cuda.empty_cache()
+#             torch.cuda.ipc_collect()
+#         except Exception as e:
+#             logging.error(f"CUDA 显存回收异常: {e}")
+
+#     logging.info("✨ [QA Admin] 物理显存清理完毕！")
+#     return get_gpu_memory_status()
 
 def emergency_force_cleanup() -> str:
     """
@@ -276,13 +309,13 @@ def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
     """解析 log_pipeline_metrics 輸出的 JSON 日誌（含後台 Print 驗證）"""
     metrics_data = []
     
-    print(f"\n================ [DEBUG METRICS] ================")
-    print(f"🔍 正在檢查日誌檔案路徑: {os.path.abspath(log_path)}")
+    # print(f"\n================ [DEBUG METRICS] ================")
+    # print(f"🔍 正在檢查日誌檔案路徑: {os.path.abspath(log_path)}")
     
-    if not os.path.exists(log_path):
-        print(f"❌ 錯誤：日誌檔案不存在！Path: {log_path}")
-        print(f"=================================================\n")
-        return pd.DataFrame()
+    # if not os.path.exists(log_path):
+    #     print(f"❌ 錯誤：日誌檔案不存在！Path: {log_path}")
+    #     print(f"=================================================\n")
+    #     return pd.DataFrame()
 
     total_lines = 0
     matched_lines = 0
@@ -301,8 +334,8 @@ def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
                     except Exception as e:
                         print(f"⚠️ 找到 [METRICS] 標籤但 JSON 解析失敗: {e} | 原文: {line.strip()}")
                         
-        print(f"📊 掃描完成：總行數 = {total_lines}, 匹配 [METRICS] 行數 = {matched_lines}")
-        print(f"=================================================\n")
+        # print(f"📊 掃描完成：總行數 = {total_lines}, 匹配 [METRICS] 行數 = {matched_lines}")
+        # print(f"=================================================\n")
         
     except Exception as e:
         print(f"❌ 讀取日誌檔案失敗: {e}")
@@ -310,6 +343,24 @@ def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
         return pd.DataFrame()
 
     return pd.DataFrame(metrics_data)
+# def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
+#     """解析 log_pipeline_metrics 輸出的 JSON 日誌"""
+#     metrics_data = []
+#     if not os.path.exists(log_path):
+#         return pd.DataFrame()
+#     try:
+#         with open(log_path, "r", encoding="utf-8") as f:
+#             for line in f:
+#                 if "📊 [METRICS]" in line:
+#                     try:
+#                         json_str = line.split("📊 [METRICS] ")[-1].strip()
+#                         metrics_data.append(json.loads(json_str))
+#                     except Exception:
+#                         continue
+#     except Exception as e:
+#         logging.error(f"解析 Metrics 日誌失敗: {e}")
+#         return pd.DataFrame()
+#     return pd.DataFrame(metrics_data)
 
 def render_observability_dashboard():
     """讀取並格式化 Observability 核心指標與 Plotly 圖表"""
@@ -352,6 +403,23 @@ def render_observability_dashboard():
         fig_gpu = px.scatter(title="⚠️ 暫無 GPU 顯存數據")
 
     return summary_md, metrics, fig_latency, fig_gpu
+
+# def render_observability_dashboard():
+#     """读取并格式化 Observability 核心指标"""
+#     metrics = scan_metrics(data_dir=DATA_DIR)
+    
+#     summary_md = f"""
+# ### 📈 系统运行核心指标概览
+
+# | 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
+# | :--- | :--- | :--- |
+# | **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
+# | **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
+# | **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
+# | **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
+# | **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
+# """
+#     return summary_md, metrics
 
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
@@ -497,7 +565,7 @@ def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choi
         filter_pattern = filter_expr.strip() if (filter_expr and filter_expr.strip()) else None
 
         history.append({"role": "user", "content": clean_message})
-        history.append({"role": "assistant", "content": ""})
+        history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
         # 🎯 2. 混合检索与 Metrics 注入
         t_search_start = time.perf_counter()
@@ -653,7 +721,13 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         return
 
     # user_mem_mgr.short_term.add_message("user", clean_message)
-    user_mem_mgr.process_user_input(clean_message)
+    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_OLD_CODE_BEGIN 🧩✨ ====================
+    # user_mem_mgr.process_user_input(clean_message)
+    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_OLD_CODE_END 🧩✨ ====================
+    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_NEW_CODE_BEGIN (修正：避免重复落盘) 🧩✨ ====================
+    # NOTE: ReActAgent.run_stream() 里已经统一执行 self.memory_mgr.process_user_input(query)，
+    # 所以这里不再重复落盘，否则同一条用户输入会写入两次到 history_storage.json。
+    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_NEW_CODE_END 🧩✨ ====================
 
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
@@ -682,18 +756,24 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
                                  ):
         stage = step.get("stage")
         content = step.get("content", "")
-        inspector_log += f"{content}\n\n"
+        cleaned_content = normalize_message_content(content)
+        inspector_log += f"{cleaned_content}\n\n"
 
         if stage == "final_answer":
-            history[-1]["content"] = content
-            final_reply = content
+            history[-1]["content"] = cleaned_content
+            final_reply = cleaned_content
         elif stage == "rollback":
-            history[-1]["content"] = f"🚨 **任务中断**: \n{content}"
-            final_reply = f"🚨 任务中断: {content}"
+            history[-1]["content"] = f"🚨 **任务中断**: \n{cleaned_content}"
+            final_reply = f"🚨 任务中断: {cleaned_content}"
 
         choices = fetch_session_dropdown_choices(username)
         yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
-                                     
+
+    # 持久化保存 AI 最终回答
+    # 💾 【核心修正】採用 MemoryManager 封裝的合法持久化 API 落盤
+    # if final_reply:
+    #     user_mem_mgr.process_assistant_output(final_reply)
+
     # 📊 寫入 Agent 總 pipeline Metrics 日誌 (供 Tab 4 圖表使用)
     t_agent_end = time.perf_counter()
     log_pipeline_metrics("agent_execution", (t_agent_end - t_agent_start) * 1000, {
@@ -706,7 +786,7 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     yield history, inspector_log, "✅ 任务完成", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
     
 
-# 容错处理防止 Radio 报错
+# 新建 Session 切换函数（容错处理防止 Radio 报错）
 def create_new_session_event(user_state: dict):
     username = user_state.get("username", "default")
     new_sess_id = str(uuid.uuid4())
@@ -719,7 +799,7 @@ def create_new_session_event(user_state: dict):
 
     return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
 
-# 用户点赞/点踩及意见反馈组件
+# 新建 用户点赞/点踩及意见反馈组件
 def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict):
     """
     处理 gr.Chatbot 逐条消息的点赞 / 点踩事件并写入 feedback_store
@@ -768,9 +848,293 @@ def switch_session_event(selected_session_id: str, user_state: dict):
 
     mem_mgr = get_or_create_user_memory(username, session_id=selected_session_id)
     raw_msgs = mem_mgr.short_term.get_messages()
-    rendered_history = [{"role": m["role"], "content": m["content"]} for m in raw_msgs]
+    rendered_history = [{"role": m["role"], "content": normalize_message_content(m.get("content", ""))} for m in raw_msgs]
     
     return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
+
+
+# ==================== ✨🧩 TAB3_MESSAGE_SANITIZE_BEGIN 🧩✨ ====================
+# 添加缓存以加快重复标准化同一内容的性能（如在编辑面板重建中）
+_normalize_cache = {}
+_normalize_cache_hits = 0  # 统计缓存命中数
+
+def normalize_message_content(raw_content: Any) -> str:
+    """统一清洗历史消息内容：去掉 <think> 思考过程，并把 [{'text': '...'}] 这类结构化文本拼成纯文本。
+    使用缓存加快重复调用性能。"""
+    global _normalize_cache_hits
+    
+    if raw_content is None:
+        return ""
+    
+    # 为了缓存键，转换为可哈希的字符串
+    if isinstance(raw_content, str):
+        cache_key = raw_content
+    else:
+        try:
+            cache_key = json.dumps(raw_content, ensure_ascii=False, default=str, sort_keys=True)
+        except Exception:
+            cache_key = str(raw_content)
+    
+    # 尝试从缓存读取
+    if cache_key in _normalize_cache:
+        _normalize_cache_hits += 1
+        if _normalize_cache_hits % 100 == 0:  # 每100次命中打印一次
+            logging.debug(f"  💾 normalize_message_content 缓存命中次数: {_normalize_cache_hits}")
+        return _normalize_cache[cache_key]
+    
+    # 原始规范化逻辑
+    if isinstance(raw_content, str):
+        text = raw_content
+    elif isinstance(raw_content, (list, tuple, dict)):
+        try:
+            text = json.dumps(raw_content, ensure_ascii=False, default=str)
+        except Exception:
+            text = str(raw_content)
+    else:
+        text = str(raw_content)
+
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    text = re.sub(r"<think>.*$", "", text, flags=re.DOTALL)
+
+    # 结构化内容常见为 "[{'text': '你好，我叫gaozheng'}]" 或 "{'text': '你好'}"
+    # 这里自动抽取所有 text 字段，并去掉列表/字典外壳，只保留真正展示的文本。
+    field_matches = re.findall(
+        r"(?:'text'|\"text\")\s*:\s*(?:'((?:\\.|[^'\\])*)'|\"((?:\\.|[^\"\\])*)\")",
+        text,
+        flags=re.DOTALL,
+    )
+    if field_matches:
+        extracted = []
+        for item in field_matches:
+            extracted.append(item[0] if item[0] else item[1])
+        if extracted:
+            text = " ".join(part for part in extracted if part).strip()
+
+    # 进一步清理列表/字典结构残留字符，如 [{'text': ...}] 和尾部 ]、}、[, 等。
+    text = text.replace("[{", "").replace("}]", "").replace("}]", "").replace("} ]", "").replace("[{'text':", "").replace("', 'text':", "")
+    text = text.replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+    text = text.replace("'text':", "").replace('"text":', "")
+    text = text.replace("'", "").replace('"', "")
+    text = re.sub(r"\s+", " ", text).strip()
+    
+    # 限制缓存大小，防止无限增大
+    if len(_normalize_cache) > 5000:  # 如果缓存超过5000项，清空一半
+        _normalize_cache.clear()
+        logging.info(f"  🗑️ normalize_message_content 缓存已清空（防止超大）")
+    
+    _normalize_cache[cache_key] = text
+    return text
+
+
+
+
+def build_agent_editable_user_turn_choices(history: List[Dict[str, Any]]) -> List[Tuple[str, str]]:
+    t_start = time_module.time()
+    
+    choices: List[Tuple[str, str]] = []
+    if not history:
+        return choices
+
+    round_index = 0
+    for idx, msg in enumerate(history):
+        if not isinstance(msg, dict) or msg.get("role") != "user":
+            continue
+        round_index += 1
+        
+        # 记录处理每个消息的耗时
+        t_norm_start = time_module.time()
+        content = normalize_message_content(msg.get("content", ""))
+        t_norm_end = time_module.time()
+        
+        if t_norm_end - t_norm_start > 0.5:  # 如果某条消息处理超过500ms，记录警告
+            logging.warning(f"  ⚠️ 消息 [{idx}] 规范化耗时 {(t_norm_end - t_norm_start):.2f}s（内容长度: {len(str(msg.get('content', '')))}）")
+        
+        preview = content[:24] + ("..." if len(content) > 24 else "")
+        choices.append((f"第 {round_index} 轮用户提问: {preview}", str(idx)))
+
+    t_end = time_module.time()
+    logging.info(f"  → build_choices 完成：扫描 {len(history)} 条历史，找到 {round_index} 个用户轮次，总耗时 {(t_end - t_start):.2f}s")
+    return choices
+    # ==================== ✨🧩 BUILD_CHOICES_DEBUG_END 🧩✨ ====================
+
+
+def refresh_agent_edit_panel_from_history(history: List[Dict[str, Any]]):
+    logging.info(f"🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: {len(history)}...")
+    t_build_start = time_module.time()
+    
+    choices = build_agent_editable_user_turn_choices(history or [])
+    
+    t_build_end = time_module.time()
+    logging.info(f"  → 构建选项耗时 {(t_build_end - t_build_start):.2f}s，共 {len(choices)} 个用户提问轮次")
+    
+    if not choices:
+        logging.info(f"  → 未找到用户轮次，返回空选项")
+        return gr.update(choices=[], value=None), ""
+
+    selected_idx = choices[-1][1]
+    edit_text = ""
+    t_load_start = time_module.time()
+    try:
+        msg_obj = history[int(selected_idx)]
+        if isinstance(msg_obj, dict):
+            edit_text = normalize_message_content(msg_obj.get("content", ""))
+        t_load_end = time_module.time()
+        logging.info(f"  → 加载最新用户轮次内容耗时 {(t_load_end - t_load_start):.2f}s")
+    except Exception as e:
+        t_load_end = time_module.time()
+        logging.warning(f"  → 加载最新轮次内容异常（耗时 {(t_load_end - t_load_start):.2f}s）: {e}")
+        edit_text = ""
+
+    logging.info(f"✅ [编辑面板逻辑] 完成，返回 {len(choices)} 个选项")
+    return gr.update(choices=choices, value=selected_idx), edit_text
+    # ==================== ✨🧩 EDIT_PANEL_LOGIC_DEBUG_END 🧩✨ ====================
+
+
+def load_agent_selected_user_turn_content(history: List[Dict[str, Any]], selected_user_turn_idx: Optional[str]):
+    if not history or selected_user_turn_idx in (None, ""):
+        return ""
+    try:
+        idx = int(selected_user_turn_idx)
+        msg_obj = history[idx]
+        if isinstance(msg_obj, dict) and msg_obj.get("role") == "user":
+            return normalize_message_content(msg_obj.get("content", ""))
+    except Exception:
+        pass
+    return ""
+
+
+def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kept_history: List[Dict[str, str]]):
+    """重建代理会话，使用保留的历史消息作为前缀。包含性能诊断日志。"""
+
+    t_start = time_module.time()
+    
+    session_id = mem_mgr.session_id
+    logging.info(f"🔄 [会话重建] 开始重建会话 {session_id[:8]}...，保留消息数: {len(kept_history)}")
+
+    if hasattr(mem_mgr, "history_storage"):
+        try:
+            t_del = time_module.time()
+            mem_mgr.history_storage.delete_session(username, session_id)
+            logging.info(f"  → 删除旧会话耗时 {(time_module.time() - t_del):.2f}s")
+        except Exception as e:
+            logging.error(f"❌ 重建会话时删除旧会话失败: {e}")
+
+        try:
+            t_create = time_module.time()
+            first_user = next((normalize_message_content(m.get("content", "")) for m in kept_history if m.get("role") == "user"), "新对话")
+            title = (str(first_user)[:15] + "...") if len(str(first_user)) > 15 else str(first_user)
+            mem_mgr.history_storage.create_session(username, session_id, title=title or "新对话")
+            logging.info(f"  → 创建新会话索引耗时 {(time_module.time() - t_create):.2f}s")
+        except Exception as e:
+            logging.error(f"❌ 重建会话时创建会话索引失败: {e}")
+
+    t_clear = time_module.time()
+    mem_mgr.short_term.clear()
+    mem_mgr.entity.clear()
+    logging.info(f"  → 清空内存缓存耗时 {(time_module.time() - t_clear):.2f}s")
+
+    t_process = time_module.time()
+    for idx, msg in enumerate(kept_history):
+        role = msg.get("role")
+        content = normalize_message_content(msg.get("content", ""))
+        if not content:
+            continue
+        if role == "user":
+            mem_mgr.process_user_input(content)
+        elif role == "assistant":
+            mem_mgr.process_assistant_output(content)
+        
+        # 每处理10条消息输出一次进度
+        if (idx + 1) % 10 == 0:
+            logging.debug(f"    └─ 已处理 {idx + 1} 条消息")
+    
+    t_end = time_module.time()
+    logging.info(f"  → 重建内存消息耗时 {(t_end - t_process):.2f}s，总耗时 {(t_end - t_start):.2f}s")
+    logging.info(f"✅ [会话重建] 完成")
+    # ==================== ✨🧩 REBUILD_SESSION_DEBUG_END 🧩✨ ====================
+
+
+def regenerate_agent_from_edited_turn(
+    history: List[Dict[str, str]],
+    selected_user_turn_idx: Optional[str],
+    edited_user_message: str,
+    llm_model: str,
+    top_k_ret: int,
+    top_k_rerank: int,
+    filter_input: str,
+    user_state: dict,
+):
+    safe_history = history or []
+    clean_message = normalize_message_content(edited_user_message)
+    username = user_state.get("username", "default") if isinstance(user_state, dict) else "default"
+    mem_mgr = get_or_create_user_memory(username)
+
+    if not clean_message:
+        yield safe_history, "⚠️ 编辑后的提问不能为空", "⚠️ 编辑内容为空", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+        return
+
+    if selected_user_turn_idx in (None, ""):
+        yield safe_history, "⚠️ 请先选择要编辑的历史提问", "⚠️ 未选择历史轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+        return
+
+    try:
+        turn_idx = int(selected_user_turn_idx)
+    except Exception:
+        yield safe_history, "⚠️ 历史轮次索引无效", "⚠️ 索引无效", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+        return
+
+    if turn_idx < 0 or turn_idx >= len(safe_history):
+        yield safe_history, "⚠️ 选择的轮次超出范围", "⚠️ 轮次超出范围", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+        return
+
+    target_msg = safe_history[turn_idx]
+    if not isinstance(target_msg, dict) or target_msg.get("role") != "user":
+        yield safe_history, "⚠️ 仅支持编辑用户提问轮次", "⚠️ 非用户轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+        return
+
+    kept_history: List[Dict[str, str]] = []
+    for msg in safe_history[:turn_idx]:
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get("role")
+        content = normalize_message_content(msg.get("content", ""))
+        if role in ("user", "assistant") and content:
+            kept_history.append({"role": role, "content": content})
+
+    rebuild_agent_session_with_prefix(mem_mgr, username, kept_history)
+
+    final_history = kept_history
+    final_inspector = "*等待启动诊断...*"
+    final_status = "🤖 推理中..."
+    final_gpu = get_gpu_memory_status()
+    final_radio_update = gr.update(choices=fetch_session_dropdown_choices(username), value=mem_mgr.session_id)
+
+    for out in agent_stream_predict(
+        user_message=clean_message,
+        history=kept_history,
+        llm_model=llm_model,
+        top_k_ret=top_k_ret,
+        top_k_rerank=top_k_rerank,
+        filter_input=filter_input,
+        user_state=user_state,
+    ):
+        chat_hist, inspector_md, status_text, gpu_text, radio_update = out
+        final_history, final_inspector, final_status, final_gpu, final_radio_update = chat_hist, inspector_md, status_text, gpu_text, radio_update
+        
+        yield chat_hist, inspector_md, status_text, gpu_text, radio_update, gr.skip(), gr.skip()
+
+    # 编辑面板刷新
+    logging.info(f"开始重建编辑选项...")
+    try:
+        selector_update, edit_text = refresh_agent_edit_panel_from_history(final_history)
+    except Exception as e:
+        logging.error(f"编辑面板刷新异常：{str(e)}", exc_info=True)
+        # 异常时返回空更新
+        selector_update = gr.update(choices=[], value=None)
+        edit_text = ""
+
+    yield final_history, final_inspector, final_status, final_gpu, final_radio_update, selector_update, edit_text
+# ==================== ✨🧩 TAB3_EDIT_REGENERATE_END 🧩✨ ====================
 
 def test_tool_execution(tool_name, tool_input_json, user_state: dict):
     start_time = time.time()
@@ -884,6 +1248,14 @@ def stream_agent_sandbox_execution(
         logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
         yield full_log + f"\n\n🚨 异常: {str(e)}"
 
+# def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
+#     """按角色动态过滤可展示的工具列表"""
+#     tools = []
+#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
+#         for name, tool_obj in tool_factory._flat_tools.items():
+#             if tool_factory._is_tool_visible(tool_obj, user_role):
+#                 tools.append(name)
+#     return tools or ["search_knowledge_base"]
 def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     tools = []
     print(f"\n---------------- [DEBUG 2: 下拉框过滤] ----------------")
@@ -898,6 +1270,11 @@ def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     print(f"👉 最终生成下拉框列表: {tools}")
     print(f"-------------------------------------------------------\n")
     return tools or ["search_knowledge_base"]
+# def get_all_registered_tool_names() -> list:
+#     tools = []
+#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
+#         tools = list(tool_factory._flat_tools.keys())
+#     return tools or ["search_knowledge_base"]
 
 # ==========================================
 # 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
@@ -1104,6 +1481,21 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
 
     registered_tools = get_all_registered_tool_names()
 
+# def build_qa_admin_ui(qa_chain: Optional[Any] = None):
+#     yaml_path = os.path.join(SCRIPT_DIR, "tools.yaml")
+#     try:
+#         if qa_chain is not None:
+#             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
+#         else:
+#             retriever = FineBIRetriever(milvus_host=DEFAULT_QA_CONFIG["milvus_host"], milvus_port=DEFAULT_QA_CONFIG["milvus_port"], collection_name=DEFAULT_QA_CONFIG["collection_name"], cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+#             reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+#             init_tools(retriever=retriever, reranker=reranker)
+#     except Exception as e:
+#         logging.warning(f"⚠️ 工具初始化说明: {e}")
+
+#     registered_tools = get_all_registered_tool_names()
+
+
     with gr.Blocks(title="FineBI QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
         # 用户状态存取 State
         user_state = gr.State(value={"is_logged_in": False, "username": ""})
@@ -1187,7 +1579,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         fn=qa_stream_predict,
                         inputs=[msg_input, chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
                         # outputs=[chatbot, sources_display, status_box, gpu_box, t1_session_radio, t1_session_radio]
-                        outputs=[chatbot, sources_display, status_box, gpu_box]
+                                               outputs=[chatbot, sources_display, status_box, gpu_box]
                         # outputs=[chatbot, sources_display, status_box, gpu_box, gpu_box, gpu_box]
                     ).then(fn=lambda: "", inputs=None, outputs=[msg_input])
 
@@ -1265,6 +1657,22 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                                     gr.Markdown("### 🔬 Agent 运行诊断 (Inspector)")
                                     agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
 
+                                    # ==================== ✨🧩 TAB3_EDIT_UI_BEGIN 🧩✨ ====================
+                                    with gr.Accordion("✏️ 编辑历史提问并重新生成", open=False):
+                                        t3_edit_turn_selector = gr.Dropdown(
+                                            label="选择要编辑的用户提问轮次",
+                                            choices=[],
+                                            value=None,
+                                            interactive=True
+                                        )
+                                        t3_edit_input = gr.Textbox(
+                                            label="修改后的提问内容",
+                                            placeholder="点击“更新并重新生成”后，将保留该轮以上历史并删除后续重算",
+                                            lines=3
+                                        )
+                                        btn_t3_apply_edit = gr.Button("🔁 更新并重新生成", variant="secondary")
+                                    # ==================== ✨🧩 TAB3_EDIT_UI_END 🧩✨ ====================
+
                     # Tab 3 事件绑定
                     # 用户赞踩反馈机制
                     agent_chatbot.like(
@@ -1272,39 +1680,107 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         inputs=[agent_chatbot, user_state],
                         outputs=None  # 纯后台异步静默记录，不打扰前端输出
                     )
-                    
-                    btn_agent_send.click(
+
+                    # ==================== ✨🧩 TAB3_EVENT_OLD_CODE_BEGIN (已注释保留) 🧩✨ ====================
+                    # btn_agent_send.click(
+                    #     fn=agent_stream_predict,
+                    #     inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
+                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, gpu_box, t3_session_radio]
+                    # ).then(fn=lambda: "", inputs=None, outputs=[agent_msg_input])
+
+                    # btn_t3_new_chat.click(
+                    #     fn=create_new_session_event,
+                    #     inputs=[user_state],
+                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, t3_session_radio]
+                    # )
+
+                    # t3_session_radio.change(
+                    #     fn=switch_session_event,
+                    #     inputs=[t3_session_radio, user_state],
+                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box]
+                    # )
+
+                    # btn_t3_refresh_sess.click(
+                    #     fn=lambda st: gr.update(choices=fetch_session_dropdown_choices(st.get("username", "default"))),
+                    #     inputs=[user_state],
+                    #     outputs=[t3_session_radio]
+                    # )
+
+                    # btn_agent_clear.click(
+                    #     fn=clear_agent_memory,
+                    #     inputs=[user_state],
+                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, agent_msg_input, t3_session_radio]
+                    # )
+                    # ==================== ✨🧩 TAB3_EVENT_OLD_CODE_END (已注释保留) 🧩✨ ====================
+
+                    # ==================== ✨🧩 TAB3_EVENT_NEW_CODE_BEGIN (修改後) 🧩✨ ====================
+                    t3_send_event = btn_agent_send.click(
                         fn=agent_stream_predict,
                         inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
                         outputs=[agent_chatbot, agent_inspector_display, agent_status_box, gpu_box, t3_session_radio]
-                    ).then(fn=lambda: "", inputs=None, outputs=[agent_msg_input])
+                    )
+                    t3_send_event.then(fn=lambda: "", inputs=None, outputs=[agent_msg_input]).then(
+                        fn=refresh_agent_edit_panel_from_history,
+                        inputs=[agent_chatbot],
+                        outputs=[t3_edit_turn_selector, t3_edit_input]
+                    )
 
-                    btn_t3_new_chat.click(
+                    t3_new_chat_event = btn_t3_new_chat.click(
                         fn=create_new_session_event,
                         inputs=[user_state],
                         outputs=[agent_chatbot, agent_inspector_display, agent_status_box, t3_session_radio]
                     )
+                    t3_new_chat_event.then(
+                        fn=refresh_agent_edit_panel_from_history,
+                        inputs=[agent_chatbot],
+                        outputs=[t3_edit_turn_selector, t3_edit_input]
+                    )
 
-                    # 【解冻并修复】点击历史会话 Radio 时切换对话
-                    t3_session_radio.change(
+                    t3_switch_event = t3_session_radio.change(
                         fn=switch_session_event,
                         inputs=[t3_session_radio, user_state],
                         outputs=[agent_chatbot, agent_inspector_display, agent_status_box]
                     )
+                    t3_switch_event.then(
+                        fn=refresh_agent_edit_panel_from_history,
+                        inputs=[agent_chatbot],
+                        outputs=[t3_edit_turn_selector, t3_edit_input]
+                    )
 
-                    # 【解冻并修复】刷新会话列表按钮事件
-                    btn_t3_refresh_sess.click(
+                    t3_refresh_event = btn_t3_refresh_sess.click(
                         fn=lambda st: gr.update(choices=fetch_session_dropdown_choices(st.get("username", "default"))),
                         inputs=[user_state],
                         outputs=[t3_session_radio]
                     )
+                    t3_refresh_event.then(
+                        fn=refresh_agent_edit_panel_from_history,
+                        inputs=[agent_chatbot],
+                        outputs=[t3_edit_turn_selector, t3_edit_input]
+                    )
 
-                    # 【清理垃圾字符】清空会话按钮事件
-                    btn_agent_clear.click(
+                    t3_clear_event = btn_agent_clear.click(
                         fn=clear_agent_memory,
                         inputs=[user_state],
                         outputs=[agent_chatbot, agent_inspector_display, agent_status_box, agent_msg_input, t3_session_radio]
                     )
+                    t3_clear_event.then(
+                        fn=refresh_agent_edit_panel_from_history,
+                        inputs=[agent_chatbot],
+                        outputs=[t3_edit_turn_selector, t3_edit_input]
+                    )
+
+                    t3_edit_turn_selector.change(
+                        fn=load_agent_selected_user_turn_content,
+                        inputs=[agent_chatbot, t3_edit_turn_selector],
+                        outputs=[t3_edit_input]
+                    )
+
+                    btn_t3_apply_edit.click(
+                        fn=regenerate_agent_from_edited_turn,
+                        inputs=[agent_chatbot, t3_edit_turn_selector, t3_edit_input, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
+                        outputs=[agent_chatbot, agent_inspector_display, agent_status_box, gpu_box, t3_session_radio, t3_edit_turn_selector, t3_edit_input]
+                    )
+                    # ==================== ✨🧩 TAB3_EVENT_NEW_CODE_END (修改後) 🧩✨ ====================
 
                 # ---------------------------------------------------------
                 # 🌟 Tab 4: 📊 基础运维与可观测性面板 (新增)
@@ -1332,7 +1808,23 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         inputs=None,
                         outputs=[obs_summary_display, obs_json_display, plot_latency, plot_gpu]
                     )
-             
+                # with gr.Tab("📊 基础运维与可观测性"):
+                #     gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
+                #     with gr.Row():
+                #         btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
+                    
+                #     with gr.Row():
+                #         with gr.Column(scale=7):
+                #             obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
+                #         with gr.Column(scale=5):
+                #             obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
+
+                #     # 页面首次加载或点击刷新时更新监控指标
+                #     btn_refresh_obs.click(
+                #         fn=render_observability_dashboard,
+                #         inputs=None,
+                #         outputs=[obs_summary_display, obs_json_display]
+                #     )
         # =========================================================
         # 🔑 登录视图切换逻辑绑定
         # =========================================================
@@ -1372,36 +1864,29 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
             if old_pwd == new_pwd:
                 return "❌ 新密码不能与原密码相同！"
             
-            # 5. YAML 文件持久化落盘逻辑
-            # yaml_path = "config/users_auth.yaml"
-            yaml_path = USERS_AUTH_PATH
-
             try:
-                # 读取现有 YAML 文件结构保持注释或格式
-                if os.path.exists(yaml_path):
-                    with open(yaml_path, "r", encoding="utf-8") as f:
-                        yaml_data = yaml.safe_load(f) or {}
-                else:
-                    yaml_data = {"users": {}}
-
-                # 更新对应用户的密码
-                if "users" not in yaml_data:
-                    yaml_data["users"] = {}
-                
-                yaml_data["users"][u_clean] = new_pwd
-
-                # 写回 YAML 文件
-                with open(yaml_path, "w", encoding="utf-8") as f:
-                    yaml.safe_dump(yaml_data, f, allow_unicode=True, sort_keys=False)
-
-                # 同步更新当前运行时的内存字典
+                # ✅ 内存中更新
                 VALID_USERS_PWD[u_clean] = new_pwd
                 
-                return "✅ 密码修改成功！YAML 文件已更新，请返回登录。"
+                # 💾 尝试持久化到 YAML 文件
+                auth_data = safe_load_yaml(USERS_AUTH_PATH, {"users": {}})
+                users_data = auth_data.get("users", {})
+                
+                if u_clean in users_data:
+                    users_data[u_clean]["password"] = new_pwd
+                    auth_data["users"] = users_data
+                    
+                    # 写入 YAML 文件
+                    with open(USERS_AUTH_PATH, "w", encoding="utf-8") as f:
+                        yaml.safe_dump(auth_data, f, default_flow_style=False, allow_unicode=True)
+                    
+                    return "✅ 密码修改成功！已持久化到配置文件。"
+                else:
+                    return "✅ 密码修改成功！（内存已更新，配置文件中用户信息不存在）"
                 
             except Exception as e:
-                logging.error(f"❌ 写入 users_auth.yaml 失败: {e}")
-                return f"❌ 密码修改失败（磁盘写入异常）: {str(e)}"
+                logging.error(f"❌ 密码修改异常: {e}")
+                return f"⚠️  密码已在内存中修改，但文件持久化失败: {str(e)}"
             
         btn_submit_change_pwd.click(
             fn=perform_change_password,
@@ -1423,7 +1908,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     gr.update(choices=[], value=None),         # t3_session_radio
                     gr.update(choices=[], value=None),         # tool_select (新增)
                     "*点击上方刷新按钮同步最新统计数据...*",        # obs_md
-                    {}                                         # obs_json
+                    {},                                        # obs_json
+                    None,                                      # plot_latency
+                    None                                       # plot_gpu
                 )
 
             # 2. 读取 Cookie Header 并打印日志
@@ -1496,7 +1983,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     gr.update(choices=[], value=None),                        # t3_session_radio
                     gr.update(choices=[], value=None),                        # tool_select
                     "*点击上方刷新按钮同步最新统计数据...*",
-                    {}
+                    {},
+                    None,
+                    None
                 )
 
         # 关键修改：绑定 demo.load 时必须包含 Request 隐式/显式传入逻辑
@@ -1543,7 +2032,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     if default_sess not in valid_values and valid_values:
                         default_sess = valid_values[0]
 
-                obs_md, obs_json = render_observability_dashboard()
+                obs_md, obs_json, _fig_lat, _fig_gpu = render_observability_dashboard()
                 return (
                     gr.update(visible=False),              # login_view 隐藏
                     gr.update(visible=True),               # main_portal_view 显示
@@ -1563,6 +2052,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     {"is_logged_in": False, "username": ""},
                     "❌ 用户名或密码错误，请重试！",
                     gr.update(choices=[], value=None),
+                    gr.update(choices=[], value=None),
+                    "*点击上方刷新按钮同步最新统计数据...*",
+                    {},
                 )
 
         # 简化后的登录事件绑定
@@ -1618,10 +2110,6 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
 # 🚀 6. 应用启动入口
 # ==========================================
 if __name__ == "__main__":
-    import atexit
-    import uvicorn
-    from fastapi import FastAPI
-    import gradio as gr
 
     def on_app_shutdown():
         logging.info("⚡关闭QA服务，清除GPU显存...")
@@ -1659,3 +2147,20 @@ if __name__ == "__main__":
         port=7865,
         log_level="info"
     )
+# if __name__ == "__main__":
+#     import atexit
+    
+#     def on_app_shutdown():
+#         logging.info("⚡ 关闭 QA 服务，清除 GPU 显存...")
+#         emergency_force_cleanup()
+
+#     atexit.register(on_app_shutdown)
+
+#     qa_ui = build_qa_admin_ui()
+    
+#     qa_ui.queue().launch(
+#         server_name="0.0.0.0",
+#         server_port=7865,
+#         root_path="/qa"
+#         # share=True
+#     )
