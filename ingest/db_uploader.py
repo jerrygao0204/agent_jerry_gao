@@ -10,6 +10,7 @@ import torch
 from pymilvus import MilvusClient, DataType
 import sys
 import hashlib
+import openai
 
 # 动态将当前脚本的上一级目录（即项目根目录 /workspace）加入 sys.path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,51 +22,48 @@ from factory.model_factory import ModelFactory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-class FineBIMilvusUploader:
-    """基于 MilvusClient 的 FineBI 知识库双路写入与检索验证器"""
+class MilvusUploader:
+    """基于 MilvusClient 的知识库双路写入与检索验证器"""
 
     def __init__(
         self,
         milvus_host: str = "172.17.0.1",
         milvus_port: str = "19530",
         collection_name: str = "finebi_knowledge_chunks",
-        model_short_name: str = "Qwen/Qwen3-Embedding-8B",
-        cache_dir: str = "/workspace/hf-conda/hf_cache/hub",
-        cuda_device: str = "0"
+        litellm_base_url: str = "http://172.17.0.1:4000/v1",  # 🟢 對齊你的 LiteLLM 代理位址
+        embedding_model_name: str = "qwen3-embedding-4B"       # 🟢 代理中註冊的 Embedding 模型名稱
     ):
         self.collection_name = collection_name
-        self.model_short_name = model_short_name
-        self.cache_dir = cache_dir
+        self.embedding_model_name = embedding_model_name
         
-        # 1. 实例化模型工厂底座（这一步会自动构建环境并建立软链接）
-        self.factory = ModelFactory(cache_dir=self.cache_dir)
-        
-        # 2. 统一管理并绑定 GPU 算力分配
-        self.factory.setup_cuda_device(cuda_device)
-        
+        # 使用與主應用一致的 LiteLLM 代理客戶端
+        self.openai_client = openai.OpenAI(
+            api_key="sk-1234",
+            base_url=litellm_base_url
+        )
+
         self.model = None
         self.tokenizer = None
-        
-        # 使用现代化的 MilvusClient 建立连接
-        self.client = MilvusClient(uri=f"http://{milvus_host}:{milvus_port}")
-        logging.info(f"⚡ 成功连接 to Milvus Client [http://{milvus_host}:{milvus_port}]")
 
-    def _init_embedding_engine(self):
-        """⚡ 转向模型工厂获取实例，工厂内部已处理好环境与软链接"""
-        if self.model is None or self.tokenizer is None:
-            # 🎯 修复点：调用工厂的 get_llm_model 实例方法，并将接收变量顺序调整为 (model, tokenizer)
-            self.model, self.tokenizer = self.factory.get_llm_model(
-                llm_short_name=self.model_short_name
-            )
+        # 现代化的 MilvusClient 建立连接
+        self.milvus_client = MilvusClient(uri=f"http://{milvus_host}:{milvus_port}")
+        logging.info(f"⚡ 成功连接到 Milvus Client 并绑定 LiteLLM 代理 Embedding 端点")
 
     def get_dense_embedding(self, text: str) -> List[float]:
-        self._init_embedding_engine()
-        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512).to(self.model.device)
-        with torch.no_grad():
-            outputs = self.model(**inputs, output_hidden_states=True)
-            embeddings = outputs.hidden_states[-1].mean(dim=1)
-        return embeddings[0].to(torch.float32).cpu().numpy().tolist()
-
+        """⚡ 透過 LiteLLM 代理統一獲取稠密向量 (Dense Vector)"""
+        try:
+            response = self.openai_client.embeddings.create(
+                model=self.embedding_model_name,
+                input=text
+            )
+            # 方法 A：直接使用物件屬性（建議）
+            embeddings_data = response.data
+            vector = embeddings_data[0].embedding
+            print(f"DEBUG: 實際生成的向量維度 = {len(vector)}")
+            return vector
+        except Exception as e:
+            logging.error(f"❌ 呼叫 LiteLLM Embedding 介面失敗: {e}")
+            raise e
 
     @staticmethod
     def generate_sparse_vector(text: str) -> Dict[int, float]:
@@ -85,13 +83,33 @@ class FineBIMilvusUploader:
         if torch.cuda.memory_stats(0).get("inactive_split_bytes", 0) > 500 * 1024**2:
             torch.cuda.empty_cache()
 
+    def get_model_dimension(self) -> int:
+        """自動探測當前 Embedding 模型產出的向量維度"""
+        try:
+            response = self.openai_client.embeddings.create(
+                            model=self.embedding_model_name,
+                            input=''
+                        )
+            # 兼容 Pydantic 物件與字典兩種回傳格式
+            if hasattr(response, "data"):
+                dim = len(response.data[0].embedding)
+            else:
+                dim = len(response['data'][0]['embedding'])
+            
+            logging.info(f"🔍 成功探測到當前模型 [{self.embedding_model_name}] 的向量維度: {dim}")
+            return dim
+        except Exception as e:
+            logging.error(f"❌ 無法探測向量維度，請檢查模型配置: {e}")
+            raise e
+    
     def _create_collection(self, force_recreate: bool = False):
         """基于 MilvusClient 的 Schema 创建方式"""
-        exists = self.client.has_collection(collection_name=self.collection_name)
+        dynamic_dim = self.get_model_dimension()
+        exists = self.milvus_client.has_collection(collection_name=self.collection_name)
 
         if exists and force_recreate:
             logging.info(f"🗑️ 强制清理旧版数据集合: {self.collection_name}")
-            self.client.drop_collection(collection_name=self.collection_name)
+            self.milvus_client.drop_collection(collection_name=self.collection_name)
             time.sleep(1)
             exists = False
 
@@ -100,7 +118,7 @@ class FineBIMilvusUploader:
             schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
             
             schema.add_field(field_name="chunk_id", datatype=DataType.VARCHAR, is_primary=True, max_length=100)
-            schema.add_field(field_name="dense_vector", datatype=DataType.FLOAT_VECTOR, dim=4096)
+            schema.add_field(field_name="dense_vector", datatype=DataType.FLOAT_VECTOR, dim=dynamic_dim)
             schema.add_field(field_name="sparse_vector", datatype=DataType.SPARSE_FLOAT_VECTOR)
             schema.add_field(field_name="file_name", datatype=DataType.VARCHAR, max_length=500)
             schema.add_field(field_name="file_url", datatype=DataType.VARCHAR, max_length=500)
@@ -138,11 +156,11 @@ class FineBIMilvusUploader:
             schema.add_field(field_name="prev_chunk_id", datatype=DataType.VARCHAR, max_length=100)
             schema.add_field(field_name="next_chunk_id", datatype=DataType.VARCHAR, max_length=100)
 
-            index_params = self.client.prepare_index_params()
+            index_params = self.milvus_client.prepare_index_params()
             index_params.add_index(field_name="dense_vector", index_type="HNSW", metric_type="COSINE", params={"M": 16, "efConstruction": 200})
             index_params.add_index(field_name="sparse_vector", index_type="SPARSE_INVERTED_INDEX", metric_type="IP")
             
-            self.client.create_collection(
+            self.milvus_client.create_collection(
                 collection_name=self.collection_name,
                 schema=schema,
                 index_params=index_params
@@ -151,9 +169,9 @@ class FineBIMilvusUploader:
         else:
             logging.info(f" 集合 [{self.collection_name}] 已存在，本次将直接采用追加模式。")
 
-    def upload_json_file(self, json_file_path: str):
+    def upload_json_file(self, json_file_path: str, force_recreate: bool = True):
         """🟢 智能查重/覆盖更新模式（带3次重试容错、终极回滚与非对称向量提取）"""
-        self._create_collection(force_recreate=False)
+        self._create_collection(force_recreate=force_recreate)
 
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -170,7 +188,7 @@ class FineBIMilvusUploader:
         incoming_chunk_ids = [p.get("metadata", {}).get("chunk_id") for p in payloads if p.get("metadata", {}).get("chunk_id")]
         
         logging.info(f"🔍 正在核对线上库，检索是否有历史冲突切片...")
-        existing_records = self.client.query(
+        existing_records = self.milvus_client.query(
             collection_name=self.collection_name,
             filter=f"chunk_id in {incoming_chunk_ids}",
             output_fields=["*"]
@@ -214,7 +232,21 @@ class FineBIMilvusUploader:
             hierarchy_str = " > ".join(hierarchy_values) if hierarchy_values else ""
             summary_str = meta.get("summary") or biz_profile.get("summary") or ""
             core_entities_list = biz_profile.get("core_entities", []) or meta.get("core_entities", [])
-            core_entities_str = ", ".join(core_entities_list) if isinstance(core_entities_list, list) else str(core_entities_list)
+            # core_entities_str = ", ".join(core_entities_list) if isinstance(core_entities_list, list) else str(core_entities_list)
+
+            # 🟢 修改后：兼容列表内的 dict/str 混合对象，自动抽取实体名称 2026-09-1219:13
+            if isinstance(core_entities_list, list):
+                formatted_entities = []
+                for item in core_entities_list:
+                    if isinstance(item, dict):
+                        # 优先提取字典中的 name/entity/text/label 等常用实体标识字段，提取不到则序列化为 JSON 字符串
+                        entity_val = item.get("name") or item.get("entity") or item.get("text") or item.get("label") or json.dumps(item, ensure_ascii=False)
+                        formatted_entities.append(str(entity_val))
+                    else:
+                        formatted_entities.append(str(item))
+                core_entities_str = ", ".join(formatted_entities)
+            else:
+                core_entities_str = str(core_entities_list)
 
             # 强力过滤：剔除纯 URL、本地文件绝对路径、纯 JSON 字典结构噪音
             clean_content = re.sub(r'http\S+|/workspace\S+|\{.*?\}', '', content)
@@ -231,6 +263,16 @@ class FineBIMilvusUploader:
             # ------------------------------------------------------------------
             # 🟢 2. 组装插入数据（Schema 零变动，密集与稀疏向量皆用 text_to_embed）
             # ------------------------------------------------------------------
+            def safe_json_field(data, default):
+                """确保数据能被标准 JSON 序列化，防止 PyMilvus gRPC 解析错位"""
+                if data is None:
+                    return default
+                try:
+                    # 通过一次 dump/load 强行压平并剔除不可序列化对象
+                    return json.loads(json.dumps(data, ensure_ascii=False))
+                except Exception:
+                    return default
+                
             record = {
                 "chunk_id": meta.get("chunk_id") or NULL_STR,
                 "dense_vector": self.get_dense_embedding(text_to_embed),
@@ -240,26 +282,26 @@ class FineBIMilvusUploader:
                 "doc_md5": doc_meta.get("md5") or NULL_STR,
                 "processed_at": doc_meta.get("processed_at") or NULL_STR,
                 "total_segments": doc_meta.get("total_segments") or 0,
-                "path_hierarchy": doc_meta.get("path_hierarchy") or [],
+                "path_hierarchy": safe_json_field(doc_meta.get("path_hierarchy") or [], []),
                 "entity_summary": doc_meta.get("entity_summary") or NULL_STR,
-                "all_entity_uuids": doc_meta.get("all_entity_uuids") or [],
+                "all_entity_uuids": safe_json_field(doc_meta.get("all_entity_uuids") or [], []),
                 "user_level": biz_profile.get("user_level") or NULL_STR,
                 "business_scene": biz_profile.get("business_scene") or meta.get("scene") or NULL_STR,
                 "biz_summary": biz_profile.get("summary") or NULL_STR,
-                "content_keywords": biz_profile.get("content_keywords") or [],
-                "core_entities": biz_profile.get("core_entities") or [],
-                "operation_constraints": biz_profile.get("operation_constraints") or [],
+                "content_keywords": safe_json_field(biz_profile.get("content_keywords") or [], []),
+                "core_entities": safe_json_field(biz_profile.get("core_entities"),[]),
+                "operation_constraints": safe_json_field(biz_profile.get("operation_constraints") or [], []),
                 "content": (content or NULL_STR)[:65000],
                 "chunk_md5": meta.get("md5") or NULL_STR,
                 "content_summary": (meta.get("summary") or NULL_STR)[:1000],
-                "entity_uuids": payload.get("entity_uuids") or [],
+                "entity_uuids": safe_json_field(payload.get("entity_uuids") or [], []),
                 "section_id": meta.get("section_id") or NULL_STR,
                 "local_scene": meta.get("scene") or NULL_STR,
                 "source_file": meta.get("source_file") or NULL_STR,
-                "full_hierarchy": meta.get("hierarchy") or {}, 
-                "full_hierarchy_array": list(meta.get("hierarchy", {}).values()),
-                "image_map": meta.get("image_map") or {},      
-                "image_urls": meta.get("image_urls") or [],    
+                "full_hierarchy": safe_json_field(meta.get("hierarchy") or {}, {}), 
+                "full_hierarchy_array": safe_json_field(list(meta.get("hierarchy", {}).values()), []),
+                "image_map": safe_json_field(meta.get("image_map") or {}, {}),      
+                "image_urls": safe_json_field(meta.get("image_urls") or [], []),    
                 "prev_chunk_id": meta.get("prev_chunk_id") or NULL_STR,
                 "next_chunk_id": meta.get("next_chunk_id") or NULL_STR
             }
@@ -282,10 +324,10 @@ class FineBIMilvusUploader:
                 
                 if chunks_to_delete:
                     logging.info(f"   [试图物理移除] {len(chunks_to_delete)} 条更替旧切片...")
-                    self.client.delete(collection_name=self.collection_name, filter=f"chunk_id in {chunks_to_delete}")
+                    self.milvus_client.delete(collection_name=self.collection_name, filter=f"chunk_id in {chunks_to_delete}")
                 
                 logging.info(f"   [试图批量推送] {len(insert_data)} 条新 RAG 知识元组...")
-                self.client.insert(collection_name=self.collection_name, data=insert_data)
+                self.milvus_client.insert(collection_name=self.collection_name, data=insert_data)
                 
                 logging.info(f"🚀 [SUCCESS] 该文件导入在第 {attempt} 次尝试时圆满成功！")
                 success = True
@@ -307,13 +349,13 @@ class FineBIMilvusUploader:
                 incoming_all_ids = [p.get("metadata", {}).get("chunk_id") for p in payloads if p.get("metadata", {}).get("chunk_id")]
                 if incoming_all_ids:
                     logging.info("🧹 物理清理中途尝试写入的混杂新数据...")
-                    self.client.delete(collection_name=self.collection_name, filter=f"chunk_id in {incoming_all_ids}")
+                    self.milvus_client.delete(collection_name=self.collection_name, filter=f"chunk_id in {incoming_all_ids}")
                 
                 if chunks_to_delete:
                     records_to_restore = [backup_records_dict[cid] for cid in chunks_to_delete if cid in backup_records_dict]
                     if records_to_restore:
                         logging.info(f"🔄 正在回填恢复 {len(records_to_restore)} 条历史备份数据元组...")
-                        self.client.insert(collection_name=self.collection_name, data=records_to_restore)
+                        self.milvus_client.insert(collection_name=self.collection_name, data=records_to_restore)
                         
                 logging.info("🎉 [ROLLBACK SUCCESS] 向量知识表已完美恢复到本次操作前的干净状态！")
             except Exception as rollback_error:
@@ -325,8 +367,8 @@ class FineBIMilvusUploader:
         """🕵️‍♂️ 核对向量库入库标量信息与原始本地 JSON 文件的一致性"""
         logging.info(f"🕵️‍♂️ 启动本地 JSON 与 Milvus 库双向一致性审计流...")
         try:
-            self.client.flush(self.collection_name)
-            self.client.load_collection(collection_name=self.collection_name)
+            self.milvus_client.flush(self.collection_name)
+            self.milvus_client.load_collection(collection_name=self.collection_name)
             time.sleep(1)
         except Exception as e:
             logging.warning(f"⚠️ 自动冲刷/加载集合时出现小插曲（可能尚未建立索引）: {e}")
@@ -339,7 +381,7 @@ class FineBIMilvusUploader:
         
         chunk_ids = [p.get("metadata", {}).get("chunk_id") for p in payloads if p.get("metadata", {}).get("chunk_id")]
         
-        milvus_results = self.client.query(
+        milvus_results = self.milvus_client.query(
             collection_name=self.collection_name,
             filter=f"chunk_id in {chunk_ids}",
             output_fields=["*"]
@@ -396,11 +438,11 @@ class FineBIMilvusUploader:
 
     def run_formal_test(self, query: str):
         logging.info(f"🔍 启动检索验证流，目标 Prompt: '{query}'")
-        self.client.load_collection(collection_name=self.collection_name)
+        self.milvus_client.load_collection(collection_name=self.collection_name)
 
         query_vector = self.get_dense_embedding(query)
         
-        results = self.client.search(
+        results = self.milvus_client.search(
             collection_name=self.collection_name,
             data=[query_vector],
             anns_field="dense_vector",
@@ -451,3 +493,55 @@ class FineBIMilvusUploader:
                 
         print("-" * 60)
 
+if __name__ == "__main__":
+    # ------------------------------------------------------------------
+    # 1. 配置基礎參數 (Configuration Parameters)
+    # ------------------------------------------------------------------
+    MILVUS_HOST = os.getenv("MILVUS_HOST", "172.17.0.1")
+    MILVUS_PORT = os.getenv("MILVUS_PORT", "19530")
+    COLLECTION_NAME = "finebi_knowledge_chunks"
+    
+    # 🟢 對齊 LiteLLM 代理與 Embedding 模型名稱配置
+    LITELLM_BASE_URL = os.getenv("LITELLM_BASE_URL", "http://172.17.0.1:4000/v1")
+    EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "qwen3-embedding-4b")
+
+    # 測試用的本地 JSON 向量 Payload 路徑
+    TEST_JSON_PATH = '/workspace/hf-conda/RAG/问答机器人/other/finebi_output/数据预警.json'
+    # 測試檢索的 Prompt
+    TEST_QUERY = "FineBI 中如何配置组件的联动与跳转关系？"
+
+    logging.info("🚀 [MAIN] 啟動 MilvusUploader 知識庫管道測試流程...")
+
+    # ------------------------------------------------------------------
+    # 2. 實例化 Uploader 主程序 (Instantiation)
+    # ------------------------------------------------------------------
+    uploader = MilvusUploader(
+        milvus_host=MILVUS_HOST,
+        milvus_port=MILVUS_PORT,
+        collection_name=COLLECTION_NAME,
+        litellm_base_url=LITELLM_BASE_URL,
+        embedding_model_name=EMBEDDING_MODEL_NAME
+    )
+
+    # ------------------------------------------------------------------
+    # 3. 執行數據寫入與智能更新 (Ingestion & Update)
+    # ------------------------------------------------------------------
+    if os.path.exists(TEST_JSON_PATH):
+        logging.info(f"📂 讀取數據源文件: {TEST_JSON_PATH}")
+        uploader.upload_json_file(json_file_path=TEST_JSON_PATH, force_recreate=False)
+
+        # --------------------------------------------------------------
+        # 4. 執行數據一致性審計 (Data Integrity Audit)
+        # --------------------------------------------------------------
+        uploader.audit_milvus_with_json(json_file_path=TEST_JSON_PATH)
+    else:
+        logging.warning(
+            f"⚠️ 未找到測試文件 [{TEST_JSON_PATH}]，將跳過寫入與審計階段，直接進入檢索測試。"
+        )
+
+    # ------------------------------------------------------------------
+    # 5. 執行檢索驗證流 (Vector Search Testing)
+    # ------------------------------------------------------------------
+    # uploader.run_formal_test(query=TEST_QUERY)
+    
+    logging.info("🎉 [MAIN] MilvusUploader 管道測試執行完畢！")

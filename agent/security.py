@@ -1,10 +1,9 @@
 # agent/security.py
 import ast
 import os
-import sys
 import yaml
 import logging
-from typing import List, Dict, Any, Tuple, Set
+from typing import List, Tuple, Set
 
 logger = logging.getLogger("ASTCodeChecker")
 

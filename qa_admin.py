@@ -14,6 +14,7 @@ except ImportError:
     install_package("plotly")
     install_package("fastapi")
     install_package("uvicorn")
+    install_package("langchain_text_splitters")
     import gradio as gr
     import plotly.express as px
 
@@ -42,6 +43,7 @@ import plotly.express as px
 import atexit
 import uvicorn
 from fastapi import FastAPI
+from factory.log_factory import RAGContextLoggerAdapter
 # ==========================================
 # 📂 1. 动态注入系统路径与模块导入
 # ==========================================
@@ -51,18 +53,24 @@ if SCRIPT_DIR not in sys.path:
 
 # logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
-from factory.model_factory import ModelFactory
+from factory.vllm_model_factory import VLLMModelFactory
+
+# 🌍 环境变量自动适配：若在 Docker 容器内部运行，检查并修正网关地址
+if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
+    os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
+    print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
 from factory.tool_factory import tool_factory, load_tools_from_yaml, BaseTool
 from generator.qa_chain import QAChain
-from generator.llm_client import FineBILLMClient
-from search.retriever import FineBIRetriever
-from search.reranker import FineBIReranker
+from generator.llm_client import LLMClient
+from search.retriever import Retriever
+from search.reranker import Reranker
 from factory import init_tools
 from agent.sandbox import SandboxExecutor
 from agent.react_agent import ReActAgent 
 from memory.memory_manager import MemoryManager
 from agent.compliance import ComplianceChecker
 from memory.feedback_store import feedback_store
+from config.config_loader import config_loader, DEFAULT_CONFIG
 
 # ==========================================
 # ⚙️ 2. 全局配置与用户凭证加载
@@ -73,55 +81,63 @@ CONFIG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_config.json")
 USERS_AUTH_PATH = os.path.join(SCRIPT_DIR, "config", "users_auth.yaml")
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 LOG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_system.log")
-# # 確保日誌目錄與檔案被自動建立
-# root_logger = logging.getLogger()
-# for handler in root_logger.handlers[:]:
-#     root_logger.removeHandler(handler)
 
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(asctime)s [%(levelname)s] %(message)s",
-#     handlers=[
-#         logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"), # 强行创建与写入日志文件
-#         logging.StreamHandler(sys.stdout)                     # 同时输出至控制台
-#     ],
-#     force=True  # Python 3.8+ 支持强行覆盖现有配置
-# )
+
+######### 注意：關於log輪詢已經改爲按天計算，並且嵌入user_id與question上下文，請參考 factory/log_factory.py 中的 RAGContextLoggerAdapter 與 setup_logger 函數。###################
 from factory.log_factory import setup_logger
 
-# 初始化並取得統一輪轉 Logger (按 10MB 切割，最多保留 5 個歷史檔)
+# 初始化统一轮转 Logger（基础底座）
 logger = setup_logger(
-    name="QA_Admin",
+    name="QA_System",
     log_file=LOG_FILE_PATH,
-    max_bytes=10 * 1024 * 1024,  # 10 MB
-    backup_count=5,
     level=logging.INFO
 )
 logging.root.handlers = logger.handlers
 logging.root.setLevel(logging.INFO)
 
+import yaml
+
+def load_litellm_models_from_yaml() -> List[str]:
+    """直接从本地 /workspace/hf-conda/litellm/litellm_config.yaml 读取模型清单"""
+    config_path = "/workspace/hf-conda/litellm/litellm_config.yaml"
+    fallback_options = ["qwen3-4b", "qwen3-8b", "qwen3-32b", "qwen3-vl-4b"]
+    
+    if not os.path.exists(config_path):
+        return fallback_options
+        
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config_data = yaml.safe_load(f)
+            
+        models = []
+        for item in config_data.get("model_list", []):
+            model_name = item.get("model_name")
+            if model_name and model_name not in models:
+                models.append(model_name)
+                
+        return models if models else fallback_options
+    except Exception:
+        return fallback_options
+
+# 1. 动态获取网关模型清单
+LLM_OPTIONS = load_litellm_models_from_yaml()
+
+# 2. 结合 config_loader 构建全局默认配置
 DEFAULT_QA_CONFIG = {
-    "prompts_hub_path": os.getenv(
-        "PROMPTS_HUB_PATH", 
-        os.path.join(SCRIPT_DIR, "config", "prompt_hub.yaml")
-    ),
+    "prompts_hub_path": config_loader.prompt_hub_path,  # 👈 完美利用 config_loader 的绝对路径
     "milvus_host": os.getenv("MILVUS_HOST", "172.17.0.1"),
     "milvus_port": os.getenv("MILVUS_PORT", "19530"),
-    "collection_name": os.getenv("MILVUS_COLLECTION", "finebi_knowledge_chunks"),
-    "llm_model_name": os.getenv("LLM_MODEL", "Qwen/Qwen3-4B"),
-    "vlm_model_name": os.getenv("VLM_MODEL", "Qwen/Qwen3-VL-32B-Instruct"),
-    "emb_model_name": os.getenv("EMB_MODEL", "Qwen/Qwen3-Embedding-8B"),
+    "collection_name": os.getenv("MILVUS_COLLECTION", "_knowledge_chunks"),
+    "llm_model_name": os.getenv("LLM_MODEL", LLM_OPTIONS[0] if LLM_OPTIONS else "qwen3-4b"),
+    "vlm_model_name": os.getenv("VLM_MODEL", "qwen3-vl-4b"),
+    "emb_model_name": os.getenv("EMB_MODEL", "qwen3-embedding-4b"),
     "cuda_device": os.getenv("CUDA_DEVICE", "0"),
     "top_k_retrieval": int(os.getenv("TOP_K_RETRIEVAL", 10)),
     "top_k_rerank": int(os.getenv("TOP_K_RERANK", 3)),
 }
 
-LLM_OPTIONS = [
-    "Qwen/Qwen3-4B",
-    "Qwen/Qwen3-8B",
-    "Qwen/Qwen3-32B",
-    "Qwen/Qwen3-VL-32B-Instruct"
-]
+# 3. 同步 DATA_DIR
+DATA_DIR = config_loader.data_root
 
 global_qa_chain = None
 global_compliance_checker = None
@@ -202,57 +218,16 @@ def get_gpu_memory_status() -> str:
     except Exception as e:
         return f"显存获取异常: {str(e)}"
 
-# def emergency_force_cleanup() -> str:
-#     global global_qa_chain
-#     logging.warning("🚨 [QA Admin] 触发应急显存回收操作！")
-#     global_qa_chain = None
-
-#     try:
-#         if hasattr(ModelFactory, "_instance"):
-#             ModelFactory._instance = None
-#     except Exception as e:
-#         logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
-
-#     try:
-#         ModelFactory.destroy_all_models_cls()
-#     except Exception as e:
-#         logging.error(f"调用 ModelFactory.destroy_all_models_cls 失败: {e}")
-
-#     gc.collect(2)
-
-#     if torch.cuda.is_available():
-#         try:
-#             torch.cuda.synchronize()
-#             torch.cuda.empty_cache()
-#             torch.cuda.ipc_collect()
-#         except Exception as e:
-#             logging.error(f"CUDA 显存回收异常: {e}")
-
-#     logging.info("✨ [QA Admin] 物理显存清理完毕！")
-#     return get_gpu_memory_status()
-
 def emergency_force_cleanup() -> str:
-    """
-    应急回收显存：结合 ModelFactory 的全量物理销毁与多级降级兜底
-    """
     global global_qa_chain
-    logging.warning("🚨 [QA Admin] 触发应急全量显存物理回收操作！")
-    
-    # 1. 重置 QAChain 句柄
+    logging.warning("🚨 [QA Admin] 触发应急显存与网关会话回收操作！")
     global_qa_chain = None
-
-    # 2. 物理彻底销毁所有已加载模型（解除加速库与 PyTorch 强引用）
     try:
-        ModelFactory.destroy_all_models_cls()
-    except Exception as cleanup_err:
-        logging.error(f"❌ 调用 destroy_all_models_cls 发生二次异常: {cleanup_err}")
-        # 降级方案：强制触发底层系统 GC 与 CUDA 缓存清空
-        try:
-            ModelFactory._trigger_system_gc()
-        except Exception as e:
-            logging.error(f"❌ 降级触发系统 GC 失败: {e}")
-
-    # 3. 补充 Python 原生垃圾回收与 CUDA 管道同步
+        if hasattr(VLLMModelFactory, "_instance"):
+            VLLMModelFactory._instance = None
+    except Exception as e:
+        logging.error(f"清空 VLLMModelFactory 单例句柄失败: {e}")
+        
     gc.collect(2)
     if torch.cuda.is_available():
         try:
@@ -261,8 +236,7 @@ def emergency_force_cleanup() -> str:
             torch.cuda.ipc_collect()
         except Exception as e:
             logging.error(f"CUDA 显存回收异常: {e}")
-
-    logging.info("✨ [QA Admin] 物理显存清理完毕！")
+    logging.info("✨ [QA Admin] 显存与网关代理清理完毕！")
     return get_gpu_memory_status()
 
 def get_compliance_checker() -> ComplianceChecker:
@@ -308,15 +282,6 @@ def clear_agent_memory(user_state: dict):
 def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
     """解析 log_pipeline_metrics 輸出的 JSON 日誌（含後台 Print 驗證）"""
     metrics_data = []
-    
-    # print(f"\n================ [DEBUG METRICS] ================")
-    # print(f"🔍 正在檢查日誌檔案路徑: {os.path.abspath(log_path)}")
-    
-    # if not os.path.exists(log_path):
-    #     print(f"❌ 錯誤：日誌檔案不存在！Path: {log_path}")
-    #     print(f"=================================================\n")
-    #     return pd.DataFrame()
-
     total_lines = 0
     matched_lines = 0
 
@@ -343,24 +308,7 @@ def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
         return pd.DataFrame()
 
     return pd.DataFrame(metrics_data)
-# def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
-#     """解析 log_pipeline_metrics 輸出的 JSON 日誌"""
-#     metrics_data = []
-#     if not os.path.exists(log_path):
-#         return pd.DataFrame()
-#     try:
-#         with open(log_path, "r", encoding="utf-8") as f:
-#             for line in f:
-#                 if "📊 [METRICS]" in line:
-#                     try:
-#                         json_str = line.split("📊 [METRICS] ")[-1].strip()
-#                         metrics_data.append(json.loads(json_str))
-#                     except Exception:
-#                         continue
-#     except Exception as e:
-#         logging.error(f"解析 Metrics 日誌失敗: {e}")
-#         return pd.DataFrame()
-#     return pd.DataFrame(metrics_data)
+
 
 def render_observability_dashboard():
     """讀取並格式化 Observability 核心指標與 Plotly 圖表"""
@@ -404,23 +352,6 @@ def render_observability_dashboard():
 
     return summary_md, metrics, fig_latency, fig_gpu
 
-# def render_observability_dashboard():
-#     """读取并格式化 Observability 核心指标"""
-#     metrics = scan_metrics(data_dir=DATA_DIR)
-    
-#     summary_md = f"""
-# ### 📈 系统运行核心指标概览
-
-# | 📊 监控维度 | 🔢 统计数值 | 💡 描述说明 |
-# | :--- | :--- | :--- |
-# | **👥 累计活跃用户** | `{metrics.get('total_users', 0)}` | 系统中已产生会话的独立账号数 |
-# | **💬 累计会话总数** | `{metrics.get('total_sessions', 0)}` | 创建的历史 Session 文件总数 |
-# | **❓ 累计查询次数** | `{metrics.get('total_queries', 0)}` | 用户提交的用户问题 (User Role Messages) 总数 |
-# | **🚨 安全风控拦截** | `{metrics.get('compliance_interceptions', 0)}` | 触发静态/动态 Compliance 规则拦截的次数 |
-# | **🛡️ 拦截命中比例** | `{metrics.get('interception_rate', '0.00%')}` | 风控拦截次数 / 累计查询总次数 |
-# """
-#     return summary_md, metrics
-
 # ==========================================
 # 🤖 4. 在线 QA 与 Agent 推理逻辑
 # ==========================================
@@ -452,11 +383,11 @@ def get_qa_chain(llm_choice: str, top_k_ret: int, top_k_rerank: int):
     if global_qa_chain is None or current_llm_choice != llm_choice:
         logging.info(f"🚀 [QA Admin] 初始化/更新全局 QAChain 句柄, 模型: {llm_choice}")
         global_qa_chain = QAChain(
-            cuda_device="0",
-            prompt_hub_path=DEFAULT_QA_CONFIG["prompts_hub_path"],
+            cuda_device=DEFAULT_QA_CONFIG["cuda_device"],
             top_k_retrieval=top_k_ret,
             top_k_rerank=top_k_rerank,
-            llm_short_name=llm_choice,
+            llm_model_name=llm_choice,
+            embedding_model_name=DEFAULT_QA_CONFIG["emb_model_name"]
         )
         current_llm_choice = llm_choice
     else:
@@ -542,6 +473,17 @@ def format_sources_log(llm_choice: str, top_k_ret: int, top_k_rerank: int, filte
 
 
 def qa_stream_predict(user_message: str, history: List[Dict[str, str]], llm_choice: str, top_k_ret: int, top_k_rerank: int, filter_expr: str, user_state: dict = None):
+    # 1. 获取当前登录用户的 ID（如果未登录默认为 anonymous）
+    username = user_state.get("username", "anonymous") if isinstance(user_state, dict) else "anonymous"
+    
+    # 2. 包装上下文 Logger，实现日志自动嵌入 user_id 与当前 question
+    context_logger = RAGContextLoggerAdapter(logging.getLogger("QA_System"), {
+        "user_id": username,
+        "question": user_message
+    })
+    
+    context_logger.info(f"🚀 用户 [{username}] 开始发起 QA 流式推理任务...")
+    
     clean_message = user_message.strip() if user_message else ""
     if not clean_message:
         yield history, "", "⚠️ 请输入有效内容！", get_gpu_memory_status(), gr.skip(), gr.skip()
@@ -695,6 +637,14 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     clean_message = user_message.strip() if user_message else ""
     username = user_state.get("username", "default")
     user_role = user_state.get("role", "user")
+    
+    # 🌟 绑定 Agent 运行时的用户上下文 Logger
+    context_logger = RAGContextLoggerAdapter(logging.getLogger("QA_System"), {
+        "user_id": username,
+        "question": clean_message
+    })
+    
+    context_logger.info(f"🤖 用户 [{username}] (角色: {user_role}) 启动 ReAct Agent 任务...")
 
     user_mem_mgr = get_or_create_user_memory(username)
 
@@ -720,20 +670,11 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
         yield history, f"🛡️ 规则拦截 [{hit_rule}]", f"🛡️ 安全拦截: {hit_rule}", get_gpu_memory_status(), gr.update(choices=choices)
         return
 
-    # user_mem_mgr.short_term.add_message("user", clean_message)
-    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_OLD_CODE_BEGIN 🧩✨ ====================
-    # user_mem_mgr.process_user_input(clean_message)
-    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_OLD_CODE_END 🧩✨ ====================
-    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_NEW_CODE_BEGIN (修正：避免重复落盘) 🧩✨ ====================
-    # NOTE: ReActAgent.run_stream() 里已经统一执行 self.memory_mgr.process_user_input(query)，
-    # 所以这里不再重复落盘，否则同一条用户输入会写入两次到 history_storage.json。
-    # ==================== ✨🧩 DUPLICATE_PERSISTENCE_NEW_CODE_END 🧩✨ ====================
-
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
     agent = ReActAgent(
-            llm_client=None,
+            llm_client=LLMClient(default_model_name=llm_model),
             model_name=llm_model,
             top_k_ret=top_k_ret,
             top_k_rerank=top_k_rerank,
@@ -768,11 +709,6 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
 
         choices = fetch_session_dropdown_choices(username)
         yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
-
-    # 持久化保存 AI 最终回答
-    # 💾 【核心修正】採用 MemoryManager 封裝的合法持久化 API 落盤
-    # if final_reply:
-    #     user_mem_mgr.process_assistant_output(final_reply)
 
     # 📊 寫入 Agent 總 pipeline Metrics 日誌 (供 Tab 4 圖表使用)
     t_agent_end = time.perf_counter()
@@ -1248,14 +1184,6 @@ def stream_agent_sandbox_execution(
         logging.error(f"Tab 2 沙盒 Agent 执行异常: {e}", exc_info=True)
         yield full_log + f"\n\n🚨 异常: {str(e)}"
 
-# def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
-#     """按角色动态过滤可展示的工具列表"""
-#     tools = []
-#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
-#         for name, tool_obj in tool_factory._flat_tools.items():
-#             if tool_factory._is_tool_visible(tool_obj, user_role):
-#                 tools.append(name)
-#     return tools or ["search_knowledge_base"]
 def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     tools = []
     print(f"\n---------------- [DEBUG 2: 下拉框过滤] ----------------")
@@ -1270,11 +1198,6 @@ def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
     print(f"👉 最终生成下拉框列表: {tools}")
     print(f"-------------------------------------------------------\n")
     return tools or ["search_knowledge_base"]
-# def get_all_registered_tool_names() -> list:
-#     tools = []
-#     if hasattr(tool_factory, "_flat_tools") and isinstance(tool_factory._flat_tools, dict):
-#         tools = list(tool_factory._flat_tools.keys())
-#     return tools or ["search_knowledge_base"]
 
 # ==========================================
 # 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
@@ -1468,35 +1391,18 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
         if qa_chain is not None:
             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
         else:
-            retriever = FineBIRetriever(
+            retriever = Retriever(
                 milvus_host=DEFAULT_QA_CONFIG["milvus_host"], 
                 milvus_port=DEFAULT_QA_CONFIG["milvus_port"], 
                 collection_name=DEFAULT_QA_CONFIG["collection_name"], 
                 cuda_device=DEFAULT_QA_CONFIG["cuda_device"]
             )
-            reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+            reranker = Reranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
             init_tools(retriever=retriever, reranker=reranker)
     except Exception as e:
         logging.warning(f"⚠️ 工具初始化说明: {e}")
 
-    registered_tools = get_all_registered_tool_names()
-
-# def build_qa_admin_ui(qa_chain: Optional[Any] = None):
-#     yaml_path = os.path.join(SCRIPT_DIR, "tools.yaml")
-#     try:
-#         if qa_chain is not None:
-#             init_tools(retriever=qa_chain.retriever, reranker=qa_chain.reranker)
-#         else:
-#             retriever = FineBIRetriever(milvus_host=DEFAULT_QA_CONFIG["milvus_host"], milvus_port=DEFAULT_QA_CONFIG["milvus_port"], collection_name=DEFAULT_QA_CONFIG["collection_name"], cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
-#             reranker = FineBIReranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
-#             init_tools(retriever=retriever, reranker=reranker)
-#     except Exception as e:
-#         logging.warning(f"⚠️ 工具初始化说明: {e}")
-
-#     registered_tools = get_all_registered_tool_names()
-
-
-    with gr.Blocks(title="FineBI QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
+    with gr.Blocks(title=" QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
         # 用户状态存取 State
         user_state = gr.State(value={"is_logged_in": False, "username": ""})
 
@@ -1507,7 +1413,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
             with gr.Column(elem_classes="login-card"):
                  # --- 子视图 A：标准登录表单 ---
                 with gr.Column(visible=True) as login_form_container:
-                    gr.Markdown("## 🔒 FineBI QA 智能调试台\n请先登录系统以继续操作")
+                    gr.Markdown("## 🔒  QA 智能调试台\n请先登录系统以继续操作")
                     login_user_input = gr.Textbox(label="用户名", placeholder="请输入账号 (例如: admin)", lines=1, elem_id="login_user_input")
                     login_pwd_input = gr.Textbox(label="密码", type="password", placeholder="请输入密码", lines=1)
                     btn_login = gr.Button("🔑 登录系统", variant="primary", size="lg")
@@ -1534,7 +1440,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
         # =========================================================
         with gr.Column(visible=False) as main_portal_view:
             with gr.Row(elem_classes="header-container"):
-                user_info_banner = gr.Markdown("# 🤖 FineBI QA 智能问答与 Agent 工具链调试台", scale=4)
+                user_info_banner = gr.Markdown("# 🤖  QA 智能问答与 Agent 工具链调试台", scale=4)
                 # 用空列或设置 scale 撑开间距，将退出按钮推到最右侧
                 with gr.Column(scale=1, min_width=10, visible=True):
                     pass
@@ -1558,7 +1464,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     with gr.Row():
                     # 主对话界面：拓展至全宽度
                         with gr.Column(scale=7):
-                            chatbot = gr.Chatbot(label="FineBI 智能问答助理", height=500)
+                            chatbot = gr.Chatbot(label=" 智能问答助理", height=500)
                             msg_input = gr.Textbox(label="请输入你的问题", placeholder="例如：怎么创建预警用户？", lines=2)
                             with gr.Row():
                                 btn_send = gr.Button("🚀 发送 (Send)", variant="primary")
@@ -1617,7 +1523,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     gr.Markdown("### 🤖 2. ReAct Agent 全链路诊断")
                     with gr.Row():
                         with gr.Column(scale=4):
-                            test_input = gr.Textbox(label="测试问题输入", placeholder="例如： FineBI V6.0 怎么解决 MySQL 连接报错？", lines=3)
+                            test_input = gr.Textbox(label="测试问题输入", placeholder="例如：  V6.0 怎么解决 MySQL 连接报错？", lines=3)
                             run_btn = gr.Button("🚀 启动 Agent 推理", variant="primary")
                         with gr.Column(scale=8):
                             react_log_markdown = gr.Markdown(value="等待启动诊断...")
@@ -1646,8 +1552,8 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         with gr.Column(scale=9):
                             with gr.Row():
                                 with gr.Column(scale=7):
-                                    agent_chatbot = gr.Chatbot(label="FineBI ReAct Agent", height=500)
-                                    agent_msg_input = gr.Textbox(label="输入你的复杂问题或任务指令", placeholder="例如：FineBI V6.0 怎么配置 MySQL 连接？", lines=2)
+                                    agent_chatbot = gr.Chatbot(label=" ReAct Agent", height=500)
+                                    agent_msg_input = gr.Textbox(label="输入你的复杂问题或任务指令", placeholder="例如： V6.0 怎么配置 MySQL 连接？", lines=2)
                                     with gr.Row():
                                         btn_agent_send = gr.Button("🚀 发送 Agent 任务", variant="primary")
                                         btn_agent_clear = gr.Button("🗑️ 清空当前对话")
@@ -1681,39 +1587,6 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         outputs=None  # 纯后台异步静默记录，不打扰前端输出
                     )
 
-                    # ==================== ✨🧩 TAB3_EVENT_OLD_CODE_BEGIN (已注释保留) 🧩✨ ====================
-                    # btn_agent_send.click(
-                    #     fn=agent_stream_predict,
-                    #     inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, gpu_box, t3_session_radio]
-                    # ).then(fn=lambda: "", inputs=None, outputs=[agent_msg_input])
-
-                    # btn_t3_new_chat.click(
-                    #     fn=create_new_session_event,
-                    #     inputs=[user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, t3_session_radio]
-                    # )
-
-                    # t3_session_radio.change(
-                    #     fn=switch_session_event,
-                    #     inputs=[t3_session_radio, user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box]
-                    # )
-
-                    # btn_t3_refresh_sess.click(
-                    #     fn=lambda st: gr.update(choices=fetch_session_dropdown_choices(st.get("username", "default"))),
-                    #     inputs=[user_state],
-                    #     outputs=[t3_session_radio]
-                    # )
-
-                    # btn_agent_clear.click(
-                    #     fn=clear_agent_memory,
-                    #     inputs=[user_state],
-                    #     outputs=[agent_chatbot, agent_inspector_display, agent_status_box, agent_msg_input, t3_session_radio]
-                    # )
-                    # ==================== ✨🧩 TAB3_EVENT_OLD_CODE_END (已注释保留) 🧩✨ ====================
-
-                    # ==================== ✨🧩 TAB3_EVENT_NEW_CODE_BEGIN (修改後) 🧩✨ ====================
                     t3_send_event = btn_agent_send.click(
                         fn=agent_stream_predict,
                         inputs=[agent_msg_input, agent_chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
@@ -1808,23 +1681,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                         inputs=None,
                         outputs=[obs_summary_display, obs_json_display, plot_latency, plot_gpu]
                     )
-                # with gr.Tab("📊 基础运维与可观测性"):
-                #     gr.Markdown("### 🔍 系统轻量级使用统计与风控监控")
-                #     with gr.Row():
-                #         btn_refresh_obs = gr.Button("🔄 刷新监控指标", variant="primary", scale=2)
-                    
-                #     with gr.Row():
-                #         with gr.Column(scale=7):
-                #             obs_summary_display = gr.Markdown(value="*点击上方刷新按钮同步最新统计数据...*")
-                #         with gr.Column(scale=5):
-                #             obs_json_display = gr.JSON(label="📦 原始 Metrics JSON 数据 Payload")
 
-                #     # 页面首次加载或点击刷新时更新监控指标
-                #     btn_refresh_obs.click(
-                #         fn=render_observability_dashboard,
-                #         inputs=None,
-                #         outputs=[obs_summary_display, obs_json_display]
-                #     )
         # =========================================================
         # 🔑 登录视图切换逻辑绑定
         # =========================================================
@@ -1903,7 +1760,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 return (
                     gr.update(visible=True),                   # login_view
                     gr.update(visible=False),                  # main_portal_view
-                    "# 🤖 FineBI QA 智能问答",                  # user_info_banner
+                    "# 🤖  QA 智能问答",                  # user_info_banner
                     {"is_logged_in": False, "username": ""},   # user_state
                     gr.update(choices=[], value=None),         # t3_session_radio
                     gr.update(choices=[], value=None),         # tool_select (新增)
@@ -1942,7 +1799,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 found_role = USER_ROLES.get(found_user, "user")
                 mem_mgr = get_or_create_user_memory(found_user)
                 new_state = {"is_logged_in": True, "username": found_user, "role": found_role}
-                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{found_user}` | 角色: `{found_role}`)"                
+                banner_text = f"# 🤖  QA 智能问答与 Agent 调试台 (当前登录用户: `{found_user}` | 角色: `{found_role}`)"                
                 session_choices = fetch_session_dropdown_choices(found_user)
                 if not session_choices:
                     default_sess = str(uuid.uuid4())
@@ -1978,7 +1835,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 return (
                     gr.update(visible=True),
                     gr.update(visible=False),
-                    "# 🤖 FineBI QA 智能问答",
+                    "# 🤖  QA 智能问答",
                     {"is_logged_in": False, "username": ""},
                     gr.update(choices=[], value=None),                        # t3_session_radio
                     gr.update(choices=[], value=None),                        # tool_select
@@ -2017,7 +1874,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 role_tools = get_all_registered_tool_names(user_role=found_role)
                 default_tool = role_tools[0] if role_tools else None
                 new_state = {"is_logged_in": True, "username": username_clean, "role": found_role}
-                banner_text = f"# 🤖 FineBI QA 智能问答与 Agent 调试台 (当前登录用户: `{username_clean}` | 角色: `{found_role}`)"
+                banner_text = f"# 🤖  QA 智能问答与 Agent 调试台 (当前登录用户: `{username_clean}` | 角色: `{found_role}`)"
 
                 session_choices = fetch_session_dropdown_choices(username_clean)
                 if not session_choices:
@@ -2048,7 +1905,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 return (
                     gr.update(visible=True),
                     gr.update(visible=False),
-                    "# 🤖 FineBI QA 智能问答",
+                    "# 🤖  QA 智能问答",
                     {"is_logged_in": False, "username": ""},
                     "❌ 用户名或密码错误，请重试！",
                     gr.update(choices=[], value=None),
@@ -2147,20 +2004,3 @@ if __name__ == "__main__":
         port=7865,
         log_level="info"
     )
-# if __name__ == "__main__":
-#     import atexit
-    
-#     def on_app_shutdown():
-#         logging.info("⚡ 关闭 QA 服务，清除 GPU 显存...")
-#         emergency_force_cleanup()
-
-#     atexit.register(on_app_shutdown)
-
-#     qa_ui = build_qa_admin_ui()
-    
-#     qa_ui.queue().launch(
-#         server_name="0.0.0.0",
-#         server_port=7865,
-#         root_path="/qa"
-#         # share=True
-#     )

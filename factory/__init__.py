@@ -1,12 +1,14 @@
 # factory/__init__.py
 import logging
-from factory.model_factory import ModelFactory
-from factory.tool_factory import tool_factory
 
-# 🌟 关键点：明确从 tools.py 单独文件导入 init_tools，避免与 tools/ 文件夹混淆
+# 1. 重命名导入各自的工厂类，彻底消除类名冲突
+from factory.model_factory import ModelFactory
+
+# 2. 导入工具工厂与初始化函数
+from factory.tool_factory import tool_factory
 from factory.tool_registry import init_tools
 
-# 从 tools/ 包导出原子工具类
+# 3. 从 tools/ 子包导出原子工具类
 from factory.tools.rag_tool import RAGKnowledgeSearchTool
 
 logger = logging.getLogger("FactoryPackage")

@@ -1,30 +1,15 @@
 # markdown_to_json.py
-import subprocess
 import sys
-
-def install_package(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-# 示例：安装 requests
-install_package("langchain_text_splitters")
-install_package("PyMuPDF")
-install_package("pdfplumber")
-install_package("openpyxl")
-install_package("pymilvus")
-
-import os
 import re
 import gc
 import json
 import uuid
 import yaml
 import logging
+import os
 import hashlib
-import subprocess
 from datetime import datetime
 from typing import Union, Dict, Any, List
-
-import torch
 
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 
@@ -35,24 +20,25 @@ if project_root not in sys.path:
 
 from factory.model_factory import ModelFactory
 from ingest.validator import Processor as ValidationProcessor, RAGDataValidator
-from ingest.db_uploader import FineBIMilvusUploader
+from ingest.db_uploader import MilvusUploader
 from data_prep.pdf_to_markdown import MarkdownProcessor
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-class FineBIDocConfig:
-    """FineBI 文档处理流水线配置管理类"""
+class DocConfig:
+    """文档处理流水线配置管理类"""
     def __init__(
         self,
         cache_dir: str = "/workspace/hf-conda/hf_cache/hub",
         datalab_cache_dir: str = "/workspace/hf-conda/hf_cache/datalab",
-        namespace_seed: str = "FineBI_RAG_2026",
+        namespace_seed: str = "RAG_2026",
         image_url_prefix: str = "",
         pdf_url_prefix: str = "",
         cuda_device: str = "0",
         yaml_rules_path: str = "heading_rules.yaml",    # 规则配置文件
-        yaml_prompts_path: str = "prompt_hub.yaml"      # 提示词库文件
+        yaml_prompts_path: str = "prompt_hub.yaml",      # 提示词库文件
+        llm_model_name: str = "qwen3-4b"  # 🟢 新增：支援接收模型名稱
     ):
         self.cache_dir = cache_dir
         self.datalab_cache_dir = datalab_cache_dir
@@ -62,16 +48,12 @@ class FineBIDocConfig:
         self.cuda_device = cuda_device
         self.yaml_rules_path = yaml_rules_path
         self.yaml_prompts_path = yaml_prompts_path
-        
-        # # 设置环境变量（在检测可用性之前设置）
-        # os.environ["CUDA_VISIBLE_DEVICES"] = cuda_device
-        # logging.info(f"CUDA 是否可用: {torch.cuda.is_available()}")
-        
-        # # 核心修复：加载并解析配置文件（规则和大模型提示词）
-        # self.heading_rules: List[Dict[str, Any]] = []
-        # self.prompts: Dict[str, str] = {}
-
+        self.llm_model_name = llm_model_name
         self._load_all_assets()
+        
+    def get(self, key, default=None):
+        """✨ 核心修复：为 DocConfig 增加字典兼容的 get 方法，防止出现 'DocConfig' object has no attribute 'get'"""
+        return getattr(self, key, default)
 
     def _load_all_assets(self):
         """同时加载规则配置和提示词库两个独立文件"""
@@ -103,22 +85,16 @@ class FineBIDocConfig:
 
         
 
-class FineBIDocProcessor:
-    """FineBI 文档语义解析与特征提取核心处理器"""
+class DocProcessor:
+    """文档语义解析与特征提取核心处理器"""
     
-    def __init__(self, config: FineBIDocConfig):
+    def __init__(self, config: DocConfig):
         self.config = config
         
         # 延迟加载的单例模型变量
         self._llm_model = None
         self._llm_tokenizer = None
         
-        # # 初始化系统软链接
-        # self._initialize_environment()
-        # # 加载 Markdown 校准规则
-        # # 从 config 直接接管已经解析好的两套资产
-        # self.heading_rules = self.config.heading_rules  # 对应第一个 YAML 的切分规则
-        # self.prompts = self.config.prompts              # 对应第二个 YAML 的提示词库
         # 🟢 核心重构点：直接交由 ModelFactory 接管环境初始化（软链接、算力设备等）
         self.model_factory = ModelFactory(
             prompt_hub_path=config.yaml_prompts_path,
@@ -127,16 +103,12 @@ class FineBIDocProcessor:
 
         # 统一设置 GPU 算力硬件
         self.device = self.model_factory.setup_cuda_device(config.cuda_device)
-        
-        # 懒加载变量预留（由工厂管理）
-        self.model = None
-        self.tokenizer = None
 
         # 加载 Markdown 校准规则与提示词
         self.heading_rules = self.config.heading_rules  # 对应第一个 YAML 的切分规则
         self.prompts = self.config.prompts              # 对应第二个 YAML 的提示词库
 
-        logging.info("⚙️ FineBIDocProcessor 初始化完成，已成功绑定规则库与提示词库。")
+        logging.info("⚙️ DocProcessor 初始化完成，已成功绑定规则库与提示词库。")
         
     def _load_prompts(self) -> Dict[str, str]:
         """加载 Prompt Hub YAML 并转换为键值对"""
@@ -165,25 +137,46 @@ class FineBIDocProcessor:
         return prompts_dict
 
     def _get_llm(self):
-        """🟢 核心重构：通过 ModelFactory 统一单例加载与预热 LLM"""
-        if self._llm_model is None or self._llm_tokenizer is None:
-            logging.info("🚀 正在通过 ModelFactory 加载纯文本 LLM 引擎...")
-            self._llm_model, self._llm_tokenizer = self.model_factory.get_llm_model(
-                llm_short_name="Qwen/Qwen3-32B"
-            )
+        """⚡ 統一由配置中心或 Config 實例獲取當前 LLM 客戶端與模型名稱"""
+        if self._llm_model is None:
+            self._llm_model = self.model_factory.get_llm_client()
+        
+        # 🟢 修正方案：優先從 DocConfig 實例中安全讀取模型名稱（支援 dict 或 object 屬性訪問）
+        current_model = "qwen3-4b" # 絕對兜底值
+        
+        try:
+            if hasattr(self.config, "get"):
+                current_model = self.config.get("llm_model_name", "qwen3-4b")
+            elif isinstance(self.config, dict):
+                current_model = self.config.get("llm_model_name", "qwen3-4b")
+            elif hasattr(self.config, "llm_model_name"):
+                current_model = getattr(self.config, "llm_model_name", "qwen3-4b")
+                
+            logging.info(f"🤖 當前調用的 LLM 模型名稱: {current_model}")
+        except Exception as e:
+            logging.warning(f"⚠️ 讀取模型名稱發生異常，採用預設值 {current_model}: {e}")
             
-            # 预热分配显存
-            warmup_prompt = "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant"
-            inputs = self._llm_tokenizer(warmup_prompt, return_tensors="pt").to(self._llm_model.device)
-            _ = self._llm_model.generate(**inputs, max_new_tokens=5)
-            logging.info("✅ LLM 预热完成，现在可以稳定工作了")
-        return self._llm_model, self._llm_tokenizer
+        return self._llm_model, current_model
 
-    def _init_llm_engine(self, model_name: str = "Qwen/Qwen3-32B"):
-        """⚡ 通过工厂懒加载纯文本 LLM 引擎"""
-        if self.model is None or self.tokenizer is None:
-            logging.info("🤖 正在通过 ModelFactory 调起文本 LLM 引擎...")
-            self.model, self.tokenizer = self.model_factory.get_llm_model(llm_short_name=model_name)
+
+    def _init_llm_engine(self, model_name: str = None):
+        """⚡ 通过工厂懒加载纯文本 LLM 客户端代理，支持动态指定模型名称"""
+        # 如果未顯式傳入 model_name，則嘗試從 config 或 YAML 讀取
+        if model_name is None:
+            if hasattr(self.config, "get"):
+                model_name = self.config.get("llm_model_name", "qwen3-8b")
+            elif isinstance(self.config, dict):
+                model_name = self.config.get("llm_model_name", "qwen3-8b")
+            else:
+                model_name = "qwen3-8b"
+
+        # 如果底層客戶端尚未初始化，則進行初始化
+        if self._llm_model is None:
+            logging.info(f"🤖 正在调起文本 LLM 客户端 (目标模型: {model_name})")
+            self._llm_model = self.model_factory.get_llm_client()
+
+        return self._llm_model, model_name
+
 
     def generate_entity_uuid(self, name: str, entity_type: str) -> str:
         """确定性 UUID v5 生成算法"""
@@ -291,37 +284,25 @@ class FineBIDocProcessor:
 
     def _run_model_inference(self, prompt: str, step_label: str, base_tokens: int) -> dict:
         """内部通用大模型推理与异常捕获循环封装"""
-        model, tokenizer = self._get_llm()
+        client, model_name = self._get_llm()
         max_attempts = 3
         
         for attempt in range(max_attempts):
             current_max = base_tokens + (attempt * 512)
             try:
-                logging.info(f"🧠 [{step_label}] 尝试提取 (第 {attempt + 1} 次, max_tokens={current_max})...")
-                inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+                logging.info(f"🧠 [{step_label}] 尝试通过 LiteLLM 提取 (第 {attempt + 1} 次, model={model_name}, max_tokens={current_max})...")
                 
-                with torch.no_grad():
-                    generate_kwargs = {
-                        **inputs,
-                        "max_new_tokens": current_max,
-                        "temperature": 0.2 if attempt > 0 else 0.1,
-                        "repetition_penalty": 1.05,
-                        "pad_token_id": tokenizer.eos_token_id,
-                        "stop_strings": ["<|im_end|>"],
-                        "tokenizer": tokenizer
-                    }
-                    try:
-                        outputs = model.generate(**generate_kwargs)
-                    except TypeError as e:
-                        if "stop_strings" in str(e):
-                            generate_kwargs.pop("stop_strings")
-                            generate_kwargs.pop("tokenizer")
-                            outputs = model.generate(**generate_kwargs)
-                        else:
-                            raise e
-
-                full_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-                answer = full_text.split("assistant")[-1].strip() if "assistant" in full_text else full_text.strip()
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant specialized in structured data extraction. You MUST output a valid JSON object."},
+                        {"role": "user", "content": prompt + "\n\n请注意：必须仅返回合法的 JSON 对象，不要包含其他多余解释。"}
+                    ],
+                    max_tokens=current_max,
+                    temperature=0.2 if attempt > 0 else 0.1
+                )
+                
+                answer = response.choices[0].message.content.strip()
                 
                 # 特征预检（主要针对分块任务的复读断裂与脏数据保护）
                 if step_label == "分块综合特征":
@@ -331,6 +312,7 @@ class FineBIDocProcessor:
                     if len(names) > 15 and (sum(len(n) for n in names) / len(names)) < 2.5:
                         raise ValueError("检测到高频低价值输出（语义噪音），强制重试并提高惩罚")
 
+                # 清理思維鏈 (<think>) 或工具調用標籤，並剝離 markdown 程式碼塊
                 answer = re.sub(r'<think>.*?</think>|<tool_call>.*?</tool_call>', '', answer, flags=re.DOTALL).strip()
                 answer = re.sub(r'```json\s*|\s*```', '', answer).strip()
                 
@@ -346,6 +328,61 @@ class FineBIDocProcessor:
                 if attempt == max_attempts - 1:
                     return {}
         return {}
+    
+    # def _run_model_inference(self, prompt: str, step_label: str, base_tokens: int) -> dict:
+    #     """内部通用大模型推理与异常捕获循环封装"""
+    #     client, model_name = self._get_llm()
+    #     max_attempts = 3
+        
+    #     for attempt in range(max_attempts):
+    #         current_max = base_tokens + (attempt * 512)
+    #         try:
+    #             logging.info(f"🧠 [{step_label}] 尝试通过 LiteLLM 提取 (第 {attempt + 1} 次, max_tokens={current_max})...")
+                
+    #             response = client.chat.completions.create(
+    #                 model=model_name,
+    #                 messages=[
+    #                     {"role": "system", "content": "You are a helpful assistant specialized in structured data extraction and JSON generation."},
+    #                     {"role": "user", "content": prompt}
+    #                 ],
+    #                 max_tokens=current_max,
+    #                 temperature=0.2 if attempt > 0 else 0.1,
+    #                 response = client.chat.completions.create(
+    #                     model=model_name,
+    #                     messages=[
+    #                         {"role": "system", "content": "You are a helpful assistant specialized in structured data extraction. You MUST output a valid JSON object."},
+    #                         {"role": "user", "content": prompt + "\n\n请注意：必须仅返回合法的 JSON 对象，不要包含其他多余解释。"}
+    #                     ],
+    #                     max_tokens=current_max,
+    #                     temperature=0.2 if attempt > 0 else 0.1
+    #                 )
+    #             )
+                
+    #             answer = response.choices[0].message.content.strip()
+                
+    #             # 特征预检（主要针对分块任务的复读断裂与脏数据保护）
+    #             if step_label == "分块综合特征":
+    #                 if '"operation_constraints"' not in answer or '}' not in answer[answer.rfind(']'):]:
+    #                     raise ValueError("JSON 字段不完整，模型可能陷入了示例参数的复读陷阱")
+    #                 names = re.findall(r'"name":\s*"(.*?)"', answer)
+    #                 if len(names) > 15 and (sum(len(n) for n in names) / len(names)) < 2.5:
+    #                     raise ValueError("检测到高频低价值输出（语义噪音），强制重试并提高惩罚")
+
+    #             answer = re.sub(r'<think>.*?</think>|<tool_call>.*?</tool_call>', '', answer, flags=re.DOTALL).strip()
+    #             answer = re.sub(r'```json\s*|\s*```', '', answer).strip()
+                
+    #             start_idx = answer.find('{')
+    #             end_idx = answer.rfind('}')
+    #             if start_idx == -1: 
+    #                 raise ValueError("未找到 JSON 起始符 '{'")
+                
+    #             return self.robust_json_stitcher(answer[start_idx:end_idx+1])
+                
+    #         except Exception as e:
+    #             logging.warning(f"🔄 [{step_label}] 第 {attempt + 1} 次解析失败: {e}")
+    #             if attempt == max_attempts - 1:
+    #                 return {}
+    #     return {}
 
     def generate_business_features(self, text: str) -> dict:
         """提取全局宏观画像特征 (双步串行策略)"""
@@ -586,6 +623,8 @@ class FineBIDocProcessor:
         # 落地持久化文件
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(final_output, f, ensure_ascii=False, indent=4)
+
+        logging.info(f"💾 輸出 JSON 檔案已成功儲存至: {json_path}")
         
         for img_name, img_obj in rendered.images.items():
             img_obj.save(os.path.join(output_dir, img_name))
@@ -595,7 +634,5 @@ class FineBIDocProcessor:
 
     @staticmethod
     def _clear_cuda_cache():
-        """执行 CUDA 显存与垃圾回收强制清理"""
+        """清理 Python 垃圾回收"""
         gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()

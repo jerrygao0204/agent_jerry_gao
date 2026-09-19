@@ -5,9 +5,7 @@ import sys
 def install_package(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# 示例：安装 requests
-install_package("PyMuPDF")
-
+import markdown
 import torch
 import fitz  # PyMuPDF
 from PIL import Image, ImageOps
@@ -19,10 +17,13 @@ import subprocess, os
 from bs4 import BeautifulSoup
 import logging
 import unicodedata
+import io
+import base64
+
 # 动态将当前脚本的上一级目录（即项目根目录 /workspace）加入 sys.path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.insert(0, project_root)    
 
 from factory.model_factory import ModelFactory
 
@@ -61,19 +62,10 @@ class MarkdownProcessor:
         """委托给 ModelFactory 统一进行路径解析"""
         return self.factory.resolve_model_path(short_name)
 
+    
     def get_vlm_model(self, vlm='Qwen--Qwen3-VL-32B-Instruct'):
         """委托 ModelFactory 统一进行多模态模型加载与预热"""
         return self.factory.get_vlm_model(vlm_short_name=vlm)
-
-    # def _destroy_model(self):
-    #     """委托 ModelFactory 主动熔断销毁 VLM 显存资源"""
-    #     self.factory.destroy_vlm_model()
-
-    def _destroy_model(self):
-        # 正确：在包含 factory 的类中进行调用
-        if hasattr(self, 'factory') and self.factory:
-            self.factory.destroy_vlm_model()
-            self.model = None
 
     @staticmethod
     def process_html_to_flat_html(
@@ -325,42 +317,6 @@ class MarkdownProcessor:
                         # 情况 C：遇到了新的非空文本，更新上下文信息
                         last_tag, last_text = tag, text
 
-            # # ========================================================
-            # # Step 3: 填充。
-            # #   - 显式合并（来自真实 rowspan/colspan 的虚拟合并单元格）：
-            # #     总是继承源单元格的内容（防御性重断言）。
-            # #   - 隐式合并（空白物理 <td>，无 rowspan 属性）：
-            # #     仅对通过 ffill_columns 选中的列进行填充。
-            # # ========================================================
-
-            # def col_selected(c_idx):
-            #     if ffill_columns is None or ffill_columns == "none":
-            #         return False
-            #     if ffill_columns == "all":
-            #         return True
-            #     if callable(ffill_columns):
-            #         return bool(ffill_columns(c_idx))
-            #     return c_idx in ffill_columns
-
-            # for c_idx in range(num_cols):
-            #     last_tag, last_text = "td", ""
-            #     for r_idx in range(data_start_idx, num_rows):
-            #         cell_data = grid_get(r_idx, c_idx)
-            #         if (r_idx, c_idx) in is_virtual:
-            #             if last_text:
-            #                 grid[(r_idx, c_idx)] = (last_tag, last_text)
-            #             continue
-
-            #         tag, text = cell_data if cell_data else ("td", "")
-            #         if text == "":
-            #             if col_selected(c_idx) and last_text:
-            #                 grid[(r_idx, c_idx)] = (last_tag, last_text)
-            #                 # keep last_tag/last_text — same run continues
-            #             else:
-            #                 last_tag, last_text = "td", ""
-            #         else:
-            #             last_tag, last_text = tag, text
-
             # ========================================================
             # Step 5: 构建表头（将每列的多行表头进行拼接）
             # ========================================================
@@ -514,12 +470,10 @@ class MarkdownProcessor:
         2. 使用模型对单页 PDF 进行原生解析，返回 Markdown 文本, 方式为单页直接输入。
         """
         logging.info(f"📄 正在解析 PDF...")
-        model, processor = self.get_vlm_model(vlm)
+        client, model_name = self.get_vlm_model(vlm)
         logging.info("🔍 正在处理 PDF 页面并构建对话输入...")
         # 1. 加载 PDF 页面
-        doc = clean_doc
-
-        page = doc[0]
+        page = clean_doc[0]
         
         # 保持 2 倍缩放确保文字清晰度 [cite: 7, 10, 42]
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2)) 
@@ -547,47 +501,30 @@ class MarkdownProcessor:
         # D. 转回 RGB：满足 Qwen3-VL 的输入规范
         image = image.convert("RGB")
 
-        # 3. 构建对话
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "image": image},
-                    {"type": "text", "text": user_prompt},
+        # 将 PIL Image 转换为 Base64 字符串以适配 API 传输
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG")
+        base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        # 调动 LiteLLM 统一 Vision 接口
+        try:
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": user_prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                        ]
+                    }
                 ],
-            }
-        ]
-
-        # 4. 模型生成 (使用动态分辨率参数)
-        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        
-        # Qwen3-VL 32B 建议设置合理的 max_pixels 以处理表格细节 
-        inputs = processor(
-            text=[text],
-            images=[image],
-            padding=True,
-            return_tensors="pt"
-        ).to(model.device)
-
-        with torch.no_grad():
-            generated_ids = model.generate(
-                **inputs, 
-                max_new_tokens=8192,
-                do_sample=False  # 提取表格数据建议关闭随机性，使用 Greedy Search
+                max_tokens=4096
             )
-        
-        # 5. 解码
-        generated_ids_trimmed = [
-            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
-        output_text = processor.batch_decode(
-            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )[0]
-        # 核心清理动作
-        del inputs, generated_ids, pix, image
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        return output_text # 返回内容和偏移量以供后续解析坐标
+            return response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"❌ LiteLLM VLM 推理失败: {e}")
+            return ""
     
     def compute_render_params(
         self,
@@ -706,11 +643,9 @@ class MarkdownProcessor:
         3. 使用模型对单页 PDF 进行原生解析，返回 Markdown 文本,方式为滑窗切片接力。
         第一阶段：VLM 提取。保持窄长比例不引入白边，依赖模型原生动态分辨率看清细节
         """
-        vl_model, vl_processor = self.get_vlm_model(vlm)
-        logging.info("🔍 [VLM Stage] 正在处理 PDF 页面并构建滑窗输入...")
-        
-        doc = clean_doc
-        page = doc[0]
+        client, model_name = self.get_vlm_model(vlm)
+        logging.info("🔍 [VLM Stage] 正在處理 PDF 頁面並透過 LiteLLM 進行滑窗輸入推理...")
+        page = clean_doc[0]
         pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
         image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
@@ -776,12 +711,12 @@ class MarkdownProcessor:
 
         # logging.info_mem("循环开始前")
         for idx in range(len(tiles)):
-            # logging.info_mem(f"tile {idx} 推理前")
             current_start_y = idx * stride
             if idx == len(tiles) - 1:
                 current_start_y = max(0, h - tile_height)
                 
-            logging.info(f" 正在处理第 {idx+1}/{len(tiles)} 个切片...")
+            logging.info(f" 正在通過 API 處理第 {idx+1}/{len(tiles)} 個切片...")
+
             current_input_images = []
             content_list = []
             
@@ -839,23 +774,45 @@ class MarkdownProcessor:
             content_list.append({"type": "image", "image": current_tile})
             current_input_images.append(current_tile)
             content_list.append({"type": "text", "text": step_prompt})
+            buffered = io.BytesIO()
+            current_tile.save(buffered, format="JPEG")
+            base64_tile = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-            messages = [{"role": "user", "content": content_list}]
-            text = vl_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            try:
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": f"[解析对象：当前第 {idx+1} 块画面]\n{step_prompt}"},
+                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_tile}"}}
+                            ]
+                        }
+                    ],
+                    max_tokens=4096
+                )
+                tile_output = response.choices[0].message.content
+            except Exception as e:
+                logging.error(f"❌ 第 {idx+1} 個切片 API 推理失敗: {e}")
+                tile_output = ""
+
+            # messages = [{"role": "user", "content": content_list}]
+            # text = vl_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             
-            # 🔥🔥 关键修正：通过配置让 Processor 针对窄长图智能分配最佳 Patch，绝不进行压扁缩放
-            inputs = vl_processor(
-                text=[text], 
-                images=current_input_images, 
-                padding=True, 
-                return_tensors="pt"
-            ).to(vl_model.device)
+            # # 🔥🔥 关键修正：通过配置让 Processor 针对窄长图智能分配最佳 Patch，绝不进行压扁缩放
+            # inputs = vl_processor(
+            #     text=[text], 
+            #     images=current_input_images, 
+            #     padding=True, 
+            #     return_tensors="pt"
+            # ).to(vl_model.device)
 
-            with torch.no_grad():
-                # 配合 do_sample=False 稳定输出，适当降低惩罚防止表格标签被截断
-                generated_ids = vl_model.generate(**inputs, max_new_tokens=4096, do_sample=False, repetition_penalty=1.1, no_repeat_ngram_size=10)
-            generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
-            tile_output = vl_processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+            # with torch.no_grad():
+            #     # 配合 do_sample=False 稳定输出，适当降低惩罚防止表格标签被截断
+            #     generated_ids = vl_model.generate(**inputs, max_new_tokens=4096, do_sample=False, repetition_penalty=1.1, no_repeat_ngram_size=10)
+            # generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+            # tile_output = vl_processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
             
 
             # ─── 4. 状态机更新与全局 Y 轴还原（X轴不再需要缩放因子） ─────────────────────────
@@ -922,7 +879,8 @@ class MarkdownProcessor:
             
             vlm_raw_outputs.append(f"\n\n<!-- tile_start={current_start_y} -->\n{tile_output_global}\n")
             logging.info(f"==================================================")
-            del inputs, generated_ids, current_input_images, text, tile_output, current_tile
+            # del inputs, generated_ids, current_input_images, text, tile_output, current_tile
+            del current_input_images, tile_output, current_tile
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
@@ -1119,6 +1077,7 @@ class MarkdownProcessor:
         """
         # logging.info(f"🔍 [Table Extraction] 正在解析 PDF 表格坐标，tile_height={tile_height}, overlap={overlap}")
         stride = tile_height - overlap  
+        client, model_name = self.get_vlm_model(vlm)
 
         # ── 局部工具函数 ──────────────────────────────────────────────────────
 
@@ -1411,33 +1370,55 @@ class MarkdownProcessor:
                     "skip": True,
                 })
                 continue
+            buffered = io.BytesIO()
+            img.save(buffered, format="JPEG")
+            base64_table_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-            messages = [{"role": "user", "content": [
-                {"type": "image", "image": img},
-                {"type": "text",  "text": table_special_prompt},
-            ]}]
-            text_input = vl_processor.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-            inputs = vl_processor(
-                text=[text_input], images=[img], return_tensors="pt"
-            ).to(vl_model.device)
-            logging.info(f"  🤖 开始VLM推理...") 
-            with torch.no_grad():
-                generated_ids = vl_model.generate(
-                    **inputs, max_new_tokens=2048, do_sample=False
+            logging.info(f"  🤖 开始通过 LiteLLM VLM 提取表格...") 
+            try:
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": table_special_prompt},
+                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_table_img}"}}
+                            ]
+                        }
+                    ],
+                    max_tokens=2048
                 )
+                output = response.choices[0].message.content
+            except Exception as e:
+                logging.error(f"❌ 表格 VLM API 推理失败: {e}")
+                output = ""
 
-            trimmed = [o[len(i):] for i, o in zip(inputs.input_ids, generated_ids)]
-            output  = vl_processor.batch_decode(
-                trimmed, skip_special_tokens=True,
-                clean_up_tokenization_spaces=False
-            )[0]
+            # messages = [{"role": "user", "content": [
+            #     {"type": "image", "image": img},
+            #     {"type": "text",  "text": table_special_prompt},
+            # ]}]
+            # text_input = vl_processor.apply_chat_template(
+            #     messages, tokenize=False, add_generation_prompt=True
+            # )
+            # inputs = vl_processor(
+            #     text=[text_input], images=[img], return_tensors="pt"
+            # ).to(vl_model.device)
+            # logging.info(f"  🤖 开始VLM推理...") 
+            # with torch.no_grad():
+            #     generated_ids = vl_model.generate(
+            #         **inputs, max_new_tokens=2048, do_sample=False
+            #     )
+
+            # trimmed = [o[len(i):] for i, o in zip(inputs.input_ids, generated_ids)]
+            # output  = vl_processor.batch_decode(
+            #     trimmed, skip_special_tokens=True,
+            #     clean_up_tokenization_spaces=False
+            # )[0]
             logging.info(f"  ✅ VLM推理完成，输出长度: {len(output)}")
             # del inputs, generated_ids, img
             # if torch.cuda.is_available():
             #     torch.cuda.empty_cache()
-
             
             html_match = re.search(r"```html\s*(.*?)```", output, re.DOTALL)
             
@@ -1482,19 +1463,16 @@ class MarkdownProcessor:
                     "skip": True,
                 })
 
-        # ── 销毁 VLM ──────────────────────────────────────────────────────────
-        # 1. 优先通过 factory 获取并销毁，或者直接调用统一封装的 destroy 方法
-        if hasattr(self, 'factory') and self.factory is not None:
-            self.factory.destroy_vlm_model()
-
-        # 2. 深度显存垃圾回收
+        # ── 清理与物理排序 ────────────────────────────────────────────────────
+        # 1. LiteLLM 模式下无需销毁本地 VLM 模型，仅进行常规显存垃圾回收
         import gc
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
-            logging.info(f"💾 [表格VLM清场] allocated: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
+            logging.info(f"💾 [表格解析清场完成] 当前显存 allocated: {torch.cuda.memory_allocated()/1024**2:.1f} MB")
 
+        # 2. 纯物理坐标排序：按照表格在页面中的纵向位置（ymin）由上到下排序（与 Rerank 无关）
         results.sort(key=lambda x: x["box"][1])
         return results
 
@@ -1571,7 +1549,8 @@ class MarkdownProcessor:
                 if table_idx < len(parsed_tables):
                     # 优先获取平铺的 flat_html（如果有的话），否则使用常规 html
                     table_content = parsed_tables[table_idx].get("flat_html") or parsed_tables[table_idx].get("html", "")
-                    final_output.append(table_content.strip())
+                    if table_content is not None:
+                        final_output.append(table_content.strip())
                     table_idx += 1
                 else:
                     logging.info(f"⚠️ 警告: 骨架中的第 {table_idx} 个表格在解析数据中未找到（越界）")
@@ -1732,9 +1711,6 @@ class MarkdownProcessor:
                 final_md = flatten_all_tables_in_md(final_md)
 
                 # ========================================================
-
-                import markdown
-
                 def validate_markdown(text: str) -> bool:
                     try:
                         html = markdown.markdown(text)
@@ -1769,3 +1745,13 @@ class MarkdownProcessor:
                 doc.close()
             if clean_doc is not None and not clean_doc.is_closed:
                 clean_doc.close()
+
+if __name__ == "__main__":
+    prompt_path = "/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml"
+    pdf_path = '/workspace/hf-conda/RAG/问答机器人/other/finebi/函数专题/1_函数新手入门/3_运算符和优先级.pdf'
+
+    # 初始化处理器
+    processor = MarkdownProcessor(prompt_hub_path=prompt_path)
+    markdown_output = processor.main(pdf_path=pdf_path, prompt_path=prompt_path, vlm="qwen3-vl-8b")
+
+    logging.info(f"============================================================================\nmarkdown_output={markdown_output}")

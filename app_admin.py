@@ -10,6 +10,16 @@ try:
 except ImportError:
     install_package("gradio")
 
+# 示例：安装 requests
+install_package("PyMuPDF")
+install_package("Pillow")
+install_package("beautifulsoup4")
+install_package("langchain_text_splitters")
+install_package("pymilvus")
+install_package("markdown")
+
+install_package("accelerate")
+
 import os
 import sys
 import gc
@@ -28,9 +38,9 @@ from factory.model_factory import ModelFactory
 from factory import tool_factory, init_tools
 from config.config_loader import DEFAULT_CONFIG, config_loader  # 配置文件加载器
 from data_prep.pdf_to_markdown import MarkdownProcessor
-from data_prep.markdown_to_json import FineBIDocConfig, FineBIDocProcessor
+from data_prep.markdown_to_json import DocConfig, DocProcessor
 from ingest.validator import Processor as ValidationProcessor, RAGDataValidator
-from ingest.db_uploader import FineBIMilvusUploader
+from ingest.db_uploader import MilvusUploader
 
 # 📌 获取当前脚本 (app_admin.py) 所在的绝对路径目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,39 +55,55 @@ DEFAULT_CONFIG = {
     "patterns_path": config_loader.patterns_path,
     "img_prefix": "https://your-oss-bucket.com/finebi/docs/images",
     "pdf_prefix": "https://your-oss-bucket.com/finebi/pdfs/",
-    "namespace_seed": "FineBI_RAG_2026",
+    "namespace_seed": "RAG_2026",
     "milvus_host": "172.17.0.1",
     "collection_name": "finebi_knowledge_chunks",
-    "vlm_model_name": "Qwen/Qwen3-VL-32B-Instruct",
-    "llm_model_name": "Qwen/Qwen3-32B",
+    "vlm_model_name": "qwen3-vl-8b",
+    "llm_model_name": "qwen3-4b",
     "score_threshold": 80.0
 }
 
+
 def load_config():
-    """读取本地 admin_config.json 并在绝对路径失效时自动修正"""
+    """讀取本地 admin_config.json 並強勢覆蓋全域預設配置"""
     global DEFAULT_CONFIG
     if os.path.exists(CONFIG_FILE_PATH):
         try:
             with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f:
                 saved_config = json.load(f)
-                
-                # 校验路径是否存在，若不存在则更正为当前配置路径
-                prompts_path = saved_config.get("prompts_hub_path", "")
-                if not os.path.exists(prompts_path):
-                    saved_config["prompts_hub_path"] = config_loader.prompt_hub_path
-                    logging.warning(f"⚠️ 校验到原配置路径不存在: {prompts_path}，已自动更正为: {config_loader.prompt_hub_path}")
-
-                patterns_path = saved_config.get("patterns_path", "")
-                if not os.path.exists(patterns_path):
-                    saved_config["patterns_path"] = config_loader.patterns_path
-                    logging.warning(f"⚠️ 校验到原配置路径不存在: {patterns_path}，已自动更正为: {config_loader.patterns_path}")
-
+                # 嚴格覆蓋全域變數
                 DEFAULT_CONFIG.update(saved_config)
-                logging.info(f"⚙️ 成功加载持久化配置文件: {CONFIG_FILE_PATH}")
+                logging.info(f"⚙️ 成功從磁盤加載最新配置文件: {CONFIG_FILE_PATH}")
         except Exception as e:
-            logging.error(f"❌ 读取配置文件异常: {e}")
+            logging.error(f"❌ 讀取配置文件異常: {e}")
             
-    os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
+    os.makedirs(DEFAULT_CONFIG.get("output_root", SCRIPT_DIR), exist_ok=True)
+
+# def load_config():
+#     """读取本地 admin_config.json 并在绝对路径失效时自动修正"""
+#     global DEFAULT_CONFIG
+#     if os.path.exists(CONFIG_FILE_PATH):
+#         try:
+#             with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f:
+#                 saved_config = json.load(f)
+                
+#                 # 校验路径是否存在，若不存在则更正为当前配置路径
+#                 prompts_path = saved_config.get("prompts_hub_path", "")
+#                 if not os.path.exists(prompts_path):
+#                     saved_config["prompts_hub_path"] = config_loader.prompt_hub_path
+#                     logging.warning(f"⚠️ 校验到原配置路径不存在: {prompts_path}，已自动更正为: {config_loader.prompt_hub_path}")
+
+#                 patterns_path = saved_config.get("patterns_path", "")
+#                 if not os.path.exists(patterns_path):
+#                     saved_config["patterns_path"] = config_loader.patterns_path
+#                     logging.warning(f"⚠️ 校验到原配置路径不存在: {patterns_path}，已自动更正为: {config_loader.patterns_path}")
+
+#                 DEFAULT_CONFIG.update(saved_config)
+#                 logging.info(f"⚙️ 成功加载持久化配置文件: {CONFIG_FILE_PATH}")
+#         except Exception as e:
+#             logging.error(f"❌ 读取配置文件异常: {e}")
+            
+#     os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
 
 load_config()
 
@@ -90,18 +116,24 @@ init_tools(retriever=None)
 # ==========================================
 # 辅助函数：GPU 显存状态监控
 # ==========================================
+# ==========================================
+# 辅助函数：GPU 显存状态监控 (LiteLLM 适配版)
+# ==========================================
 def get_gpu_memory_status():
-    """获取当前 GPU 显存使用情况"""
+    """获取当前 GPU 显存使用情况 (LiteLLM 模式下主要由 Rerank 模型与代理服务占用)"""
     if not torch.cuda.is_available():
         return "GPU 不可用 (CPU Mode)"
     
-    allocated = torch.cuda.memory_allocated() / (1024 ** 3)
-    reserved = torch.cuda.memory_reserved() / (1024 ** 3)
-    total = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-    return f"GPU 显存状态: 使用率 {allocated/total:.1%} | 实际分配 {allocated:.1f} GB | 已申领预留 {reserved:.1f} GB | 总共 {total:.1f} GB"
+    try:
+        allocated = torch.cuda.memory_allocated() / (1024 ** 3)
+        reserved = torch.cuda.memory_reserved() / (1024 ** 3)
+        total = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        return f"GPU 显存状态: 使用率 {allocated/total:.1%} | 实际分配 {allocated:.1f} GB | 已申领预留 {reserved:.1f} GB | 总共 {total:.1f} GB"
+    except Exception as e:
+        return f"显存监控获取异常: {str(e)}"
 
 def force_gc_cleanup():
-    """彻底回收 CUDA 显存与 Python 垃圾"""
+    """回收 Python 垃圾"""
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.synchronize()
@@ -109,17 +141,9 @@ def force_gc_cleanup():
     return get_gpu_memory_status()
 
 def emergency_force_cleanup():
-    """🔥 应急熔断：一键彻底物理清空所有工厂模型并回收 CUDA 显存"""
-    logging.warning("🚨 [Emergency Cleanup] 用户触发了应急全量显存回收！")
-    if hasattr(ModelFactory, "destroy_all_models_cls"):
-        ModelFactory.destroy_all_models_cls()
-    else:
-        ModelFactory.destroy_vlm_model()
-        ModelFactory.destroy_llm_model()
-        if hasattr(ModelFactory, "destroy_embedding_model"):
-            ModelFactory.destroy_embedding_model()
-        force_gc_cleanup()
-    return get_gpu_memory_status()
+    """🔥 LiteLLM 模式下的轻量重置"""
+    logging.info("ℹ️ [Emergency Cleanup] LiteLLM 模式下无本地大模型权重占用，执行常规垃圾回收。")
+    return force_gc_cleanup()
 
 # ==========================================
 # 阶段 1-3：运行流水线解析与质检
@@ -185,14 +209,23 @@ def run_parsing_and_validation(pdf_file, score_threshold):
     except Exception as e:
         current_log = make_log(f"❌ [阶段一] 发生异常: {e}")
         yield current_log, "", "", get_gpu_memory_status(), status("阶段一：发生异常！"), btn_running, btn_write_disabled, btn_cancel_disabled, ""
+
     finally:
-        current_log = make_log("🧹 [阶段一] 正在呼叫工厂物理销毁 VLM 模型并释放显存...")
+        current_log = make_log("🧹 [阶段一] 任务完成，执行常规垃圾回收...")
         if 'processor' in locals():
             del processor
-        ModelFactory.destroy_vlm_model()
+        gc.collect()
         gpu_stat = get_gpu_memory_status()
-        current_log = make_log(f"💾 [阶段一] 显存已完全回收。{gpu_stat}")
+        current_log = make_log(f"💾 [阶段一] 清理完毕。{gpu_stat}")
         yield current_log, markdown_output or "", "", gpu_stat, status("阶段一：完成"), btn_running, btn_write_disabled, btn_cancel_disabled, ""
+    # finally:
+    #     current_log = make_log("🧹 [阶段一] 正在呼叫工厂物理销毁 VLM 模型并释放显存...")
+    #     if 'processor' in locals():
+    #         del processor
+    #     ModelFactory.destroy_vlm_model()
+    #     gpu_stat = get_gpu_memory_status()
+    #     current_log = make_log(f"💾 [阶段一] 显存已完全回收。{gpu_stat}")
+    #     yield current_log, markdown_output or "", "", gpu_stat, status("阶段一：完成"), btn_running, btn_write_disabled, btn_cancel_disabled, ""
 
     # ----------------------------------------------------
     # 阶段二：后处理与 JSON 转换
@@ -202,15 +235,16 @@ def run_parsing_and_validation(pdf_file, score_threshold):
 
     doc_processor = None
     try:
-        doc_config = FineBIDocConfig(
+        doc_config = DocConfig(
             namespace_seed=DEFAULT_CONFIG["namespace_seed"],
             image_url_prefix=DEFAULT_CONFIG["img_prefix"],
             pdf_url_prefix=DEFAULT_CONFIG["pdf_prefix"],
             cuda_device="0",  
             yaml_rules_path=DEFAULT_CONFIG["patterns_path"],
-            yaml_prompts_path=DEFAULT_CONFIG["prompts_hub_path"]
+            yaml_prompts_path=DEFAULT_CONFIG["prompts_hub_path"],
+            llm_model_name=DEFAULT_CONFIG["llm_model_name"]
         )
-        doc_processor = FineBIDocProcessor(config=doc_config)
+        doc_processor = DocProcessor(config=doc_config)
         doc_processor.process_pdf(
             pdf_path=pdf_path,
             md_input=markdown_output,
@@ -225,7 +259,8 @@ def run_parsing_and_validation(pdf_file, score_threshold):
         current_log = make_log("🧹 [阶段二] 物理销毁阶段二 LLM 模型...")
         if "doc_processor" in locals() and doc_processor is not None:
             del doc_processor
-        ModelFactory.destroy_llm_model()
+        gc.collect()
+        # ModelFactory.destroy_llm_model()
         gpu_stat = get_gpu_memory_status()
         current_log = make_log(f"💾 [阶段二] 显存已完全回收。{gpu_stat}")
         yield current_log, markdown_output or "", "", gpu_stat, status("阶段二：完成"), btn_running, btn_write_disabled, btn_cancel_disabled, target_json
@@ -266,7 +301,8 @@ def run_parsing_and_validation(pdf_file, score_threshold):
         current_log = make_log("🧹 [阶段三] 物理销毁阶段三评估模型并释放显存...")
         if "val_processor" in locals(): 
             del val_processor
-        ModelFactory.destroy_llm_model()
+        gc.collect()
+        # ModelFactory.destroy_llm_model()
         gpu_stat = get_gpu_memory_status()
         current_log = make_log(f"💾 [阶段三] 显存已完全回收。{gpu_stat}")
 
@@ -322,7 +358,7 @@ def write_to_milvus_action(target_json, current_logs):
 
     uploader = None
     try:
-        uploader = FineBIMilvusUploader(
+        uploader = MilvusUploader(
             milvus_host=DEFAULT_CONFIG["milvus_host"],
             collection_name=DEFAULT_CONFIG["collection_name"],
             cuda_device="0"
@@ -380,12 +416,15 @@ def cancel_write_action(current_logs):
 # ==========================================
 # 系统配置保存与更新逻辑
 # ==========================================
+
 def save_system_config(
     output_root, prompts_hub_path, patterns_path, img_prefix, 
     pdf_prefix, namespace_seed, milvus_host, collection_name, 
     vlm_model_name, llm_model_name, score_threshold
 ):
     global DEFAULT_CONFIG
+    
+    # 1. 組裝新配置字典
     new_config = {
         "output_root": output_root,
         "prompts_hub_path": prompts_hub_path,
@@ -400,24 +439,110 @@ def save_system_config(
         "score_threshold": float(score_threshold)
     }
     
-    DEFAULT_CONFIG.update(new_config)
-    os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
-    
     try:
+        # 2. 寫入磁盤文件
         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
-            json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=4)
-        return "✅ 系统基础配置已成功保存并同步生效！", DEFAULT_CONFIG
+            json.dump(new_config, f, ensure_ascii=False, indent=4)
+        
+        # 3. 🟢 強制重新調用 load_config() 從磁盤讀取最新數據，確保內存與硬盤 100% 同步
+        load_config()
+        
+        os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
+        
+        logging.info(f"💾 配置保存成功，當前生效的 llm_model_name: {DEFAULT_CONFIG['llm_model_name']}")
+
+        # 4. 完整返回最新數據，刷新前端所有輸入框與 JSON 視圖
+        return (
+            "✅ 系統基礎配置已成功保存、持久化並即時生效！",
+            DEFAULT_CONFIG["output_root"],
+            DEFAULT_CONFIG["prompts_hub_path"],
+            DEFAULT_CONFIG["patterns_path"],
+            DEFAULT_CONFIG["img_prefix"],
+            DEFAULT_CONFIG["pdf_prefix"],
+            DEFAULT_CONFIG["namespace_seed"],
+            DEFAULT_CONFIG["milvus_host"],
+            DEFAULT_CONFIG["collection_name"],
+            DEFAULT_CONFIG["vlm_model_name"],
+            DEFAULT_CONFIG["llm_model_name"],
+            DEFAULT_CONFIG["score_threshold"],
+            DEFAULT_CONFIG  # 用於下方 gr.JSON 視圖
+        )
     except Exception as e:
-        return f"❌ 保存配置文件失败: {e}", DEFAULT_CONFIG
+        error_msg = f"❌ 保存配置文件失敗: {e}"
+        logging.error(error_msg)
+        return (error_msg, *[DEFAULT_CONFIG[k] for k in [
+            "output_root", "prompts_hub_path", "patterns_path", "img_prefix", 
+            "pdf_prefix", "namespace_seed", "milvus_host", "collection_name", 
+            "vlm_model_name", "llm_model_name", "score_threshold"
+        ]], DEFAULT_CONFIG)
+    
+# def save_system_config(
+#     output_root, prompts_hub_path, patterns_path, img_prefix, 
+#     pdf_prefix, namespace_seed, milvus_host, collection_name, 
+#     vlm_model_name, llm_model_name, score_threshold
+# ):
+#     global DEFAULT_CONFIG
+#     new_config = {
+#         "output_root": output_root,
+#         "prompts_hub_path": prompts_hub_path,
+#         "patterns_path": patterns_path,
+#         "img_prefix": img_prefix,
+#         "pdf_prefix": pdf_prefix,
+#         "namespace_seed": namespace_seed,
+#         "milvus_host": milvus_host,
+#         "collection_name": collection_name,
+#         "vlm_model_name": vlm_model_name,
+#         "llm_model_name": llm_model_name,
+#         "score_threshold": float(score_threshold)
+#     }
+    
+#     DEFAULT_CONFIG.update(new_config)
+#     os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
+
+#     try:
+#         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
+#             json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=4)
+        
+#         # 🟢 關鍵修復：返回所有更新後的數值，用於即時刷新前端介面輸入框
+#         return (
+#             "✅ 系統基礎配置已成功保存並同步生效！",
+#             DEFAULT_CONFIG["output_root"],
+#             DEFAULT_CONFIG["prompts_hub_path"],
+#             DEFAULT_CONFIG["patterns_path"],
+#             DEFAULT_CONFIG["img_prefix"],
+#             DEFAULT_CONFIG["pdf_prefix"],
+#             DEFAULT_CONFIG["namespace_seed"],
+#             DEFAULT_CONFIG["milvus_host"],
+#             DEFAULT_CONFIG["collection_name"],
+#             DEFAULT_CONFIG["vlm_model_name"],
+#             DEFAULT_CONFIG["llm_model_name"],
+#             DEFAULT_CONFIG["score_threshold"],
+#             DEFAULT_CONFIG  # 用於底部的 gr.JSON 預覽
+#         )
+#     except Exception as e:
+#         error_msg = f"❌ 保存配置文件失敗: {e}"
+#         # 發生異常時保持原值返回
+#         return (error_msg, *[DEFAULT_CONFIG[k] for k in [
+#             "output_root", "prompts_hub_path", "patterns_path", "img_prefix", 
+#             "pdf_prefix", "namespace_seed", "milvus_host", "collection_name", 
+#             "vlm_model_name", "llm_model_name", "score_threshold"
+#         ]], DEFAULT_CONFIG)
+    
+    # try:
+    #     with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
+    #         json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=4)
+    #     return "✅ 系统基础配置已成功保存并同步生效！", DEFAULT_CONFIG
+    # except Exception as e:
+    #     return f"❌ 保存配置文件失败: {e}", DEFAULT_CONFIG
 
 # ==========================================
 # Gradio 管理后台界面构建
 # ==========================================
 def build_admin_ui():
-    with gr.Blocks(title="FineBI 知识库后台管理系统", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="知识库后台管理系统", theme=gr.themes.Soft()) as demo:
         target_json_state = gr.State("")
 
-        gr.Markdown("# 🛡️ FineBI 知识库离线清洗与向量入库系统 (Admin Portal)")
+        gr.Markdown("# 🛡️ 知识库离线清洗与向量入库系统 (Admin Portal)")
         
         with gr.Row():
             gpu_status_box = gr.Textbox(
@@ -533,8 +658,16 @@ def build_admin_ui():
                         cfg_milvus_host, cfg_collection_name, cfg_vlm_model_name, 
                         cfg_llm_model_name, cfg_score_threshold
                     ],
-                    outputs=[config_status_msg, config_json_preview]
+                    outputs=[
+                        config_status_msg, 
+                        cfg_output_root, cfg_prompts_hub_path, cfg_patterns_path, 
+                        cfg_img_prefix, cfg_pdf_prefix, cfg_namespace_seed, 
+                        cfg_milvus_host, cfg_collection_name, cfg_vlm_model_name, 
+                        cfg_llm_model_name, cfg_score_threshold,
+                        config_json_preview
+                    ]
                 )
+
 
     return demo
 

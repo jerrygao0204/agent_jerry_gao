@@ -11,8 +11,8 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from search.retriever import FineBIRetriever
-from search.reranker import FineBIReranker
+from search.retriever import Retriever
+from search.reranker import Reranker
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,16 +28,16 @@ class RetrieverEvaluator:
     ):
         self.host = milvus_host or os.getenv("MILVUS_HOST", "172.17.0.1")
         self.port = milvus_port or os.getenv("MILVUS_PORT", "19530")
-        self.collection = collection_name or os.getenv("MILVUS_COLLECTION", "finebi_knowledge_chunks")
+        self.collection = collection_name or os.getenv("MILVUS_COLLECTION", "_knowledge_chunks")
         
-        logging.info("🚀 初始化 Evaluator: 載入 FineBIRetriever 與 FineBIReranker...")
-        self.retriever = FineBIRetriever(
+        logging.info("🚀 初始化 Evaluator: 載入 Retriever 與 Reranker...")
+        self.retriever = Retriever(
             milvus_host=self.host,
             milvus_port=self.port,
             collection_name=self.collection,
             cuda_device=cuda_device
         )
-        self.reranker = FineBIReranker(cuda_device=cuda_device, min_prob=0.25)
+        self.reranker = Reranker(cuda_device=cuda_device, min_prob=0.25)
         
         self._warmup()
 

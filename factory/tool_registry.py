@@ -17,13 +17,6 @@ import importlib
 from typing import Any, Dict, Optional
 import inspect
 
-# 🌟 从具体实现模块导入定义，避免重复定义
-# from factory.tools.rag_tool import RAGKnowledgeSearchTool
-# from factory.tools.api_tool import FineBIDashboardTool
-# from factory.tools.web_search_tool import WebSearchTool
-# from factory.tools.dataset_summary import DatasetSummaryTool
-
-
 logger = logging.getLogger("ToolsModule")
 
 def init_tools(retriever: Optional[Any] = None, reranker: Optional[Any] = None) -> None:
@@ -87,7 +80,12 @@ if __name__ == "__main__":
         print(f"✅ [成功] 成功定位檔案！")
         try:
             init_tools()
-            tools = tool_factory.get_openai_tools_schema_by_packages()
+            all_target_packages = [
+                (domain, pkg)
+                for domain, pkgs in tool_factory._hierarchy.items()
+                for pkg in pkgs.keys()
+            ]
+            _, tools = tool_factory.get_tools_metadata_by_packages(all_target_packages, user_role="admin")
             print(f"🎉 [成功] 成功加載 YAML 並註冊 {len(tools)} 個工具！")
         except Exception as e:
             print(f"❌ [錯誤] 初始化失敗: {e}")

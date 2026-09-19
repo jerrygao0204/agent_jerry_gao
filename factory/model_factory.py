@@ -1,397 +1,258 @@
 # factory/model_factory.py
 import os
-import sys
-import gc
-import logging
-import subprocess
 import yaml
-import torch
-from PIL import Image
+import logging
+import threading
+import requests
+from typing import List, Dict, Any, Optional
+from urllib.parse import urlparse
 from dotenv import load_dotenv
+from openai import OpenAI
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import torch
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
-try:
-    from transformers import AutoProcessor, AutoTokenizer, AutoModelForCausalLM
-except ImportError:
-    import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "transformers"])
-    from transformers import AutoProcessor, AutoTokenizer, AutoModelForCausalLM
-
-# 条件导入多模态模型类
-try:
-    from transformers import Qwen3VLForConditionalGeneration
-except ImportError:
-    try:
-        from transformers import Qwen2_5_VLForConditionalGeneration as Qwen3VLForConditionalGeneration
-    except ImportError:
-        from transformers import AutoModelForConditionalGeneration as Qwen3VLForConditionalGeneration
-
-
 class ModelFactory:
     """
-    模型与环境配置中心工厂（系统终极底座）
-    全局接管：环境软链接、离线模型物理路径寻址、硬件算力分配、以及 VLM/LLM/Embedding 引擎的生命周期管理
+    模型与环境配置中心工厂 (ModelFactory - LiteLLM Unified Mode)
+    全局接管：Prompt Hub 资产管理、LiteLLM API 句柄分发、Rerank 与 Embedding 统一调用
     """
-    load_dotenv()
-    
-    # 🔒 静态类变量（全局唯一句柄）
-    _LLM_MODEL = None
-    _LLM_TOKENIZER = None
-    
-    _VL_MODEL = None
-    _VL_PROCESSOR = None
+    _instance: Optional["ModelFactory"] = None
+    _lock: threading.Lock = threading.Lock()
+    _openai_client: Optional[OpenAI] = None
 
-    _EMB_MODEL = None
-    _EMB_TOKENIZER = None
-
-    _RERANKER_MODEL = None
-    _RERANKER_TOKENIZER = None
-
-    _instance = None
+    # 🌟 类级别全局缓存：确保 Rerank 模型与分词器在整个生命周期中只被加载一次
+    _rerank_tokenizer = None
+    _rerank_model = None
+    _device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def __new__(cls, *args, **kwargs):
-        """真单例模式，阻断重复初始化"""
         if cls._instance is None:
-            cls._instance = super(ModelFactory, cls).__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(ModelFactory, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, prompt_hub_path: str = "prompt_hub.yaml", cache_dir: str = None):
-
-        if getattr(self, '_initialized', False):
+    def __init__(self, prompt_hub_path: str = "prompt_hub.yaml", cache_dir: str = "/workspace/hf-conda/hf_cache/hub"):
+        if getattr(self, "_initialized", False):
             return
-        
-        if hasattr(self, '_initialized') and self._initialized:
-            if prompt_hub_path and (not hasattr(self, 'prompts') or not self.prompts):
-                self.prompt_hub_path = self._resolve_path(prompt_hub_path)
-                self.prompts = self._load_prompts()
-            return
-        
-        # 🌟 1. 动态获取缓存路径环境变量（去除硬编码）
-        self.cache_dir = cache_dir or os.getenv(
-            "HF_CACHE_DIR", 
-            "/workspace/hf-conda/hf_cache/hub"
-        )
-        self.datalab_dir = os.getenv(
-            "HF_CACHE_DATALAB", 
-            "/workspace/hf-conda/hf_cache/datalab"
-        )
+        with self._lock:
+            if getattr(self, "_initialized", False):
+                return
+            load_dotenv()
 
-        # 🌟 2. 将传入的路径统一转换为绝对路径
-        self.prompt_hub_path = self._resolve_path(prompt_hub_path)
-        
-        # 🌟 3. 使用绝对路径加载 Prompts
-        self.prompts = self._load_prompts()
+            # 1. 配置 Endpoint & Key (默认指向 LiteLLM 统一代理)
+            self.base_url = os.getenv("OPENAI_BASE_URL", "http://172.17.0.1:4000/v1").rstrip("/")
+            self.api_key = os.getenv("OPENAI_API_KEY", "sk-1234")
 
-        # 建立全局软链接（从环境变量路径链接到系统默认缓存路径）
-        self._ensure_symlink(self.datalab_dir, "/root/.cache/datalab")
-        self._ensure_symlink(self.cache_dir, "/root/.cache/huggingface")
-        
-        self._initialized = True
+            # 2. 解析 Prompt Hub 路径
+            self.prompt_hub_path = self._resolve_path(prompt_hub_path)
+            self.prompts = self._load_prompts()
+
+            # 3. 初始化全局 OpenAI Client
+            ModelFactory._openai_client = OpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key
+            )
+
+            # 4. 初始化 requests.Session 连接池
+            self.session = requests.Session()
+            retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+            self.session.mount("http://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
+            self.session.mount("https://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
+
+            # 🌟 5. 确保在启动初始化时「仅加载一次」Rerank 模型到 GPU
+            self._init_rerank_model()
+
+            self._initialized = True
+            logging.info(f"🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: {self.base_url}")
 
     def _resolve_path(self, path: str) -> str:
-        """
-        🌟 动态计算绝对路径：如果传入的是相对路径，则自动绑定到项目的 root/config/ 目录下
-        """
         if os.path.isabs(path):
             return path
-        # 获取 factory/ 目录的上一级目录（即项目 root 根目录）
         factory_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(factory_dir)
-        
-        # 提取文件名，直接绑定到 config 子目录下
         filename = os.path.basename(path)
         return os.path.join(project_root, "config", filename)
 
-    def _load_prompts(self):
-        """加载 Prompt Hub 文件"""
-        # 🌟 3. 安全校验：防止绝对路径文件不存在
+    def _load_prompts(self) -> Dict[str, str]:
         if not os.path.exists(self.prompt_hub_path):
-            logging.warning(f"⚠️ Prompt Hub 文件不存在，跳过加载: {self.prompt_hub_path}")
+            logging.warning(f"⚠️ Prompt Hub 文件不存在: {self.prompt_hub_path}")
             return {}
-
         try:
             with open(self.prompt_hub_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
-            
             if not data or "prompts" not in data:
-                logging.warning(f"⚠️ Prompt Hub 文件内容格式不正确: {self.prompt_hub_path}")
+                logging.warning(f"⚠️ Prompt Hub 格式无效: {self.prompt_hub_path}")
                 return {}
-
-            prompts_dict = {p["name"]: p["content"] for p in data.get("prompts", [])}
-            logging.info(f"📂 Prompt Hub 资产加载成功，绝对路径: [{self.prompt_hub_path}]，可用 keys: {list(prompts_dict.keys())}")
+            prompts_dict = {p["name"]: p["content"] for p in data.get("prompts", []) if "name" in p and "content" in p}
+            logging.info(f"📂 Prompt Hub 资产加载成功: [{self.prompt_hub_path}] | Keys: {list(prompts_dict.keys())}")
             return prompts_dict
         except Exception as e:
             logging.error(f"❌ 加载 Prompt Hub 失败 ({self.prompt_hub_path}): {e}")
             return {}
-        
+
     @classmethod
-    def get_instance(cls, *args, **kwargs):
-        """获取或创建 ModelFactory 全局单例句柄"""
-        if not hasattr(cls, '_instance'):
-            cls._instance = cls(*args, **kwargs)
-        return cls._instance
+    def get_instance(cls, *args, **kwargs) -> "ModelFactory":
+        return cls(*args, **kwargs)
 
-    def resolve_model_path(self, short_name: str) -> str:
-        """统一寻址算法 (Unified Path Resolver)"""
-        if os.path.exists(short_name):
-            return short_name
-            
-        safe_folder_name = f"models--{short_name.replace('/', '--')}"
-        model_dir = os.path.join(self.cache_dir, safe_folder_name, "snapshots")
-        
-        if not os.path.isdir(model_dir):
-            raise FileNotFoundError(f"❌ 工厂未在 {self.cache_dir} 寻寻找模型 [{short_name}] 的缓存文件夹。")
-        
-        snapshots = sorted(os.listdir(model_dir))
-        if not snapshots:
-            raise FileNotFoundError(f"❌ 模型 [{short_name}] 的 snapshots 目录为空。")
-        
-        real_path = os.path.join(model_dir, snapshots[-1])
-        logging.info(f"🎯 工厂自动寻址成功 -> [{short_name}] 物理路径: {real_path}")
-        return real_path
+    def get_llm_client(self) -> OpenAI:
+        if not ModelFactory._openai_client:
+            raise RuntimeError("ModelFactory 未正确初始化 OpenAI Client")
+        return ModelFactory._openai_client
 
-    def _ensure_symlink(self, source: str, target: str):
-        if not os.path.islink(target):
-            logging.info(f"🔧 构建全局软链接: {target} -> {source}")
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            if os.path.exists(target) and not os.path.islink(target):
-                subprocess.run(f"rm -rf {target}", shell=True)
-            os.symlink(source, target)
+    def setup_cuda_device(self, device_str: str = "0") -> str:
+        """旧接口兼容方法"""
+        return ModelFactory._device
 
-    @staticmethod
-    def setup_cuda_device(cuda_device: str = "0") -> torch.device:
-        os.environ["CUDA_VISIBLE_DEVICES"] = cuda_device
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        logging.info(f"🖥️ 硬件环境已绑定设备: {device}")
-        return device
-
-    # =====================================================================
-    # 🛠️ 通用底层工具：极限原地解构模型 (Hard Cleansing Mechanism)
-    # =====================================================================
-    @classmethod
-    def _hard_destroy_module(cls, model_obj):
-        """原地拆解模型 Parameter/Buffer/Hooks，物理斩断 CUDA 显存强引用"""
-        if model_obj is None:
+    def _init_rerank_model(self):
+        """内部方法：在启动时预先加载 Rerank 模型，避免每次查询重复加载"""
+        if ModelFactory._rerank_model is not None:
             return
-        
+        model_path = Path("/workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+        if not model_path.exists():
+            host_fallback = Path("/home/gaozheng/venv/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+            if host_fallback.exists():
+                model_path = host_fallback
+
         try:
-            # 1. 尝试解绑 Accelerate 挂载的 Hooks
-            try:
-                from accelerate.hooks import remove_hook_from_module
-                remove_hook_from_module(model_obj, recurse=True)
-            except Exception:
-                pass
-
-            # 2. 逐层将权重 Tensor 的内存置空 (0 字节)
-            if hasattr(model_obj, "modules"):
-                for module in model_obj.modules():
-                    for param in list(module._parameters.keys()):
-                        p = module._parameters[param]
-                        if p is not None:
-                            p.data = torch.empty(0, device=p.device)
-                            module._parameters[param] = None
-                    for buf in list(module._buffers.keys()):
-                        b = module._buffers[buf]
-                        if b is not None:
-                            b.data = torch.empty(0, device=b.device)
-                            module._buffers[buf] = None
-                    for hook_dict in ('_backward_hooks', '_forward_hooks', '_forward_pre_hooks'):
-                        if hasattr(module, hook_dict):
-                            getattr(module, hook_dict).clear()
+            logging.info(f"⏳ 正在初始化本地 Rerank 模型至设备: {ModelFactory._device}...")
+            ModelFactory._rerank_tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+            ModelFactory._rerank_model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+            ModelFactory._rerank_model.eval()
+            ModelFactory._rerank_model.to(ModelFactory._device)
+            logging.info(f"✅ Rerank 模型已成功常驻于 {ModelFactory._device}")
         except Exception as e:
-            logging.warning(f"⚠️ 物理解构张量时发生非致命异常: {e}")
+            logging.error(f"❌ 初始化 Rerank 模型失败: {e}")
 
-    @classmethod
-    def _trigger_system_gc(cls):
-        """系统级多层垃圾回收与 CUDA 缓存彻底清空"""
-        gc.collect()
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.synchronize()
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+    def rerank(self, query: str, documents: List[str], top_n: int = 3) -> List[Dict[str, Any]]:
+        """使用已常驻内存的 Rerank 模型进行高速重排序 (纯 Forward 推理)"""
+        if not documents:
+            return []
+        if ModelFactory._rerank_model is None or ModelFactory._rerank_tokenizer is None:
+            logging.warning("⚠️ Rerank 模型未就绪，启动降级策略。")
+            return [{"index": idx, "document": doc, "relevance_score": 0.0} for idx, doc in enumerate(documents[:top_n])]
 
-    # =====================================================================
-    # 🌌 核心引擎 1：纯文本 LLM 工厂驱动
-    # =====================================================================
-    def get_llm_model(self, llm_short_name: str = "Qwen/Qwen3-32B"):
-        is_healthy = (
-            ModelFactory._LLM_MODEL is not None 
-            and hasattr(ModelFactory._LLM_MODEL, "generate")
-        )
-
-        if not is_healthy:
-            model_dir = self.resolve_model_path(llm_short_name)
-            logging.info(f"🚀 [Offline Load] 冷启动加载纯文本大模型: {model_dir}")
-            
-            ModelFactory._LLM_TOKENIZER = AutoTokenizer.from_pretrained(
-                model_dir, 
-                local_files_only=True, 
-                trust_remote_code=True
-            )
-            ModelFactory._LLM_MODEL = AutoModelForCausalLM.from_pretrained(
-                model_dir,
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-                attn_implementation="flash_attention_2",
-                use_cache=True,
-                local_files_only=True,
-                trust_remote_code=True
-            )
-            
-            warmup_prompt = "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant"
-            inputs = ModelFactory._LLM_TOKENIZER(warmup_prompt, return_tensors="pt").to(ModelFactory._LLM_MODEL.device)
-            
-            logging.info("💡 正在执行纯文本大模型静态显存预热...")
+        try:
+            pairs = [[query, doc] for doc in documents]
             with torch.no_grad():
-                _ = ModelFactory._LLM_MODEL.generate(**inputs, max_new_tokens=5)
-            logging.info("✅ LLM 预热成功。")
-            
-            del inputs
-            self._trigger_system_gc()
-        else:
-            logging.info("🟢 复用已存在的 LLM 实例。")
+                inputs = ModelFactory._rerank_tokenizer(
+                    pairs, padding=True, truncation=True, return_tensors="pt", max_length=512
+                )
+                inputs = {k: v.to(ModelFactory._device) for k, v in inputs.items()}
+                scores = ModelFactory._rerank_model(**inputs).logits.squeeze(-1).float().cpu().tolist()
+                if isinstance(scores, float):
+                    scores = [scores]
                 
-        return ModelFactory._LLM_MODEL, ModelFactory._LLM_TOKENIZER
+                results = []
+                for idx, (doc, score) in enumerate(zip(documents, scores)):
+                    results.append({
+                        "index": idx,
+                        "document": doc,
+                        "relevance_score": float(score)
+                    })
+                results = sorted(results, key=lambda x: x["relevance_score"], reverse=True)[:top_n]
+                return results
+        except Exception as e:
+            logging.error(f"❌ Rerank 执行失败: {e}")
+            return [{"index": idx, "document": doc, "relevance_score": 0.0} for idx, doc in enumerate(documents[:top_n])]
 
+    def get_vlm_model(self, vlm_short_name: str = "Qwen/Qwen3-VL-32B-Instruct"):
+        """
+        [LiteLLM 模式適配] 
+        原本返回本地 VLM 模型與 Processor，現統一返回 LiteLLM OpenAI Client 
+        以及對應的模型名稱，供上層流水線透過標準 Chat Completions (Vision) 進行多模態推理。
+        """
+        logging.info(f"ℹ️ 委託 ModelFactory: VLM 模型 [{vlm_short_name}] 已轉由 LiteLLM 統一代理調度。")
+        return self.get_llm_client(), vlm_short_name
 
-    # =====================================================================
-    # 🌌 核心引擎 2：多模态 VLM 工厂驱动
-    # =====================================================================
-    def get_vlm_model(self, vlm_short_name: str = 'Qwen/Qwen3-VL-32B-Instruct'):
-        global Qwen3VLForConditionalGeneration
-        if Qwen3VLForConditionalGeneration is None:
-            raise ImportError("❌ 未找到对应的 Qwen VL 模型类。")
-
-        is_old_model_alive = False
-        if ModelFactory._VL_MODEL is not None:
-            try:
-                if next(ModelFactory._VL_MODEL.parameters()).numel() > 0:
-                    is_old_model_alive = True
-            except Exception:
-                is_old_model_alive = False
-
-        if is_old_model_alive:
-            logging.info("♻️ 激活 VLM 绿色复用通道。")
-            return ModelFactory._VL_MODEL, ModelFactory._VL_PROCESSOR
-
-        if torch.cuda.is_available():
-            device_idx = torch.cuda.current_device()
-            free_bytes, total_bytes = torch.cuda.mem_get_info(device_idx)
-            used_bytes = total_bytes - free_bytes
-            gpu_usage_ratio = used_bytes / total_bytes
-
-            if gpu_usage_ratio > 0.70:
-                self._trigger_system_gc()
-                free_bytes, total_bytes = torch.cuda.mem_get_info(device_idx)
-                if ((total_bytes - free_bytes) / total_bytes) > 0.70:
-                    raise RuntimeError(f"❌ [安全熔断] 显存不足以加载 {vlm_short_name}。")
-
-        model_dir = self.resolve_model_path(vlm_short_name)
-        logging.info(f"🚀 冷启动加载多模态模型: {model_dir}")
-        
-        ModelFactory._VL_PROCESSOR = AutoProcessor.from_pretrained(model_dir, local_files_only=True, trust_remote_code=True)
-        ModelFactory._VL_MODEL = Qwen3VLForConditionalGeneration.from_pretrained(
-            model_dir,
-            torch_dtype=torch.bfloat16,
-            local_files_only=True,
-            device_map="auto",
-            trust_remote_code=True,
-            attn_implementation="flash_attention_2"
-        )
-
-        warmup_img = Image.new("RGB", (1, 1), (255, 255, 255))
-        messages = [{"role": "user", "content": [{"type": "image", "image": warmup_img}, {"type": "text", "text": "Hi"}]}]
-        text = ModelFactory._VL_PROCESSOR.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = ModelFactory._VL_PROCESSOR(text=[text], images=[warmup_img], return_tensors="pt").to(ModelFactory._VL_MODEL.device)
-
-        logging.info("💡 正在执行多模态模型预热...")
-        with torch.no_grad():
-            _ = ModelFactory._VL_MODEL.generate(**inputs, max_new_tokens=5)
-        
-        del inputs, text, messages, warmup_img
-        self._trigger_system_gc()
-
-        return ModelFactory._VL_MODEL, ModelFactory._VL_PROCESSOR
-
-    @classmethod
-    def destroy_llm_model(cls):
-        """主动物理熔断销毁纯文本模型"""
-        if cls._LLM_MODEL is not None:
-            logging.info("🧹 正在主动物理清空纯文本大模型显存...")
-            cls._hard_destroy_module(cls._LLM_MODEL)
-            
-            del cls._LLM_MODEL
-            del cls._LLM_TOKENIZER
-            cls._LLM_MODEL = None
-            cls._LLM_TOKENIZER = None
-            
-            cls._trigger_system_gc()
-            logging.info("✅ 纯文本大模型显存物理清理完毕。")
-
-    @classmethod
-    def destroy_vlm_model(cls):
-        """物理销毁多模态模型"""
-        if cls._VL_MODEL is not None:
-            logging.info("🧹 正在物理拆解多模态大模型张量...")
-            cls._hard_destroy_module(cls._VL_MODEL)
-
-            del cls._VL_MODEL
-            del cls._VL_PROCESSOR
-            cls._VL_MODEL = None
-            cls._VL_PROCESSOR = None
-
-            cls._trigger_system_gc()
-            logging.info("✅ 多模态模型显存清理完毕。")
-
-    # =====================================================================
-    # 🌌 核心引擎 3：新增 Embedding 模型管理
-    # =====================================================================
-    @classmethod
-    def destroy_embedding_model(cls):
-        """销毁 Embedding 向量模型"""
-        if cls._EMB_MODEL is not None:
-            logging.info("🧹 正在物理销毁 Embedding 模型...")
-            cls._hard_destroy_module(cls._EMB_MODEL)
-            
-            del cls._EMB_MODEL
-            del cls._EMB_TOKENIZER
-            cls._EMB_MODEL = None
-            cls._EMB_TOKENIZER = None
-            
-            cls._trigger_system_gc()
-            logging.info("✅ Embedding 模型清理完毕。")
-
-    # =====================================================================
-    # 🌌 核心引擎 4：新增 reranker 模型管理
-    # =====================================================================
-    @classmethod
-    def destroy_reranker_model(cls):
-        """物理销毁 Reranker 重排模型 (Destroy Reranker)"""
-        if cls._RERANKER_MODEL is not None:
-            logging.info("🧹 正在物理销毁 Reranker 模型...")
-            cls._hard_destroy_module(cls._RERANKER_MODEL)
-            
-            del cls._RERANKER_MODEL
-            if hasattr(cls, "_RERANKER_TOKENIZER") and cls._RERANKER_TOKENIZER is not None:
-                del cls._RERANKER_TOKENIZER
-            cls._RERANKER_MODEL = None
-            cls._RERANKER_TOKENIZER = None
-            
-            cls._trigger_system_gc()
-            logging.info("✅ Reranker 模型显存物理清理完毕。")
-
-    # =====================================================================
-    # 🚨 终极核武器：一键物理清空工厂所有静态模型
-    # =====================================================================
+    # 兼容性空实现或显存监控方法，防范旧逻辑调用报错
     @classmethod
     def destroy_all_models_cls(cls):
-        """类级别无视状态强制清空一切挂载模型"""
-        logging.info("🔥 触发工厂级终极全量显存回收...")
-        cls.destroy_vlm_model()
-        cls.destroy_llm_model()
-        cls.destroy_embedding_model()
-        cls.destroy_reranker_model()
-        cls._trigger_system_gc()
-        logging.info("✨ 工厂所有静态大模型已彻底卸载！")
+        logging.info("ℹ️ LiteLLM 模式下无本地 LLM/VLM 模型显存需要物理销毁。")
+
+    def resolve_model_path(self, model_name_or_path: str) -> str:
+        """
+        兼容 Reranker / Embedding 等本地物理快照路径解析
+        """
+        # 1. 如果传入的本身就是绝对路径或相对路径且存在，直接返回
+        if os.path.exists(model_name_or_path):
+            return model_name_or_path
+            
+        # 2. 如果请求的是 bge-reranker-large，直接返回工厂内部已经验证过的物理路径
+        if "bge-reranker-large" in model_name_or_path:
+            # 复用工厂内部已有的路径检查逻辑
+            primary_path = Path("/workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+            if primary_path.exists():
+                return str(primary_path)
+            host_fallback = Path("/home/gaozheng/venv/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+            if host_fallback.exists():
+                return str(host_fallback)
+                
+        # 3. 兜底：直接返回原字符串
+        return model_name_or_path
+
+# =====================================================================
+# 🧪 快速验证测试
+# =====================================================================
+if __name__ == "__main__":
+    factory = ModelFactory.get_instance()
+    
+    # 1. 测试 Prompt Hub
+    print("📂 Prompts 資源:", list(factory.prompts.keys()))
+
+    # 2. 测试 LLM 文本生成
+    client = factory.get_llm_client()
+    res = client.chat.completions.create(
+        model="qwen3-4b",
+        messages=[{"role": "user", "content": "你好，请自我介绍"}]
+    )
+    print("🤖 LLM 输出:", res.choices[0].message.content)
+    print("== LLM 测试完成 ==", "=" * 30)
+
+    # 3. 测试 Qwen/Qwen3-Embedding-8B 向量化 (使用一致的 client 風格)
+    sample_texts = [
+        "Python 自动化架构设计与模块化脚本",
+        "DGX Spark GPU 算力配置与显存管理",
+        "大模型 RAG 检索增强生成与本地 Rerank 优化"
+    ]
+    print(f"🔍 正在對 {len(sample_texts)} 筆文本調用 Qwen3-Embedding-4B 進行向量化...")
+    
+    embedding_res = client.embeddings.create(
+        model="qwen3-embedding-4b",
+        input=sample_texts
+    )
+    embeddings = [data.embedding for data in embedding_res.data]
+    print(f"🎯 Embedding 輸出成功！向量維度: {len(embeddings[0])} | 總筆數: {len(embeddings)}")
+    print("== Embedding 测试完成 ==", "=" * 30)
+
+    # 4. 測試本地直連 Reranker 
+    docs = ["Python 自动化", "DGX Spark GPU 算力", "天气很好"]
+    query = "GPU 算力配置"
+    
+    print(f"🔍 正在對 Query: '{query}' 進行本地 Rerank 重排序...")
+    ranked_docs = factory.rerank(query, docs, top_n=3)
+    
+    print("🎯 Rerank 本地推理結果:")
+    for item in ranked_docs:
+        print(f"  - [Score: {item['relevance_score']:.4f}] 索引: {item['index']} | 文檔: {item['document']}")
+    print("== Rerank 测试完成 ==", "=" * 30)
+
+    # 5. 測試 resolve_model_path 物理路徑解析
+    print(f"🔍 正在測試 ModelFactory.resolve_model_path 路徑解析...")
+    
+    test_cases = [
+        "BAAI/bge-reranker-large",                          # 預期命中本地快照路徑
+        "/workspace/hf-conda/hf_cache/hub",                 # 預期返回原路徑（存在）
+        "unknown/model-name-xyz"                            # 預期走兜底邏輯返回原字符串
+    ]
+    
+    for case in test_cases:
+        resolved_path = factory.resolve_model_path(case)
+        print(f"  - 原始輸入: {case} ---> 解析結果: {resolved_path}")
+        
+    print("== resolve_model_path 测试完成 ==", "=" * 30)

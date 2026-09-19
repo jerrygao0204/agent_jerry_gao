@@ -8,12 +8,12 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from search.retriever import FineBIRetriever
-from search.reranker import FineBIReranker
+from search.retriever import Retriever
+from search.reranker import Reranker
 
 def debug_eval_dataset(dataset_path: str):
-    retriever = FineBIRetriever(cuda_device="0")
-    reranker = FineBIReranker(cuda_device="0", min_prob=0.25)
+    retriever = Retriever(cuda_device="0")
+    reranker = Reranker(cuda_device="0", min_prob=0.25)
 
     with open(dataset_path, "r", encoding="utf-8") as f:
         dataset = json.load(f)

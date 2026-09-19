@@ -3,13 +3,13 @@ import json
 import logging
 from typing import Dict, Any, Generator
 from factory.tool_factory import tool_factory
-from generator.llm_client import FineBILLMClient
+from generator.llm_client import LLMClient
 
 logger = logging.getLogger("AgentFactory")
 
 class RouterAgent:
     """Level 1: 意图识别与业务领域路由 Agent"""
-    def __init__(self, llm_client: FineBILLMClient):
+    def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
     def route(self, query: str) -> str:
@@ -38,7 +38,7 @@ class RouterAgent:
 
 class ReActAgent:
     """Level 2 & 3: 结合指定领域工具链的多步推理与工具执行 Agent"""
-    def __init__(self, llm_client: FineBILLMClient, domain: str):
+    def __init__(self, llm_client: LLMClient, domain: str):
         self.llm_client = llm_client
         self.domain = domain
         # 按领域隔离加载工具描述 (节约 Token)
@@ -101,5 +101,5 @@ class ReActAgent:
 class AgentFactory:
     """Agent 工厂入口"""
     @staticmethod
-    def create_pipeline(llm_client: FineBILLMClient):
+    def create_pipeline(llm_client: LLMClient):
         return RouterAgent(llm_client)

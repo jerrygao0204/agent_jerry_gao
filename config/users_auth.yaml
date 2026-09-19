@@ -1,17 +1,13 @@
-# config/users_auth.yaml
 users:
   admin:
-    password: "123456"
-    role: "admin"        # 系统超级管理员：拥有全部工具与域的调用权限
-
+    password: '654321'
+    role: admin
   gaozheng:
-    password: "123456"
-    role: "analyst"      # 架构师/数据分析师：具备 finebi_system 与数据分析能力
-
+    password: '123456'
+    role: analyst
   lisi:
-    password: "123456"
-    role: "user"         # 普通用户：仅具备基础知识库检索与公网搜索权限
-
+    password: '123456'
+    role: user
   wangwu:
-    password: "888888"
-    role: "user"         # 普通用户
+    password: '888888'
+    role: user

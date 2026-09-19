@@ -14,7 +14,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from generator.qa_chain import QAChain
-from generator.llm_client import FineBILLMClient
+from generator.llm_client import LLMClient
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,14 +45,14 @@ JUDGE_PROMPT_TEMPLATE = """你是一名嚴格的 RAG 系統生成質量評審專
 class GeneratorEvaluator:
     """RAG 回答生成質量自動化評估器 (LLM-as-a-Judge)"""
 
-    def __init__(self, llm_model_name: str = "Qwen/Qwen3-4B", cuda_device: str = "0"):
+    def __init__(self, llm_model_name: str = "", cuda_device: str = "0"):
         logging.info("🚀 初始化 GeneratorEvaluator: 載入 QAChain 與 Judge LLM...")
         self.qa_chain = QAChain(
             cuda_device=cuda_device,
             prompt_hub_path=os.path.join(PROJECT_ROOT, "config", "prompt_hub.yaml"),
             llm_short_name=llm_model_name
         )
-        self.judge_client = FineBILLMClient(cuda_device=cuda_device)
+        self.judge_client = LLMClient(cuda_device=cuda_device)
 
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
         if not os.path.exists(dataset_path):

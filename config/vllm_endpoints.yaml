@@ -1,0 +1,26 @@
+# vLLM 端点路由配置
+# - MODEL_BACKEND=vllm: 单实例（各角色可指向同一端点）
+# - MODEL_BACKEND=multi_vllm: 多实例（按角色拆分端点）
+
+profiles:
+  vllm:
+    llm:
+      base_url: "http://127.0.0.1:8000"
+      model: "Qwen/Qwen3-8B"
+    vlm:
+      base_url: "http://127.0.0.1:8000"
+      model: "Qwen/Qwen3-VL-32B-Instruct"
+    embedding:
+      base_url: "http://127.0.0.1:8000"
+      model: "Qwen/Qwen3-Embedding-8B"
+
+  multi_vllm:
+    llm:
+      base_url: "http://127.0.0.1:8000"
+      model: "Qwen/Qwen3-4B"
+    vlm:
+      base_url: "http://127.0.0.1:8001"
+      model: "Qwen/Qwen3-VL-8B-Instruct"
+    embedding:
+      base_url: "http://127.0.0.1:8002"
+      model: "Qwen/Qwen3-Embedding-8B"
