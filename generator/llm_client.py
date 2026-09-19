@@ -9,7 +9,7 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from factory.vllm_model_factory import VLLMModelFactory
+from factory.model_factory import ModelFactory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 class LLMClient:
     def __init__(self, default_model_name: str = "qwen3-embedding-4b"):
         self.default_model_name = default_model_name
-        self.factory = VLLMModelFactory()
+        self.factory = ModelFactory()
 
     def stream_generate(
         self,
@@ -30,9 +30,6 @@ class LLMClient:
         **kwargs
     ) -> Generator[str, None, None]:
         target_model = model_name or self.default_model_name
-        
-        # 从工厂获取对应模型的客户端实例
-        vllm_client = self.factory.get_llm_client(model_name=target_model)
 
         if messages:
             final_messages = messages
@@ -49,18 +46,19 @@ class LLMClient:
                 user_content = query
             final_messages = [{"role": "user", "content": user_content}]
 
-        yield from vllm_client.stream_invoke(
+        yield from self.factory.stream_chat(
             messages=final_messages,
+            model=target_model,
             temperature=temperature,
             max_tokens=max_new_tokens
         )
 
 
 if __name__ == "__main__":
-    # 【环境自动修复】如果在 Docker 容器内部运行，检查并修正网关地址
-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
+    # 【环境自动修复】如果在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
+    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
         # 尝试将工厂默认的 localhost 变更为宿主机网关
-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
+        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
 
     client = LLMClient()

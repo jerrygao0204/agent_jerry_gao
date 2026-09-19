@@ -53,11 +53,11 @@ if SCRIPT_DIR not in sys.path:
 
 # logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
 
-from factory.vllm_model_factory import VLLMModelFactory
+from factory.model_factory import ModelFactory
 
-# 🌍 环境变量自动适配：若在 Docker 容器内部运行，检查并修正网关地址
-if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
-    os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
+# 🌍 环境变量自动适配：若在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
+if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
+    os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
     print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
 from factory.tool_factory import tool_factory, load_tools_from_yaml, BaseTool
 from generator.qa_chain import QAChain
@@ -223,10 +223,10 @@ def emergency_force_cleanup() -> str:
     logging.warning("🚨 [QA Admin] 触发应急显存与网关会话回收操作！")
     global_qa_chain = None
     try:
-        if hasattr(VLLMModelFactory, "_instance"):
-            VLLMModelFactory._instance = None
+        if hasattr(ModelFactory, "_instance"):
+            ModelFactory._instance = None
     except Exception as e:
-        logging.error(f"清空 VLLMModelFactory 单例句柄失败: {e}")
+        logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
         
     gc.collect(2)
     if torch.cuda.is_available():

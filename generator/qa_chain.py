@@ -297,8 +297,8 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# 统一引入各核心组件（对接 VLLMModelFactory 网关架构）
-from factory.vllm_model_factory import VLLMModelFactory
+# 统一引入各核心组件（对接 ModelFactory 网关架构）
+from factory.model_factory import ModelFactory
 from search.retriever import Retriever
 from search.reranker import Reranker
 from generator.llm_client import LLMClient
@@ -328,14 +328,11 @@ class QAChain:
         self.embedding_model_name = embedding_model_name
 
         logging.info("⚙️ 正在初始化 QAChain 全链路问答组件...")
-        
-        # 1. 获取统一应用层模型工厂单例句柄
-        self.vllm_factory = VLLMModelFactory()
 
         # 初始化 API/vLLM LLM 客户端（通过网关统一接管）
         self.llm_client = LLMClient(default_model_name=self.llm_model_name)
 
-        # 2. 实例化检索器与重排器，共享统一 factory 实例
+        # 2. 实例化检索器与重排器（Retriever 内部按需自行持有 ModelFactory 单例）
         self.retriever = Retriever(
             milvus_host="172.17.0.1",
             collection_name="finebi_knowledge_chunks",
@@ -513,9 +510,9 @@ class QAChain:
 # 🧪 测试与可视化打印
 # =====================================================================
 if __name__ == "__main__":
-    # 🌍 环境自动适配检查
-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
+    # 🌍 环境自动适配检查（ModelFactory 读取 OPENAI_BASE_URL）
+    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
+        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
 
     # 🌟 从最上游入口显式注入模型代号，完美隔离中间过程

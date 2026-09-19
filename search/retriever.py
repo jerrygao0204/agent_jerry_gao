@@ -263,7 +263,7 @@
 
 
 
-# search/retriever.py 向量/混合检索 (完全对接 VLLMModelFactory 统一网关)
+# search/retriever.py 向量/混合检索 (完全对接 ModelFactory 统一网关)
 import os
 import sys
 import re
@@ -277,8 +277,8 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# 统一从中央工厂引入 VLLMModelFactory（与 llm_client.py 保持完全一致）
-from factory.vllm_model_factory import VLLMModelFactory
+# 统一从中央工厂引入 ModelFactory（唯一 LLM/Embedding 网关入口，与 llm_client.py 保持一致）
+from factory.model_factory import ModelFactory
 
 try:
     from pymilvus import MilvusClient, AnnSearchRequest, RRFRanker
@@ -297,16 +297,16 @@ class Retriever:
         milvus_port: str = "19530",
         collection_name: str = "finebi_knowledge_chunks",
         default_model_name: str = "qwen3-embedding-8b",  # 对应你在网关配置的向量模型代号
-        factory: Optional[VLLMModelFactory] = None
+        factory: Optional[ModelFactory] = None
     ):
         """
-        轻量级混合检索召回器：通过 VLLMModelFactory 统一网关获取稠密向量，零本地大模型依赖
+        轻量级混合检索召回器：通过 ModelFactory 统一网关获取稠密向量，零本地大模型依赖
         """
         self.collection_name = collection_name
         self.default_model_name = default_model_name
         
-        # 1. 统一采用 VLLMModelFactory 管理底层路由与网关
-        self.factory = factory if factory is not None else VLLMModelFactory()
+        # 1. 统一采用 ModelFactory 管理底层路由与网关
+        self.factory = factory if factory is not None else ModelFactory()
         
         # 2. 建立物理向量数据库长连接
         self.client = MilvusClient(uri=f"http://{milvus_host}:{milvus_port}")
@@ -314,16 +314,14 @@ class Retriever:
 
     def get_dense_embedding(self, text: str, model_name: Optional[str] = None) -> List[float]:
         """
-        透过 VLLMModelFactory 获取对应的 Embedding 客户端计算高维稠密语义向量
+        透过 ModelFactory 计算高维稠密语义向量
         """
         target_model = model_name or self.default_model_name
         
         try:
-            # 直接调用工厂中封装好的 Embedding 客户端实例
-            embedding_client = self.factory.get_embedding_client(model_name=target_model)
-            return embedding_client.embed_query(text)
+            return self.factory.embed_query(text, model=target_model)
         except Exception as e:
-            logging.error(f"❌ 通过 VLLMModelFactory 获取 Embedding 失败 (模型: {target_model}): {e}")
+            logging.error(f"❌ 通过 ModelFactory 获取 Embedding 失败 (模型: {target_model}): {e}")
             raise e
 
     @staticmethod
@@ -442,9 +440,9 @@ class Retriever:
 # 🧪 本地链路检索实战验证
 # =====================================================================
 if __name__ == "__main__":
-    # 🌍 环境自动适配：若在 Docker 容器内部运行，检查并修正网关地址（与 llm_client.py 保持完全一致）
-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
+    # 🌍 环境自动适配：若在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
+    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
+        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
 
     retriever = Retriever(

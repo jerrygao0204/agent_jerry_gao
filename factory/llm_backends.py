@@ -1,3 +1,8 @@
+# ⚠️ [已废弃 / DEPRECATED] 本模块是切换到 vllm+litellm 网关统一架构之前的
+# 直连 vLLM（MODEL_BACKEND=local/vllm/multi_vllm）实现，现已被 factory/model_factory.py
+# 完全取代。生产代码中没有任何一处引用本模块，目前仅 tests/test_model_factory_backends_smoke.py
+# 还在 import 它（该测试本身也已过时，将在测试清理阶段一并处理）。
+# 待测试清理完成后，本文件应整体删除，请勿在新代码中引入依赖。
 import json
 import logging
 import os

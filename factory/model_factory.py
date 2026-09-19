@@ -161,6 +161,43 @@ class ModelFactory:
             logging.error(f"❌ Rerank 执行失败: {e}")
             return [{"index": idx, "document": doc, "relevance_score": 0.0} for idx, doc in enumerate(documents[:top_n])]
 
+    def embed_query(self, text: str, model: str = "qwen3-embedding-4b") -> List[float]:
+        """單條文本向量化（原 VLLMModelFactory.get_embedding_client().embed_query 合並於此）"""
+        response = self.get_llm_client().embeddings.create(model=model, input=text)
+        return response.data[0].embedding
+
+    def embed_texts(self, input_texts: List[str], model: str = "qwen3-embedding-4b", batch_size: int = 64) -> List[List[float]]:
+        """批量文本向量化（原 litellm_model_factory.get_embeddings 合並於此）"""
+        if not input_texts:
+            return []
+        all_embeddings: List[List[float]] = []
+        client = self.get_llm_client()
+        for i in range(0, len(input_texts), batch_size):
+            batch = input_texts[i:i + batch_size]
+            response = client.embeddings.create(model=model, input=batch)
+            all_embeddings.extend([data.embedding for data in response.data])
+        return all_embeddings
+
+    def stream_chat(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+    ):
+        """流式對話生成（原 VLLMTextClient.stream_invoke 合並於此，走 OpenAI SDK 而非手拼 urllib）"""
+        stream = self.get_llm_client().chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta and delta.content:
+                yield delta.content
+
     def get_vlm_model(self, vlm_short_name: str = "Qwen/Qwen3-VL-32B-Instruct"):
         """
         [LiteLLM 模式適配] 
