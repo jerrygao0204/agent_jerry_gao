@@ -1,0 +1,827 @@
+diff --git a/config/vllm_endpoints.yaml b/config/vllm_endpoints.yaml
+deleted file mode 100644
+index 52f9622..0000000
+--- a/config/vllm_endpoints.yaml
++++ /dev/null
+@@ -1,26 +0,0 @@
+-# vLLM 端点路由配置
+-# - MODEL_BACKEND=vllm: 单实例（各角色可指向同一端点）
+-# - MODEL_BACKEND=multi_vllm: 多实例（按角色拆分端点）
+-
+-profiles:
+-  vllm:
+-    llm:
+-      base_url: "http://127.0.0.1:8000"
+-      model: "Qwen/Qwen3-8B"
+-    vlm:
+-      base_url: "http://127.0.0.1:8000"
+-      model: "Qwen/Qwen3-VL-32B-Instruct"
+-    embedding:
+-      base_url: "http://127.0.0.1:8000"
+-      model: "Qwen/Qwen3-Embedding-8B"
+-
+-  multi_vllm:
+-    llm:
+-      base_url: "http://127.0.0.1:8000"
+-      model: "Qwen/Qwen3-4B"
+-    vlm:
+-      base_url: "http://127.0.0.1:8001"
+-      model: "Qwen/Qwen3-VL-8B-Instruct"
+-    embedding:
+-      base_url: "http://127.0.0.1:8002"
+-      model: "Qwen/Qwen3-Embedding-8B"
+diff --git a/factory/litellm_model_factory.py b/factory/litellm_model_factory.py
+deleted file mode 100644
+index b36bd3c..0000000
+--- a/factory/litellm_model_factory.py
++++ /dev/null
+@@ -1,246 +0,0 @@
+-# factory/litellm_model_factory.py
+-import os
+-import yaml
+-import logging
+-import threading
+-import requests
+-from typing import List, Dict, Any, Optional
+-from urllib.parse import urlparse
+-from dotenv import load_dotenv
+-from openai import OpenAI
+-from requests.adapters import HTTPAdapter
+-from urllib3.util.retry import Retry
+-import torch
+-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+-from pathlib import Path
+-
+-logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+-
+-
+-class ModelFactory:
+-    """
+-    模型与环境配置中心工厂 (ModelFactory - LiteLLM Mode)
+-    全局接管：Prompt Hub 资产管理、LiteLLM API 句柄分发、Rerank 与 Embedding 统一调用
+-    """
+-    _instance: Optional["ModelFactory"] = None
+-    _lock: threading.Lock = threading.Lock()
+-    _openai_client: Optional[OpenAI] = None
+-    
+-    # 🌟 類別級別全域快取：確保模型與分詞器在整個生命週期中只被載入一次
+-    _rerank_tokenizer = None
+-    _rerank_model = None
+-    _device = "cuda" if torch.cuda.is_available() else "cpu"
+-
+-    def __new__(cls, *args, **kwargs):
+-        if cls._instance is None:
+-            with cls._lock:
+-                if cls._instance is None:
+-                    cls._instance = super(ModelFactory, cls).__new__(cls)
+-        return cls._instance
+-
+-    def __init__(self, prompt_hub_path: str = "prompt_hub.yaml"):
+-        if getattr(self, "_initialized", False):
+-            return
+-
+-        with self._lock:
+-            if getattr(self, "_initialized", False):
+-                return
+-
+-            load_dotenv()
+-
+-            # 1. 配置 Endpoint & Key
+-            self.base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1").rstrip("/")
+-            self.api_key = os.getenv("OPENAI_API_KEY", "sk-1234")
+-
+-            # 2. 解析 Prompt Hub 路径
+-            self.prompt_hub_path = self._resolve_path(prompt_hub_path)
+-            self.prompts = self._load_prompts()
+-
+-            # 3. 初始化全局 OpenAI Client
+-            ModelFactory._openai_client = OpenAI(
+-                base_url=self.base_url,
+-                api_key=self.api_key
+-            )
+-
+-            # 4. 初始化 requests.Session 连接池
+-            self.session = requests.Session()
+-            retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+-            self.session.mount("http://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
+-            self.session.mount("https://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
+-
+-            # 🌟 5. 確保在啟動初始化時「僅載入一次」Rerank 模型到 GPU
+-            self._init_rerank_model()
+-
+-            self._initialized = True
+-            logging.info(f"🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: {self.base_url}")
+-
+-    def _resolve_path(self, path: str) -> str:
+-        if os.path.isabs(path):
+-            return path
+-        factory_dir = os.path.dirname(os.path.abspath(__file__))
+-        project_root = os.path.dirname(factory_dir)
+-        return os.path.join(project_root, "config", os.path.basename(path))
+-
+-    def _load_prompts(self) -> Dict[str, str]:
+-        if not os.path.exists(self.prompt_hub_path):
+-            logging.warning(f"⚠️ Prompt Hub 文件不存在: {self.prompt_hub_path}")
+-            return {}
+-
+-        try:
+-            with open(self.prompt_hub_path, "r", encoding="utf-8") as f:
+-                data = yaml.safe_load(f)
+-
+-            if not data or "prompts" not in data:
+-                logging.warning(f"⚠️ Prompt Hub 格式无效: {self.prompt_hub_path}")
+-                return {}
+-
+-            prompts_dict = {p["name"]: p["content"] for p in data.get("prompts", []) if "name" in p and "content" in p}
+-            logging.info(f"📂 Prompt Hub 资产加载成功: [{self.prompt_hub_path}] | Keys: {list(prompts_dict.keys())}")
+-            return prompts_dict
+-        except Exception as e:
+-            logging.error(f"❌ 加载 Prompt Hub 失败 ({self.prompt_hub_path}): {e}")
+-            return {}
+-
+-    @classmethod
+-    def get_instance(cls, *args, **kwargs) -> "ModelFactory":
+-        return cls(*args, **kwargs)
+-
+-    def get_llm_client(self) -> OpenAI:
+-        if not ModelFactory._openai_client:
+-            raise RuntimeError("ModelFactory 未正确初始化 OpenAI Client")
+-        return ModelFactory._openai_client
+-
+-    def _init_rerank_model(self):
+-        """內部方法：在啟動時預先載入 Rerank 模型，避免每次查詢重複載入"""
+-        if ModelFactory._rerank_model is not None:
+-            return
+-
+-        model_path = Path("/workspace/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+-        if not model_path.exists():
+-            host_fallback = Path("/home/gaozheng/venv/hf-conda/hf_cache/hub/models--BAAI--bge-reranker-large/snapshots/55611d7bca2a7133960a6d3b71e083071bbfc312")
+-            if host_fallback.exists():
+-                model_path = host_fallback
+-
+-        try:
+-            logging.info(f"⏳ 正在初始化本地 Rerank 模型至設備: {ModelFactory._device}...")
+-            ModelFactory._rerank_tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+-            ModelFactory._rerank_model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+-            ModelFactory._rerank_model.eval()
+-            
+-            ModelFactory._rerank_model.to(ModelFactory._device)
+-            logging.info(f"✅ Rerank 模型已成功常駐於 {ModelFactory._device}")
+-        except Exception as e:
+-            logging.error(f"❌ 初始化 Rerank 模型失敗: {e}")
+-
+-    def rerank(self, query: str, documents: List[str], top_n: int = 3) -> List[Dict[str, Any]]:
+-        """
+-        使用已常駐記憶體的 Rerank 模型進行高速重排序 (純 Forward 推理)
+-        """
+-        if not documents:
+-            return []
+-
+-        if ModelFactory._rerank_model is None or ModelFactory._rerank_tokenizer is None:
+-            logging.warning("⚠️ Rerank 模型未就緒，啟動降級策略。")
+-            return [{"index": idx, "document": doc, "relevance_score": 0.0} for idx, doc in enumerate(documents[:top_n])]
+-
+-        try:
+-            pairs = [[query, doc] for doc in documents]
+-            
+-            with torch.no_grad():
+-                inputs = ModelFactory._rerank_tokenizer(
+-                    pairs, 
+-                    padding=True, 
+-                    truncation=True, 
+-                    return_tensors="pt", 
+-                    max_length=512
+-                )
+-                inputs = {k: v.to(ModelFactory._device) for k, v in inputs.items()}
+-                
+-                # 直接調用常駐模型進行推理，極速返回
+-                scores = ModelFactory._rerank_model(**inputs).logits.squeeze(-1).float().cpu().tolist()
+-                
+-                if isinstance(scores, float):
+-                    scores = [scores]
+-
+-            results = []
+-            for idx, (doc, score) in enumerate(zip(documents, scores)):
+-                results.append({
+-                    "index": idx,
+-                    "document": doc,
+-                    "relevance_score": float(score)
+-                })
+-
+-            results = sorted(results, key=lambda x: x["relevance_score"], reverse=True)[:top_n]
+-            return results
+-
+-        except Exception as e:
+-            logging.error(f"❌ 本地 Rerank 推理失敗: {e}")
+-            return [
+-                {"index": idx, "document": doc, "relevance_score": 0.0}
+-                for idx, doc in enumerate(documents[:top_n])
+-            ]
+-
+-    def get_embeddings(self, input_texts: List[str], model: str = "Qwen/Qwen3-Embedding-8B", batch_size: int = 64) -> List[List[float]]:
+-        if not input_texts:
+-            return []
+-
+-        all_embeddings = []
+-        try:
+-            for i in range(0, len(input_texts), batch_size):
+-                batch_texts = input_texts[i:i + batch_size]
+-                response = ModelFactory._openai_client.embeddings.create(
+-                    model=model,
+-                    input=batch_texts
+-                )
+-                all_embeddings.extend([data.embedding for data in response.data])
+-            return all_embeddings
+-        except Exception as e:
+-            logging.error(f"❌ Embedding 请求失败 (模型: {model}): {e}")
+-            raise e
+-
+-
+-# =====================================================================
+-# 🧪 快速验证测试
+-# =====================================================================
+-if __name__ == "__main__":
+-    factory = ModelFactory.get_instance()
+-    
+-    # 1. 测试 Prompt Hub
+-    print("📂 Prompts 資源:", list(factory.prompts.keys()))
+-
+-    # 2. 测试 LLM 文本生成
+-    client = factory.get_llm_client()
+-    res = client.chat.completions.create(
+-        model="qwen3-4b",
+-        messages=[{"role": "user", "content": "你好，请自我介绍"}]
+-    )
+-    print("🤖 LLM 输出:", res.choices[0].message.content)
+-    print("== LLM 测试完成 ==", "=" * 30)
+-
+-    # 3. 测试 Qwen/Qwen3-Embedding-8B 向量化 (使用一致的 client 風格)
+-    sample_texts = [
+-        "Python 自动化架构设计与模块化脚本",
+-        "DGX Spark GPU 算力配置与显存管理",
+-        "大模型 RAG 检索增强生成与本地 Rerank 优化"
+-    ]
+-    print(f"🔍 正在對 {len(sample_texts)} 筆文本調用 Qwen/Qwen3-Embedding-8B 進行向量化...")
+-    
+-    embedding_res = client.embeddings.create(
+-        model="Qwen/Qwen3-Embedding-8B",
+-        input=sample_texts
+-    )
+-    embeddings = [data.embedding for data in embedding_res.data]
+-    print(f"🎯 Embedding 輸出成功！向量維度: {len(embeddings[0])} | 總筆數: {len(embeddings)}")
+-    print("== Embedding 测试完成 ==", "=" * 30)
+-
+-    # 4. 測試本地直連 Reranker 
+-    docs = ["Python 自动化", "DGX Spark GPU 算力", "天气很好"]
+-    query = "GPU 算力配置"
+-    
+-    print(f"🔍 正在對 Query: '{query}' 進行本地 Rerank 重排序...")
+-    ranked_docs = factory.rerank(query, docs, top_n=3)
+-    
+-    print("🎯 Rerank 本地推理結果:")
+-    for item in ranked_docs:
+-        print(f"  - [Score: {item['relevance_score']:.4f}] 索引: {item['index']} | 文檔: {item['document']}")
+-    print("== Rerank 测试完成 ==", "=" * 30)
+\ No newline at end of file
+diff --git a/factory/llm_backends.py b/factory/llm_backends.py
+index 6793dde..588150a 100644
+--- a/factory/llm_backends.py
++++ b/factory/llm_backends.py
+@@ -1,3 +1,8 @@
++# ⚠️ [已废弃 / DEPRECATED] 本模块是切换到 vllm+litellm 网关统一架构之前的
++# 直连 vLLM（MODEL_BACKEND=local/vllm/multi_vllm）实现，现已被 factory/model_factory.py
++# 完全取代。生产代码中没有任何一处引用本模块，目前仅 tests/test_model_factory_backends_smoke.py
++# 还在 import 它（该测试本身也已过时，将在测试清理阶段一并处理）。
++# 待测试清理完成后，本文件应整体删除，请勿在新代码中引入依赖。
+ import json
+ import logging
+ import os
+diff --git a/factory/model_factory.py b/factory/model_factory.py
+index e04c9b9..5daa47d 100644
+--- a/factory/model_factory.py
++++ b/factory/model_factory.py
+@@ -161,6 +161,43 @@ class ModelFactory:
+             logging.error(f"❌ Rerank 执行失败: {e}")
+             return [{"index": idx, "document": doc, "relevance_score": 0.0} for idx, doc in enumerate(documents[:top_n])]
+ 
++    def embed_query(self, text: str, model: str = "qwen3-embedding-4b") -> List[float]:
++        """單條文本向量化（原 VLLMModelFactory.get_embedding_client().embed_query 合並於此）"""
++        response = self.get_llm_client().embeddings.create(model=model, input=text)
++        return response.data[0].embedding
++
++    def embed_texts(self, input_texts: List[str], model: str = "qwen3-embedding-4b", batch_size: int = 64) -> List[List[float]]:
++        """批量文本向量化（原 litellm_model_factory.get_embeddings 合並於此）"""
++        if not input_texts:
++            return []
++        all_embeddings: List[List[float]] = []
++        client = self.get_llm_client()
++        for i in range(0, len(input_texts), batch_size):
++            batch = input_texts[i:i + batch_size]
++            response = client.embeddings.create(model=model, input=batch)
++            all_embeddings.extend([data.embedding for data in response.data])
++        return all_embeddings
++
++    def stream_chat(
++        self,
++        messages: List[Dict[str, str]],
++        model: str,
++        temperature: float = 0.7,
++        max_tokens: int = 2048,
++    ):
++        """流式對話生成（原 VLLMTextClient.stream_invoke 合並於此，走 OpenAI SDK 而非手拼 urllib）"""
++        stream = self.get_llm_client().chat.completions.create(
++            model=model,
++            messages=messages,
++            temperature=temperature,
++            max_tokens=max_tokens,
++            stream=True,
++        )
++        for chunk in stream:
++            delta = chunk.choices[0].delta
++            if delta and delta.content:
++                yield delta.content
++
+     def get_vlm_model(self, vlm_short_name: str = "Qwen/Qwen3-VL-32B-Instruct"):
+         """
+         [LiteLLM 模式適配] 
+diff --git a/factory/vllm_model_factory.py b/factory/vllm_model_factory.py
+deleted file mode 100644
+index f0d6d54..0000000
+--- a/factory/vllm_model_factory.py
++++ /dev/null
+@@ -1,263 +0,0 @@
+-# factory/vllm_model_factory.py
+-import os
+-import json
+-import logging
+-import base64
+-import urllib.request
+-import time
+-from io import BytesIO
+-from typing import List, Dict, Any, Optional, Generator
+-from PIL import Image
+-from dotenv import load_dotenv
+-
+-logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+-
+-# =====================================================================
+-# 1. Base / Text / Vision Clients (保持原有 HTTP 與 SSE 實現)
+-# =====================================================================
+-class BaseVLLMClient:
+-    def __init__(self, endpoint_url: str, model_name: str, default_temperature: float = 0.2):
+-        clean_base = endpoint_url.rstrip("/")
+-        if clean_base.endswith("/v1/chat/completions"):
+-            self.endpoint_url = clean_base
+-        elif clean_base.endswith("/v1"):
+-            self.endpoint_url = f"{clean_base}/chat/completions"
+-        else:
+-            self.endpoint_url = f"{clean_base}/v1/chat/completions"
+-            
+-        self.model_name = model_name
+-        self.default_temperature = default_temperature
+-
+-    def _post(self, payload: Dict[str, Any], timeout: int = 120) -> str:
+-        headers = {"Content-Type": "application/json"}
+-        req = urllib.request.Request(
+-            self.endpoint_url, 
+-            data=json.dumps(payload).encode('utf-8'), 
+-            headers=headers
+-        )
+-        try:
+-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+-                result = json.loads(resp.read().decode('utf-8'))
+-                return result['choices'][0]['message']['content']
+-        except Exception as e:
+-            logging.error(f"❌ LiteLLM 閘道器請求失敗 [{self.endpoint_url}]: {e}")
+-            raise RuntimeError(f"LiteLLM Gateway Client Error: {e}")
+-
+-    def _post_stream(self, payload: Dict[str, Any], timeout: int = 120) -> Generator[str, None, None]:
+-        headers = {"Content-Type": "application/json"}
+-        payload["stream"] = True
+-        req = urllib.request.Request(
+-            self.endpoint_url, 
+-            data=json.dumps(payload).encode('utf-8'), 
+-            headers=headers
+-        )
+-        try:
+-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+-                for line in resp:
+-                    line_str = line.decode('utf-8').strip()
+-                    if not line_str or line_str.startswith(":"):
+-                        continue
+-                    if line_str.startswith("data: "):
+-                        data_content = line_str[6:]
+-                        if data_content == "[DONE]":
+-                            break
+-                        try:
+-                            chunk_json = json.loads(data_content)
+-                            if chunk_json['choices'] and 'delta' in chunk_json['choices'][0]:
+-                                delta = chunk_json['choices'][0]['delta']
+-                                if 'content' in delta and delta['content']:
+-                                    yield delta['content']
+-                        except json.JSONDecodeError:
+-                            continue
+-        except Exception as e:
+-            logging.error(f"❌ LiteLLM SSE 流式請求失敗 [{self.endpoint_url}]: {e}")
+-            raise RuntimeError(f"LiteLLM Gateway Stream Error: {e}")
+-
+-
+-class VLLMTextClient(BaseVLLMClient):
+-    def invoke(self, prompt: str, temperature: Optional[float] = None, max_tokens: int = 2048) -> str:
+-        payload = {
+-            "model": self.model_name,
+-            "messages": [{"role": "user", "content": prompt}],
+-            "temperature": temperature if temperature is not None else self.default_temperature,
+-            "max_tokens": max_tokens
+-        }
+-        return self._post(payload)
+-
+-    def stream_invoke(
+-        self, 
+-        messages: List[Dict[str, str]], 
+-        temperature: Optional[float] = None, 
+-        max_tokens: int = 2048
+-    ) -> Generator[str, None, None]:
+-        payload = {
+-            "model": self.model_name,
+-            "messages": messages,
+-            "temperature": temperature if temperature is not None else self.default_temperature,
+-            "max_tokens": max_tokens
+-        }
+-        yield from self._post_stream(payload)
+-
+-
+-class VLLMVisionClient(BaseVLLMClient):
+-    @staticmethod
+-    def _image_to_base64(image: Image.Image) -> str:
+-        buf = BytesIO()
+-        image.save(buf, format="PNG")
+-        return base64.b64encode(buf.getvalue()).decode('utf-8')
+-
+-    def invoke(
+-        self, 
+-        prompt: str, 
+-        images: Optional[List[Image.Image]] = None, 
+-        temperature: Optional[float] = None, 
+-        max_tokens: int = 2048
+-    ) -> str:
+-        content_payload: List[Dict[str, Any]] = []
+-        if images:
+-            for img in images:
+-                b64_str = self._image_to_base64(img)
+-                content_payload.append({
+-                    "type": "image_url", 
+-                    "image_url": {"url": f"data:image/png;base64,{b64_str}"}
+-                })
+-        content_payload.append({"type": "text", "text": prompt})
+-
+-        payload = {
+-            "model": self.model_name,
+-            "messages": [{"role": "user", "content": content_payload}],
+-            "temperature": temperature if temperature is not None else self.default_temperature,
+-            "max_tokens": max_tokens
+-        }
+-        return self._post(payload)
+-
+-class VLLMEmbeddingClient(BaseVLLMClient):
+-    def __init__(self, endpoint_url: str, model_name: str):
+-        # 修正 Embedding 的端点路径指向 /v1/embeddings
+-        clean_base = endpoint_url.rstrip("/")
+-        if clean_base.endswith("/v1/chat/completions"):
+-            clean_base = clean_base.replace("/v1/chat/completions", "/v1")
+-        
+-        if clean_base.endswith("/v1"):
+-            self.endpoint_url = f"{clean_base}/embeddings"
+-        elif clean_base.endswith("/embeddings"):
+-            self.endpoint_url = clean_base
+-        else:
+-            self.endpoint_url = f"{clean_base}/v1/embeddings"
+-            
+-        self.model_name = model_name
+-
+-    def embed_query(self, text: str) -> List[float]:
+-        """向 LiteLLM 閘道器發送 Embedding 請求"""
+-        payload = {
+-            "model": self.model_name,
+-            "input": text
+-        }
+-        headers = {"Content-Type": "application/json"}
+-        req = urllib.request.Request(
+-            self.endpoint_url, 
+-            data=json.dumps(payload).encode('utf-8'), 
+-            headers=headers
+-        )
+-        try:
+-            with urllib.request.urlopen(req, timeout=120) as resp:
+-                result = json.loads(resp.read().decode('utf-8'))
+-                return result['data'][0]['embedding']
+-        except Exception as e:
+-            logging.error(f"❌ LiteLLM 閘道器 Embedding 請求失敗 [{self.endpoint_url}]: {e}")
+-            raise RuntimeError(f"LiteLLM Gateway Embedding Error: {e}")
+-        
+-# =====================================================================
+-# 2. 應用層解耦工廠 (完全基於環境變數與 LiteLLM 閘道器通訊)
+-# =====================================================================
+-class VLLMModelFactory:
+-    """
+-    輕量級應用層模型工廠
+-    遵循架構解耦原則：不讀取底層 YAML，統一透過 LITELLM_ENDPOINT 導向網關
+-    """
+-    _instance = None
+-
+-    def __new__(cls, *args, **kwargs):
+-        if cls._instance is None:
+-            cls._instance = super(VLLMModelFactory, cls).__new__(cls)
+-        return cls._instance
+-
+-    def __init__(self):
+-        if getattr(self, '_initialized', False):
+-            return
+-        
+-        load_dotenv()
+-        # 🌟 核心變更：統一透過環境變數獲取 LiteLLM 閘道器位址
+-        self.default_endpoint = os.getenv("LITELLM_ENDPOINT", "http://172.17.0.1:4000")
+-        
+-        logging.info(f"🌐 應用層模型工廠初始化完成，統一網關路由: {self.default_endpoint}")
+-        self._initialized = True
+-
+-    def get_llm_client(self, model_name: str = "qwen3-4b") -> VLLMTextClient:
+-        """獲取純文本 LLM Client (直接指向 LiteLLM 閘道器)"""
+-        return VLLMTextClient(endpoint_url=self.default_endpoint, model_name=model_name)
+-
+-    def get_vlm_client(self, model_name: str = "qwen3-vl-4b") -> VLLMVisionClient:
+-        """獲取多模態 VLM Client (直接指向 LiteLLM 閘道器)"""
+-        return VLLMVisionClient(endpoint_url=self.default_endpoint, model_name=model_name)
+-
+-    def get_embedding_client(self, model_name: str = "qwen3-embedding-4b") -> VLLMEmbeddingClient:
+-        """獲取文本向量 Embedding Client (直接指向 LiteLLM 閘道器)"""
+-        return VLLMEmbeddingClient(endpoint_url=self.default_endpoint, model_name=model_name)
+-
+-# =====================================================================
+-# 3. 本地集成驗證入口 (對應 LiteLLM 閘道器架構)
+-# =====================================================================
+-# =====================================================================
+-# 3. 本地集成驗證入口 (修復：多模態測試帶入真實圖片)
+-# =====================================================================
+-if __name__ == "__main__":
+-    print("\n===================================================")
+-    print("🚀 開始驗證應用層與 LiteLLM 閘道器的連通性...")
+-    print("===================================================\n")
+-
+-    factory = VLLMModelFactory()
+-
+-    # 1. 驗證純文本模型 (對應 LiteLLM 中的 qwen3-4b)
+-    print("1️⃣ [測試 LiteLLM 閘道器] 正在向 qwen3-4b 發送測試請求...")
+-    client_text = factory.get_llm_client(model_name="qwen3-4b")
+-    t0 = time.time()
+-    response_text = client_text.invoke(prompt="用一句話總結什麼是流程自动化 (Process Automation)。")
+-    cost_text = time.time() - t0
+-    print(f"✅ [qwen3-4b 響應成功] (耗時: {cost_text:.2f}s):")
+-    print(f"└─ 結果: {response_text[:50].strip()}...\n")
+-
+-    # 2. 驗證視覺多模態模型 (對應 LiteLLM 中的 qwen3-vl-4b，必須帶圖)
+-    print("2️⃣ [測試 LiteLLM 閘道器] 正在向 qwen3-vl-4b 發送多模態測試請求...")
+-    client_vision = factory.get_vlm_client(model_name="qwen3-vl-4b")
+-    
+-    # 建立一張簡單的測試圖片 (用於驗證 VLM 圖像傳輸通道)
+-    test_img = Image.new('RGB', (200, 100), color=(73, 109, 137))
+-    
+-    t1 = time.time()
+-    response_vision = client_vision.invoke(
+-        prompt="請描述這張圖片的背景顏色，並說明架構解耦的核心價值。", 
+-        images=[test_img]
+-    )
+-    cost_vision = time.time() - t1
+-    print(f"✅ [qwen3-vl-4b 響應成功] (耗時: {cost_vision:.2f}s):")
+-    print(f"└─ 結果: {response_vision[:50].strip()}\n")
+-
+-    # 3. 驗證文本向量模型 (對應 LiteLLM 中的 qwen3-embedding-4b)
+-    print("3️⃣ [測試 LiteLLM 閘道器] 正在向 qwen3-embedding-4b 發送 Embedding 請求...")
+-    # 假設你的 factory 提供了獲取 embedding 客戶端的方法，或者使用 LangChain 的 OpenAIEmbeddings 對接 LiteLLM 代理
+-    client_embedding = factory.get_embedding_client(model_name="qwen3-embedding-4b")
+-    
+-    t2 = time.time()
+-    # 執行向量化測試
+-    test_text_to_embed = "流程自動化與架構解耦能顯著減少重複勞動。"
+-    embedding_result = client_embedding.embed_query(test_text_to_embed)
+-    cost_embedding = time.time() - t2
+-    
+-    print(f"✅ [qwen3-embedding-4b 響應成功] (耗時: {cost_embedding:.2f}s):")
+-    print(f"└─ 向量維度 (Dimension): {len(embedding_result)}")
+-    print(f"└─ 向量預覽 (前 5 維): {embedding_result[:5]}...\n")
+-    
+-    print("===================================================")
+-    print("🎉 應用層與底層網關解耦驗證通過！")
+-    print("===================================================\n")
+diff --git a/generator/llm_client.py b/generator/llm_client.py
+index 25e9c54..5b7ea9f 100644
+--- a/generator/llm_client.py
++++ b/generator/llm_client.py
+@@ -9,7 +9,7 @@ project_root = os.path.dirname(current_dir)
+ if project_root not in sys.path:
+     sys.path.insert(0, project_root)
+ 
+-from factory.vllm_model_factory import VLLMModelFactory
++from factory.model_factory import ModelFactory
+ 
+ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+ 
+@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] -
+ class LLMClient:
+     def __init__(self, default_model_name: str = "qwen3-embedding-4b"):
+         self.default_model_name = default_model_name
+-        self.factory = VLLMModelFactory()
++        self.factory = ModelFactory()
+ 
+     def stream_generate(
+         self,
+@@ -30,9 +30,6 @@ class LLMClient:
+         **kwargs
+     ) -> Generator[str, None, None]:
+         target_model = model_name or self.default_model_name
+-        
+-        # 从工厂获取对应模型的客户端实例
+-        vllm_client = self.factory.get_llm_client(model_name=target_model)
+ 
+         if messages:
+             final_messages = messages
+@@ -49,18 +46,19 @@ class LLMClient:
+                 user_content = query
+             final_messages = [{"role": "user", "content": user_content}]
+ 
+-        yield from vllm_client.stream_invoke(
++        yield from self.factory.stream_chat(
+             messages=final_messages,
++            model=target_model,
+             temperature=temperature,
+             max_tokens=max_new_tokens
+         )
+ 
+ 
+ if __name__ == "__main__":
+-    # 【环境自动修复】如果在 Docker 容器内部运行，检查并修正网关地址
+-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
++    # 【环境自动修复】如果在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
++    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
+         # 尝试将工厂默认的 localhost 变更为宿主机网关
+-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
++        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
+         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
+ 
+     client = LLMClient()
+diff --git a/generator/qa_chain.py b/generator/qa_chain.py
+index 8829cd0..c81120d 100644
+--- a/generator/qa_chain.py
++++ b/generator/qa_chain.py
+@@ -297,8 +297,8 @@ project_root = os.path.dirname(current_dir)
+ if project_root not in sys.path:
+     sys.path.insert(0, project_root)
+ 
+-# 统一引入各核心组件（对接 VLLMModelFactory 网关架构）
+-from factory.vllm_model_factory import VLLMModelFactory
++# 统一引入各核心组件（对接 ModelFactory 网关架构）
++from factory.model_factory import ModelFactory
+ from search.retriever import Retriever
+ from search.reranker import Reranker
+ from generator.llm_client import LLMClient
+@@ -328,14 +328,11 @@ class QAChain:
+         self.embedding_model_name = embedding_model_name
+ 
+         logging.info("⚙️ 正在初始化 QAChain 全链路问答组件...")
+-        
+-        # 1. 获取统一应用层模型工厂单例句柄
+-        self.vllm_factory = VLLMModelFactory()
+ 
+         # 初始化 API/vLLM LLM 客户端（通过网关统一接管）
+         self.llm_client = LLMClient(default_model_name=self.llm_model_name)
+ 
+-        # 2. 实例化检索器与重排器，共享统一 factory 实例
++        # 2. 实例化检索器与重排器（Retriever 内部按需自行持有 ModelFactory 单例）
+         self.retriever = Retriever(
+             milvus_host="172.17.0.1",
+             collection_name="finebi_knowledge_chunks",
+@@ -513,9 +510,9 @@ class QAChain:
+ # 🧪 测试与可视化打印
+ # =====================================================================
+ if __name__ == "__main__":
+-    # 🌍 环境自动适配检查
+-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
+-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
++    # 🌍 环境自动适配检查（ModelFactory 读取 OPENAI_BASE_URL）
++    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
++        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
+         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
+ 
+     # 🌟 从最上游入口显式注入模型代号，完美隔离中间过程
+diff --git a/qa_admin.py b/qa_admin.py
+index 59429cc..7abe4d4 100644
+--- a/qa_admin.py
++++ b/qa_admin.py
+@@ -53,11 +53,11 @@ if SCRIPT_DIR not in sys.path:
+ 
+ # logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
+ 
+-from factory.vllm_model_factory import VLLMModelFactory
++from factory.model_factory import ModelFactory
+ 
+-# 🌍 环境变量自动适配：若在 Docker 容器内部运行，检查并修正网关地址
+-if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
+-    os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
++# 🌍 环境变量自动适配：若在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
++if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
++    os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
+     print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
+ from factory.tool_factory import tool_factory, load_tools_from_yaml, BaseTool
+ from generator.qa_chain import QAChain
+@@ -223,10 +223,10 @@ def emergency_force_cleanup() -> str:
+     logging.warning("🚨 [QA Admin] 触发应急显存与网关会话回收操作！")
+     global_qa_chain = None
+     try:
+-        if hasattr(VLLMModelFactory, "_instance"):
+-            VLLMModelFactory._instance = None
++        if hasattr(ModelFactory, "_instance"):
++            ModelFactory._instance = None
+     except Exception as e:
+-        logging.error(f"清空 VLLMModelFactory 单例句柄失败: {e}")
++        logging.error(f"清空 ModelFactory 单例句柄失败: {e}")
+         
+     gc.collect(2)
+     if torch.cuda.is_available():
+diff --git a/search/retriever.py b/search/retriever.py
+index 0c5ba69..d2ebb6b 100644
+--- a/search/retriever.py
++++ b/search/retriever.py
+@@ -263,7 +263,7 @@
+ 
+ 
+ 
+-# search/retriever.py 向量/混合检索 (完全对接 VLLMModelFactory 统一网关)
++# search/retriever.py 向量/混合检索 (完全对接 ModelFactory 统一网关)
+ import os
+ import sys
+ import re
+@@ -277,8 +277,8 @@ project_root = os.path.dirname(current_dir)
+ if project_root not in sys.path:
+     sys.path.insert(0, project_root)
+ 
+-# 统一从中央工厂引入 VLLMModelFactory（与 llm_client.py 保持完全一致）
+-from factory.vllm_model_factory import VLLMModelFactory
++# 统一从中央工厂引入 ModelFactory（唯一 LLM/Embedding 网关入口，与 llm_client.py 保持一致）
++from factory.model_factory import ModelFactory
+ 
+ try:
+     from pymilvus import MilvusClient, AnnSearchRequest, RRFRanker
+@@ -297,16 +297,16 @@ class Retriever:
+         milvus_port: str = "19530",
+         collection_name: str = "finebi_knowledge_chunks",
+         default_model_name: str = "qwen3-embedding-8b",  # 对应你在网关配置的向量模型代号
+-        factory: Optional[VLLMModelFactory] = None
++        factory: Optional[ModelFactory] = None
+     ):
+         """
+-        轻量级混合检索召回器：通过 VLLMModelFactory 统一网关获取稠密向量，零本地大模型依赖
++        轻量级混合检索召回器：通过 ModelFactory 统一网关获取稠密向量，零本地大模型依赖
+         """
+         self.collection_name = collection_name
+         self.default_model_name = default_model_name
+         
+-        # 1. 统一采用 VLLMModelFactory 管理底层路由与网关
+-        self.factory = factory if factory is not None else VLLMModelFactory()
++        # 1. 统一采用 ModelFactory 管理底层路由与网关
++        self.factory = factory if factory is not None else ModelFactory()
+         
+         # 2. 建立物理向量数据库长连接
+         self.client = MilvusClient(uri=f"http://{milvus_host}:{milvus_port}")
+@@ -314,16 +314,14 @@ class Retriever:
+ 
+     def get_dense_embedding(self, text: str, model_name: Optional[str] = None) -> List[float]:
+         """
+-        透过 VLLMModelFactory 获取对应的 Embedding 客户端计算高维稠密语义向量
++        透过 ModelFactory 计算高维稠密语义向量
+         """
+         target_model = model_name or self.default_model_name
+         
+         try:
+-            # 直接调用工厂中封装好的 Embedding 客户端实例
+-            embedding_client = self.factory.get_embedding_client(model_name=target_model)
+-            return embedding_client.embed_query(text)
++            return self.factory.embed_query(text, model=target_model)
+         except Exception as e:
+-            logging.error(f"❌ 通过 VLLMModelFactory 获取 Embedding 失败 (模型: {target_model}): {e}")
++            logging.error(f"❌ 通过 ModelFactory 获取 Embedding 失败 (模型: {target_model}): {e}")
+             raise e
+ 
+     @staticmethod
+@@ -442,9 +440,9 @@ class Retriever:
+ # 🧪 本地链路检索实战验证
+ # =====================================================================
+ if __name__ == "__main__":
+-    # 🌍 环境自动适配：若在 Docker 容器内部运行，检查并修正网关地址（与 llm_client.py 保持完全一致）
+-    if os.path.exists("/workspace") and not os.environ.get("LITELLM_API_BASE"):
+-        os.environ["LITELLM_API_BASE"] = "http://172.17.0.1:4000/v1"
++    # 🌍 环境自动适配：若在 Docker 容器内部运行，检查并修正网关地址（ModelFactory 读取 OPENAI_BASE_URL）
++    if os.path.exists("/workspace") and not os.environ.get("OPENAI_BASE_URL"):
++        os.environ["OPENAI_BASE_URL"] = "http://172.17.0.1:4000/v1"
+         print("🔧 [自动适配] 检测到处于容器内部，已将 LiteLLM 网关自动重定向至宿主机: http://172.17.0.1:4000/v1")
+ 
+     retriever = Retriever(
