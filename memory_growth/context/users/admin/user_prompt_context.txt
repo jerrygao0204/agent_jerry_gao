@@ -1,37 +1,28 @@
-==================================================
-【用户长期记忆与成长语境】 (User ID: admin)
-==================================================
+# SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+====================================================
+以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
 
-[模块 1: 用户静态基础档案 (Identity Fact)]
-- 用户姓名是高铮
+### [模組 01: 核心身份與定位 (Identity & Role)]
+- **用户姓名是高铮**
 
-[模块 2: 用户硬性偏好 (Explicit Preferences)]
-- 暂无相关记录
+### [模組 02: 技術與工作偏好 (Preferences)]
+- 無特殊偏好
 
-[模块 3: 用户技术与业务约束 (Explicit Constraints)]
-- 暂无相关记录
+### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+- 無硬性限制
 
-[模块 4: 已明确决策历史与技术迁移 (Explicit Decisions & Migration)]
-- 暂无相关记录
+### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+**核心目標**:
+- 無
 
-[模块 5: 长期认知与能力协议 (Co-Reasoning Protocol)]
-- 暂无相关记录
+**當前研發焦點**:
+- 無
 
-[模块 6: 基础能力现状 (Layer 1: Ability Tree Anchor)]
-- 暂无相关记录
+### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+- 尚無紀錄
 
-[模块 7: 动态实践与思维模式 (Layer 2: Reasoning Patterns)]
-- 暂无相关记录
+### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+- 尚無社交關係與態度數據
 
-[模块 8: 演进目标与长远规划 (Layer 3: Long-Term Goals)]
-- 暂无相关记录
-
-[模块 9: 反思与避坑清单 (Reflection Points & Avoidance)]
-- 暂无相关记录
-
-[模块 10: 用户成长轨迹 (User Growth Points)]
-- 暂无相关记录
-
-[模块 11: 模型协作演進点 (Model Growth Points)]
-- 暂无相关记录
-==================================================
+====================================================
+END OF SYSTEM CONTEXT

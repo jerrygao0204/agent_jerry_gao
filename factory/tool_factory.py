@@ -25,7 +25,7 @@ class BaseTool(ABC):
     """Agent 原子工具抽象基类 (Level 3)"""
     name: str = ""
     description: str = ""
-    domain: str = "general"        # Level 1: 业务领域 (如: rag_knowledge, finebi_system, data_analytics)
+    domain: str = "general"        # Level 1: 业务领域 (如: rag_knowledge, data_analytics)
     package: str = "default_pkg"   # Level 2: 工具包分类 (如: metadata_pkg, search_pkg)
     args_schema: Optional[Type[BaseModel]] = None
     is_read_only: bool = True      # 默认只读安全保障

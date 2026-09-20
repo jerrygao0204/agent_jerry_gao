@@ -242,7 +242,7 @@ if __name__ == "__main__":
 
     class _MockKnowledgeTool:
         def run(self, query: str, top_k: int = 5, **kwargs):
-            return f"【模拟检索结果】关于 '{query}' 的 Top-{top_k} 条 FineBI 文档"
+            return f"【模拟检索结果】关于 '{query}' 的 Top-{top_k} 条文档"
 
     class _MockToolFactory:
         def get_tool(self, name, user_role=None):

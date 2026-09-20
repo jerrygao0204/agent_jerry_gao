@@ -7,12 +7,12 @@ from factory.tool_factory import BaseTool
 logger = logging.getLogger("RAGTool")
 
 class RAGSearchInput(BaseModel):
-    query: str = Field(description="用户针对 FineBI 用户手册、FAQ 或故障排查指南提出的问题")
+    query: str = Field(description="用户针对 用户手册、FAQ 或故障排查指南提出的问题")
     top_k: int = Field(default=3, description="期望返回的相关文档 Chunk 数量")
 
 class RAGKnowledgeSearchTool(BaseTool):
     name: str = "search_knowledge_base"  # 🌟 统一名称为 search_knowledge_base
-    description: str = "检索 FineBI 系统官方文档、报错排查指南、FAQ 及最佳实践"
+    description: str = "检索 系统官方文档、报错排查指南、FAQ 及最佳实践"
     domain: str = "rag_knowledge"
     package: str = "knowledge_search_pkg"
     args_schema = RAGSearchInput
@@ -39,7 +39,7 @@ class RAGKnowledgeSearchTool(BaseTool):
         logger.info(f"🔍 [RAGTool] 触发知识库检索: query='{query}', top_k={top_k}")
         
         if not self.retriever:
-            return f"[模拟 RAG 结果] 关于 '{query}' 的 FineBI 配置说明"
+            return f"[模拟 RAG 结果] 关于 '{query}' 的 配置说明"
 
         # 1. 混合检索初召回
         raw_chunks = []
@@ -51,9 +51,9 @@ class RAGKnowledgeSearchTool(BaseTool):
         if not raw_chunks:
             return [] if return_raw else "未检索到相关文档。"
 
-        # 2. 交叉重排计算交叉语义得分 (FineBIReranker)
+        # 2. 交叉重排计算交叉语义得分 (Reranker)
         if self.reranker and hasattr(self.reranker, "rerank"):
-            logger.info("⚡ [RAGTool] 执行 FineBIReranker 交叉重排...")
+            logger.info("⚡ [RAGTool] 执行 Reranker 交叉重排...")
             reranked_chunks = self.reranker.rerank(
                 query=query, 
                 documents=raw_chunks, 

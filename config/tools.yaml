@@ -4,7 +4,7 @@ domains:
     role_whitelist: ["admin", "analyst", "user"]
 
   finebi_system:
-    description: "查询 FineBI 系统仪表板、数据集元数据、表结构及行数信息"
+    description: "查询系统仪表板、数据集元数据、表结构及行数信息"
     role_whitelist: ["admin", "analyst"] # 限制仅管理员与分析师可见
     packages:
       metadata_pkg: "查询数据集元数据、表结构、行数及字段明细"
@@ -30,7 +30,7 @@ tools:
 
   - name: get_finebi_dashboards
     module: factory.tools.api_tool
-    class: FineBIDashboardTool
+    class: DashboardTool
     domain: finebi_system
     package: dashboard_pkg
     enabled: true

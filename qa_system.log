@@ -482,3 +482,16 @@
 2026-09-07 05:32:18,012 [INFO] ✅ 纯文本大模型显存物理清理完毕。
 2026-09-07 05:32:18,285 [INFO] ✨ 工厂所有静态大模型已彻底卸载！
 2026-09-07 05:32:18,420 [INFO] ✨ [QA Admin] 物理显存清理完毕！
+2026-09-20 06:53:04,907 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-20 06:53:04,907 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-20 06:53:04,907 - [ERROR] - [tool_factory.py:376] - ❌ 动态加载工具失败 [factory.tools.api_tool.DashboardTool]: module 'factory.tools.api_tool' has no attribute 'DashboardTool'
+2026-09-20 06:53:04,908 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-20 06:53:04,908 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-20 06:53:04,908 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-20 06:53:04,908 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-20 06:53:04,908 - [INFO] - [qa_admin.py:1386] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-20 06:53:04,908 - [WARNING] - [qa_admin.py:1403] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-20 06:53:07,516 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-20 06:56:15,663 - [INFO] - [qa_admin.py:1972] - ⚡关闭QA服务，清除GPU显存...
+2026-09-20 06:56:15,663 - [WARNING] - [qa_admin.py:223] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-20 06:56:15,972 - [INFO] - [qa_admin.py:239] - ✨ [QA Admin] 显存与网关代理清理完毕！

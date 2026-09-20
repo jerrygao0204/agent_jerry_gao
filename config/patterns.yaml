@@ -125,9 +125,9 @@ compliance_rules:
 # 🧠 业务实体自动提取模式 (Entity Memory Rules)
 # ==========================================
 entity_patterns:
-  # FineBI 版本号模式
-  finebi_version:
-    pattern: '(?i)\b(?:FineBI\s*)?(?:v|V)?([56]\.\d(?:\.\d)?)\b'
+  # 版本号模式
+  version:
+    pattern: '(?i)\b(?:\s*)?(?:v|V)?([56]\.\d(?:\.\d)?)\b'
     group: 1
     type: string
   

@@ -1,6 +1,6 @@
 # memory_growth/path_config.py
 """
-path_config.py - 统一管理多用户的输入与输出路径
+path_config.py - 統一管理多用戶的輸入、輸出與增量狀態路徑
 """
 
 import sys
@@ -15,7 +15,7 @@ from config.config_loader import config_loader
 
 
 class UserMemoryPathConfig:
-    """自动生成并管理指定用户的聊天历史路径与记忆存储路径"""
+    """自動生成並管理指定用戶的聊天歷史路徑、記憶存儲路徑與處理狀態記錄"""
 
     def __init__(
         self,
@@ -31,19 +31,20 @@ class UserMemoryPathConfig:
         if memory_root is None:
             memory_root = config_dict["memory_root"]
 
-        # 1. 输入路径：该用户的原始聊天记录目录 (data/gaozheng, data/jiyun 等)
+        # 1. 輸入路徑：原始聊天記錄目錄 (data/gaozheng, data/admin 等)
         self.data_dir = Path(data_root) / user_id
 
-        # 2. 输出路径：该用户的成长记忆存储目录 (memory_growth/.../users/gaozheng 等)
+        # 2. 輸出路徑：成長記憶存儲目錄
         self.memory_dir = Path(memory_root) / user_id
 
-        # 3. 各阶段产出的具体文件路径
+        # 3. 各階段產出的具體檔案路徑
+        self.processed_state_path = self.memory_dir / "processed_state.json"  # 新增：Message Hash 記錄表
         self.facts_path = self.memory_dir / "facts.json"
         self.layered_context_path = self.memory_dir / "layered_context.json"
         self.user_prompt_context_path = (
             self.memory_dir / "user_prompt_context.txt"
         )
 
-        # 自动创建输入/输出目录（如果不存在会自动创建，防止报错）
+        # 自動創建目錄
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.memory_dir.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Growth Pipeline - 技術文檔與使用指南</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-text: #38bdf8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        header p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .badge-group {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #38bdf8;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.75rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-top: 0;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+        }
+
+        p, li {
+            color: var(--text-muted);
+        }
+
+        /* 流程步驟樣式 */
+        .pipeline-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .step-card {
+            background: #f1f5f9;
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        /* 程式碼區塊樣式 */
+        pre {
+            background-color: var(--code-bg);
+            color: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "Fira Code", Consolas, Monaco, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: "Fira Code", Consolas, Monaco, monospace;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* 表格樣式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* LLMGuard 特性 Highlight */
+        .feature-box {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .feature-box h4 {
+            margin: 0 0 0.5rem 0;
+            color: #065f46;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-box p {
+            margin: 0;
+            color: #047857;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🧠 Memory Growth Pipeline</h1>
+        <p>基於認知架構與 LLMGuard 自我修復網絡的 AI Agent 記憶成長管道</p>
+        <div class="badge-group">
+            <span class="badge">Modular Architecture</span>
+            <span class="badge">Self-Healing Pipeline</span>
+            <span class="badge">LLM Quality Audit</span>
+            <span class="badge">Zero Infrastructure Touch</span>
+        </div>
+    </header>
+
+    <!-- 1. 核心概括與架構設計 -->
+    <section>
+        <h2>核心概括 (Architecture Overview)</h2>
+        <p><strong>Memory Growth Pipeline</strong> 是一個專為大語言模型 Agent 設計的高可靠性記憶演進系統。系統採用三階段（Phase）模組化管線架構，結合獨立的 <strong>LLMGuard</strong> 自我修復防護網，確保長時間跨度的對話碎片能精準抽取並映射為動態演進的三層語境結構 (Profile, Memory, State)。</p>
+
+        <div class="pipeline-steps">
+            <div class="step-card">
+                <h4>Phase 1: 1_extractor.py</h4>
+                <p><strong>事實碎片抽取 (Fact Extraction)</strong><br>採用語義感知重疊滑動窗口 (Semantic Overlap Window)，全量/增量解析對話歷史並追蹤 Message Hash，高召回率提取事實碎片 (Raw Facts)。</p>
+            </div>
+            <div class="step-card">
+                <h4>Phase 2: 2_layer_mapper.py</h4>
+                <p><strong>規範化與三層映射 (Layer Mapping)</strong><br>執行 Pass 1 事實清洗與 Pass 2 結構化映射，產出包含 Profile (靜態畫像)、Memory (成長鏈/態度圖譜) 與 State (當前焦點) 的 JSON 記憶體。</p>
+            </div>
+            <div class="step-card">
+                <h4>Phase 3: 3_context_builder.py</h4>
+                <p><strong>系統語境渲染 (Context Builder)</strong><br>讀取三層語境數據結構，進行模組化 Prompt 模板渲染，導出可以直接注入系統 Prompt 的純文字 Context。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Self-Healing 自我修復機制 -->
+    <section>
+        <h2>高可靠性防護網 (LLMGuard Mechanism)</h2>
+        <p>為了確保大模型生成的 JSON 數據 100% 滿足強類型與語法合規要求，系統導入了獨立適配器 <code>5_llm_guard.py</code>，其運作邏輯如下：</p>
+        
+        <div class="feature-box">
+            <h4>🛡️ 5 輪 Self-Healing 重試與雙級評估流程</h4>
+            <p>1. <strong>語法攔截</strong>：自動捕捉 <code>JSONDecodeError</code>，將具體報錯行號與列號構造為修復 Prompt 反饋給 LLM。<br>
+               2. <strong>LLM Auditor 二次審查</strong>：由 LLM 擔任品質審查專家，針對 <code>schema_desc</code> 規範進行 1-10 分的業務邏輯打分。<br>
+               3. <strong>最佳版本選取 (Fallback)</strong>：若 5 輪均未獲 10/10 滿分，自動比較歷史嘗試，選出得分最高且語法正確的最佳版本。</p>
+        </div>
+    </section>
+
+    <!-- 3. 常用命令行操作說明 -->
+    <section>
+        <h2>常用命令行操作說明 (CLI Usage)</h2>
+        <p>系統透過 <code>app.py</code> 作為統一的流程調度入口，支援靈活的參數傳遞：</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>操作場景</th>
+                    <th>CLI 命令範例</th>
+                    <th>說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>預設增量運行</strong></td>
+                    <td><code>python app.py --user admin</code></td>
+                    <td>只處理尚未記錄 Hash 的新對話碎片</td>
+                </tr>
+                <tr>
+                    <td><strong>全量重新抽取</strong></td>
+                    <td><code>python app.py --user admin --full-run</code></td>
+                    <td>清空歷史 Hash 狀態，重新對全量對話執行解析與映射</td>
+                </tr>
+                <tr>
+                    <td><strong>指定模型與窗口調優</strong></td>
+                    <td><code>python app.py --user gao --model qwen3-32b --window-size 8 --overlap-size 2</code></td>
+                    <td>調整滑動窗口大小與重疊邊界，配合指定 LLM 模型</td>
+                </tr>
+                <tr>
+                    <td><strong>開啟 Debug 日誌</strong></td>
+                    <td><code>python app.py --user admin --debug</code></td>
+                    <td>輸出詳細的 LLM 調用日誌與中間驗證過程</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>快速調試 (app.py 內部測試)</h3>
+        <p>在 <code>app.py</code> 底部已預留情境代碼，可直接取消註解進行測試：</p>
+<pre><code>if __name__ == "__main__":
+    import sys
+
+    # 【情境 1】：預設增量運行
+    # sys.argv = ["app.py", "--user", "admin"]
+
+    # 【情境 2】：全量重洗運行 (清空舊 Hash 重新抽取全量)
+    # sys.argv = ["app.py", "--user", "admin", "--full-run"]
+
+    main()</code></pre>
+    </section>
+
+    <!-- 4. 目錄結構與檔案說明 -->
+    <section>
+        <h2>目錄結構說明 (Project Structure)</h2>
+<pre><code>memory_growth/
+├── 1_extractor.py         # Phase 1: 高召回率事實與關係圖譜抽取器 (內建 LLMGuard)
+├── 2_layer_mapper.py      # Phase 2: 規範化清洗與三層語境映射器 (內建 LLMGuard)
+├── 3_context_builder.py   # Phase 3: 模組化 Prompt 渲染與 System Context 導出器
+├── llm_guard.py           # 獨立適配器: Self-Healing 自我修復與 LLM 專家評估護航組件
+├── app.py                 # Pipeline Controller: 主流程調度與 CLI 命令入口
+├── path_config.py         # 用戶記憶數據路徑配置管理器
+└── context/               # 產出數據目錄 (用戶 Prompt 與 JSON 記憶體)
+    └── users/
+        └── {user_id}/
+            ├── facts.json
+            ├── layered_context.json
+            └── user_prompt_context.txt</code></pre>
+    </section>
+
+    <footer>
+        <p>Memory Growth Pipeline Architecture Design © 2026. Built with Python & LLM Self-Healing Framework.</p>
+    </footer>
+</div>
+
+</body>
+</html>

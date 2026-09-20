@@ -13,7 +13,7 @@ if project_root not in sys.path:
 from agent.sandbox import SandboxExecutor
 from memory.memory_manager import MemoryManager  # 👈 直接使用你现有的 MemoryManager
 from factory.tool_factory import tool_factory
-from generator.llm_client import FineBILLMClient
+from generator.llm_client import LLMClient
 
 logger = logging.getLogger("IntegratedReActAgent")
 
@@ -36,7 +36,7 @@ class IntegratedReActAgent:
         
         # 🛠️ 复用传入的 memory_mgr 实例，避免每次调用重新初始化
         self.memory_mgr = memory_mgr if memory_mgr is not None else MemoryManager(max_messages=20)
-        self.llm_client = FineBILLMClient(model_short_name=model_name)
+        self.llm_client = LLMClient(model_short_name=model_name)
         
         self.top_k_ret = top_k_ret
         self.top_k_rerank = top_k_rerank

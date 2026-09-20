@@ -47,9 +47,9 @@ class ReActAgent:
         # 💡 [适配 1]: 自动转换旧版参数 (llm_client 缺失时自动补全)
         # ---------------------------------------------------------------------
         if llm_client is None:
-            from generator.llm_client import FineBILLMClient
-            target_model = model_name or "Qwen/Qwen3-4B"
-            self.llm_client = FineBILLMClient(target_model)
+            from generator.llm_client import LLMClient
+            target_model = model_name or "qwen3-4b"
+            self.llm_client = LLMClient(target_model)
         else:
             self.llm_client = llm_client
 
