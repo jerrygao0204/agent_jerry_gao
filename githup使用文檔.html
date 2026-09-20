@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub 使用文档</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+    h1, h2 { color: #0366d6; }
+    code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; }
+    pre { background: #f6f8fa; padding: 10px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>GitHub 使用文档</h1>
+
+  <h2>1. 生成 Personal Access Token (PAT)</h2>
+  <ul>
+    <li>进入 GitHub 设置 → <strong>Developer settings</strong> → <strong>Personal access tokens</strong></li>
+    <li>选择 <strong>Generate new token (classic)</strong></li>
+    <li>填写 Token 名称（例如 <code>RAG-private-token</code>）</li>
+    <li>设置有效期（建议 90 天）</li>
+    <li>在 <strong>Select scopes</strong> 中只勾选 <code>repo</code> 权限</li>
+    <li>点击 <strong>Generate token</strong> 并复制生成的 Token</li>
+  </ul>
+
+  <h2>2. 在容器中配置 Token</h2>
+  <pre><code>git config --global credential.helper store
+echo "https://jerrygao0204:ghp_xxxxxxxxxxxxxxxxxxxxx@github.com" > ~/.git-credentials
+</code></pre>
+  <p>确认配置：</p>
+  <pre><code>cat ~/.git-credentials
+git config --global credential.helper
+</code></pre>
+
+  <h2>3. 提交代码流程</h2>
+  <ol>
+    <li>进入仓库目录：<code>/workspace/hf-conda/RAG/agent_jerry_gao</code></li>
+    <li>添加修改的文件：
+      <pre><code>git add .
+git add 文件名.py</code></pre>
+    </li>
+    <li>提交修改：
+      <pre><code>git commit -m "描述你的修改内容"</code></pre>
+    </li>
+    <li>推送到远程仓库：
+      <pre><code>git push origin main</code></pre>
+    </li>
+  </ol>
+
+  <h2>4. 验证配置</h2>
+  <ul>
+    <li>执行 <code>git pull origin main</code> → 如果显示 <code>Already up to date</code>，说明同步成功</li>
+    <li>执行 <code>git push origin main</code> → 如果有新提交，会直接推送成功</li>
+  </ul>
+
+  <h2>5. 注意事项</h2>
+  <ul>
+    <li>不要在 <code>~/.git-credentials</code> 文件里写尖括号 <code>&lt;&gt;</code></li>
+    <li>Token 只显示一次，记得妥善保存</li>
+    <li>只勾选 <code>repo</code> 权限即可，避免过多权限带来安全风险</li>
+  </ul>
+</body>
+</html>
+
