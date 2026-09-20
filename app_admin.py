@@ -17,7 +17,6 @@ install_package("beautifulsoup4")
 install_package("langchain_text_splitters")
 install_package("pymilvus")
 install_package("markdown")
-
 install_package("accelerate")
 
 import os
@@ -79,31 +78,6 @@ def load_config():
             
     os.makedirs(DEFAULT_CONFIG.get("output_root", SCRIPT_DIR), exist_ok=True)
 
-# def load_config():
-#     """读取本地 admin_config.json 并在绝对路径失效时自动修正"""
-#     global DEFAULT_CONFIG
-#     if os.path.exists(CONFIG_FILE_PATH):
-#         try:
-#             with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f:
-#                 saved_config = json.load(f)
-                
-#                 # 校验路径是否存在，若不存在则更正为当前配置路径
-#                 prompts_path = saved_config.get("prompts_hub_path", "")
-#                 if not os.path.exists(prompts_path):
-#                     saved_config["prompts_hub_path"] = config_loader.prompt_hub_path
-#                     logging.warning(f"⚠️ 校验到原配置路径不存在: {prompts_path}，已自动更正为: {config_loader.prompt_hub_path}")
-
-#                 patterns_path = saved_config.get("patterns_path", "")
-#                 if not os.path.exists(patterns_path):
-#                     saved_config["patterns_path"] = config_loader.patterns_path
-#                     logging.warning(f"⚠️ 校验到原配置路径不存在: {patterns_path}，已自动更正为: {config_loader.patterns_path}")
-
-#                 DEFAULT_CONFIG.update(saved_config)
-#                 logging.info(f"⚙️ 成功加载持久化配置文件: {CONFIG_FILE_PATH}")
-#         except Exception as e:
-#             logging.error(f"❌ 读取配置文件异常: {e}")
-            
-#     os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
 
 load_config()
 
@@ -218,15 +192,7 @@ def run_parsing_and_validation(pdf_file, score_threshold):
         gpu_stat = get_gpu_memory_status()
         current_log = make_log(f"💾 [阶段一] 清理完毕。{gpu_stat}")
         yield current_log, markdown_output or "", "", gpu_stat, status("阶段一：完成"), btn_running, btn_write_disabled, btn_cancel_disabled, ""
-    # finally:
-    #     current_log = make_log("🧹 [阶段一] 正在呼叫工厂物理销毁 VLM 模型并释放显存...")
-    #     if 'processor' in locals():
-    #         del processor
-    #     ModelFactory.destroy_vlm_model()
-    #     gpu_stat = get_gpu_memory_status()
-    #     current_log = make_log(f"💾 [阶段一] 显存已完全回收。{gpu_stat}")
-    #     yield current_log, markdown_output or "", "", gpu_stat, status("阶段一：完成"), btn_running, btn_write_disabled, btn_cancel_disabled, ""
-
+ 
     # ----------------------------------------------------
     # 阶段二：后处理与 JSON 转换
     # ----------------------------------------------------
@@ -475,65 +441,7 @@ def save_system_config(
             "pdf_prefix", "namespace_seed", "milvus_host", "collection_name", 
             "vlm_model_name", "llm_model_name", "score_threshold"
         ]], DEFAULT_CONFIG)
-    
-# def save_system_config(
-#     output_root, prompts_hub_path, patterns_path, img_prefix, 
-#     pdf_prefix, namespace_seed, milvus_host, collection_name, 
-#     vlm_model_name, llm_model_name, score_threshold
-# ):
-#     global DEFAULT_CONFIG
-#     new_config = {
-#         "output_root": output_root,
-#         "prompts_hub_path": prompts_hub_path,
-#         "patterns_path": patterns_path,
-#         "img_prefix": img_prefix,
-#         "pdf_prefix": pdf_prefix,
-#         "namespace_seed": namespace_seed,
-#         "milvus_host": milvus_host,
-#         "collection_name": collection_name,
-#         "vlm_model_name": vlm_model_name,
-#         "llm_model_name": llm_model_name,
-#         "score_threshold": float(score_threshold)
-#     }
-    
-#     DEFAULT_CONFIG.update(new_config)
-#     os.makedirs(DEFAULT_CONFIG["output_root"], exist_ok=True)
 
-#     try:
-#         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
-#             json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=4)
-        
-#         # 🟢 關鍵修復：返回所有更新後的數值，用於即時刷新前端介面輸入框
-#         return (
-#             "✅ 系統基礎配置已成功保存並同步生效！",
-#             DEFAULT_CONFIG["output_root"],
-#             DEFAULT_CONFIG["prompts_hub_path"],
-#             DEFAULT_CONFIG["patterns_path"],
-#             DEFAULT_CONFIG["img_prefix"],
-#             DEFAULT_CONFIG["pdf_prefix"],
-#             DEFAULT_CONFIG["namespace_seed"],
-#             DEFAULT_CONFIG["milvus_host"],
-#             DEFAULT_CONFIG["collection_name"],
-#             DEFAULT_CONFIG["vlm_model_name"],
-#             DEFAULT_CONFIG["llm_model_name"],
-#             DEFAULT_CONFIG["score_threshold"],
-#             DEFAULT_CONFIG  # 用於底部的 gr.JSON 預覽
-#         )
-#     except Exception as e:
-#         error_msg = f"❌ 保存配置文件失敗: {e}"
-#         # 發生異常時保持原值返回
-#         return (error_msg, *[DEFAULT_CONFIG[k] for k in [
-#             "output_root", "prompts_hub_path", "patterns_path", "img_prefix", 
-#             "pdf_prefix", "namespace_seed", "milvus_host", "collection_name", 
-#             "vlm_model_name", "llm_model_name", "score_threshold"
-#         ]], DEFAULT_CONFIG)
-    
-    # try:
-    #     with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
-    #         json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=4)
-    #     return "✅ 系统基础配置已成功保存并同步生效！", DEFAULT_CONFIG
-    # except Exception as e:
-    #     return f"❌ 保存配置文件失败: {e}", DEFAULT_CONFIG
 
 # ==========================================
 # Gradio 管理后台界面构建

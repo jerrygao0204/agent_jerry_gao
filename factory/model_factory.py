@@ -65,7 +65,9 @@ class ModelFactory:
             self.session.mount("http://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
             self.session.mount("https://", HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=retries))
 
-            # 🌟 5. 确保在启动初始化时「仅加载一次」Rerank 模型到 GPU
+            # 5. 初始化 Rerank 模型（本地加载，避免每次查询重复加载）
+            # LLM/VLM/Embedding 通过 LiteLLM 统一调用；
+            # Reranker 因当前网关不支持该能力，继续在本地加载并缓存。
             self._init_rerank_model()
 
             self._initialized = True
@@ -104,10 +106,6 @@ class ModelFactory:
         if not ModelFactory._openai_client:
             raise RuntimeError("ModelFactory 未正确初始化 OpenAI Client")
         return ModelFactory._openai_client
-
-    def setup_cuda_device(self, device_str: str = "0") -> str:
-        """旧接口兼容方法"""
-        return ModelFactory._device
 
     def _init_rerank_model(self):
         """内部方法：在启动时预先加载 Rerank 模型，避免每次查询重复加载"""
@@ -199,18 +197,22 @@ class ModelFactory:
                 yield delta.content
 
     def get_vlm_model(self, vlm_short_name: str = "Qwen/Qwen3-VL-32B-Instruct"):
-        """
-        [LiteLLM 模式適配] 
-        原本返回本地 VLM 模型與 Processor，現統一返回 LiteLLM OpenAI Client 
-        以及對應的模型名稱，供上層流水線透過標準 Chat Completions (Vision) 進行多模態推理。
-        """
+        """获取 LiteLLM/OpenAI 兼容的 Vision 客户端与模型名称。
+           VLM 不在本地加载，实际推理由网关完成。"""
         logging.info(f"ℹ️ 委託 ModelFactory: VLM 模型 [{vlm_short_name}] 已轉由 LiteLLM 統一代理調度。")
         return self.get_llm_client(), vlm_short_name
 
     # 兼容性空实现或显存监控方法，防范旧逻辑调用报错
     @classmethod
     def destroy_all_models_cls(cls):
-        logging.info("ℹ️ LiteLLM 模式下无本地 LLM/VLM 模型显存需要物理销毁。")
+        logging.info("釋放本地 Renanker 模型資源（若已加載）...")
+
+        cls._rerank_model = None
+        cls._rerank_tokenizer = None
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            logging.info("✅ GPU 显存已清理。")
 
     def resolve_model_path(self, model_name_or_path: str) -> str:
         """

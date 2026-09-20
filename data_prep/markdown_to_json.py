@@ -35,7 +35,6 @@ class DocConfig:
         namespace_seed: str = "RAG_2026",
         image_url_prefix: str = "",
         pdf_url_prefix: str = "",
-        cuda_device: str = "0",
         yaml_rules_path: str = "heading_rules.yaml",    # 规则配置文件
         yaml_prompts_path: str = "prompt_hub.yaml",      # 提示词库文件
         llm_model_name: str = "qwen3-4b"  # 🟢 新增：支援接收模型名稱
@@ -45,7 +44,6 @@ class DocConfig:
         self.namespace_seed = namespace_seed
         self.image_url_prefix = image_url_prefix
         self.pdf_url_prefix = pdf_url_prefix
-        self.cuda_device = cuda_device
         self.yaml_rules_path = yaml_rules_path
         self.yaml_prompts_path = yaml_prompts_path
         self.llm_model_name = llm_model_name
@@ -101,9 +99,6 @@ class DocProcessor:
             cache_dir=config.cache_dir
         )
 
-        # 统一设置 GPU 算力硬件
-        self.device = self.model_factory.setup_cuda_device(config.cuda_device)
-
         # 加载 Markdown 校准规则与提示词
         self.heading_rules = self.config.heading_rules  # 对应第一个 YAML 的切分规则
         self.prompts = self.config.prompts              # 对应第二个 YAML 的提示词库
@@ -157,26 +152,6 @@ class DocProcessor:
             logging.warning(f"⚠️ 讀取模型名稱發生異常，採用預設值 {current_model}: {e}")
             
         return self._llm_model, current_model
-
-
-    def _init_llm_engine(self, model_name: str = None):
-        """⚡ 通过工厂懒加载纯文本 LLM 客户端代理，支持动态指定模型名称"""
-        # 如果未顯式傳入 model_name，則嘗試從 config 或 YAML 讀取
-        if model_name is None:
-            if hasattr(self.config, "get"):
-                model_name = self.config.get("llm_model_name", "qwen3-8b")
-            elif isinstance(self.config, dict):
-                model_name = self.config.get("llm_model_name", "qwen3-8b")
-            else:
-                model_name = "qwen3-8b"
-
-        # 如果底層客戶端尚未初始化，則進行初始化
-        if self._llm_model is None:
-            logging.info(f"🤖 正在调起文本 LLM 客户端 (目标模型: {model_name})")
-            self._llm_model = self.model_factory.get_llm_client()
-
-        return self._llm_model, model_name
-
 
     def generate_entity_uuid(self, name: str, entity_type: str) -> str:
         """确定性 UUID v5 生成算法"""

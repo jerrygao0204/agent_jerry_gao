@@ -1,0 +1,225 @@
+{
+    "doc_metadata": {
+        "file_name": "/workspace/hf-conda/RAG/agent_jerry_gao-main/other/finebi_output/函数专题/1_函数新手入门/3_运算符和优先级.pdf/3_运算符和优先级.json",
+        "file_url": "https://your-oss-bucket.com/finebi/pdfs/3_运算符和优先级.pdf",
+        "path_hierarchy": [
+            "3_运算符和优先级"
+        ],
+        "md5": "2709fdaaa3571bf4d1b0f781646207ac",
+        "processed_at": "2026-09-20 01:53:25",
+        "total_segments": 3,
+        "entity_summary": "算术运算符(算术运算符) | 比较运算符(比较运算符) | 逻辑运算符(逻辑运算符) | 字符串拼接运算符(字符串拼接运算符)",
+        "all_entity_uuids": [
+            "ef3219f6-a34e-5fa9-baa2-58c2c4bd8090",
+            "2261797c-3df6-5928-ad14-146fec6389b3",
+            "1c0020f3-3e44-52ee-83bf-d076732fa170",
+            "9bcecd70-cfd9-545b-aad9-80346cfed721"
+        ],
+        "business_profile": {
+            "summary": "FineBI运算符使用指南：涵盖算术/比较/逻辑运算符定义与示例，说明公式运算优先级规则及括号使用规范。关键限制：逻辑运算符仅支持布尔/数值表达式连接。",
+            "business_scene": "数据分析与报表制作",
+            "user_level": "进阶",
+            "content_keywords": [
+                {
+                    "word": "运算符",
+                    "score": 0.9
+                },
+                {
+                    "word": "优先级",
+                    "score": 0.85
+                },
+                {
+                    "word": "逻辑运算符",
+                    "score": 0.8
+                },
+                {
+                    "word": "括号使用",
+                    "score": 0.75
+                },
+                {
+                    "word": "公式计算",
+                    "score": 0.7
+                },
+                {
+                    "word": "字符串拼接",
+                    "score": 0.65
+                },
+                {
+                    "word": "负号",
+                    "score": 0.6
+                },
+                {
+                    "word": "乘方",
+                    "score": 0.55
+                }
+            ],
+            "core_entities": [
+                {
+                    "name": "算术运算符",
+                    "type": "算术运算符"
+                },
+                {
+                    "name": "比较运算符",
+                    "type": "比较运算符"
+                },
+                {
+                    "name": "逻辑运算符",
+                    "type": "逻辑运算符"
+                },
+                {
+                    "name": "字符串拼接运算符",
+                    "type": "字符串拼接运算符"
+                }
+            ],
+            "operation_constraints": [
+                "逻辑运算符只能连接两个布尔或数值类型的表达式。",
+                "若要更改计算顺序，需要将公式中要先计算的部分用括号括起来。"
+            ]
+        }
+    },
+    "milvus_payloads": [
+        {
+            "content": "算术运算符 | 示例 | 结果  \n比较运算符 | 含义 | 示例  \n逻辑运算符 | 含义 | 示例  \n<table border='1'>\n<tr>\n<th>逻辑运算符</th>\n<th>含义</th>\n<th>示例</th>\n</tr>\n<tr>\n<td>&&</td>\n<td>逻辑与，同时满足多个表达式条件</td>\n<td>销售额 >=10&& 销售人数 >=2</td>\n</tr>\n<tr>\n<td>||</td>\n<td>逻辑或，只要满足多个表达式条件中的一个即可</td>\n<td>销售额 >=10|| 销售人数 >=2</td>\n</tr>\n</table>  \n注：逻辑运算符只能连接两个布尔或数值类型的表达式。  \n2.4 字符串拼接运算符  \n可以使用 + 运算符对文本字段进行合并。  \n例如：将文本字段「店风格」和「店名」拼接在一起，当然可以使用 CONCATENATE 字段，但更简单的方案是直接使用「+」，如下图所示：",
+            "entity_uuids": [
+                "ef3219f6-a34e-5fa9-baa2-58c2c4bd8090",
+                "2261797c-3df6-5928-ad14-146fec6389b3",
+                "1c0020f3-3e44-52ee-83bf-d076732fa170",
+                "9bcecd70-cfd9-545b-aad9-80346cfed721"
+            ],
+            "metadata": {
+                "chunk_id": "3_运算符和优先级.pdf_h_0",
+                "source_file": "3_运算符和优先级.pdf",
+                "md5": "c7b4f43c45ae9c7d709f493f9d67e417",
+                "local_index": 0,
+                "prev_chunk_id": null,
+                "next_chunk_id": "3_运算符和优先级.pdf_h_1",
+                "hierarchy": {
+                    "H1": "1. 概述"
+                },
+                "chunk_type": "Table",
+                "chunk_summary": "逻辑运算符及字符串拼接运算符的定义、示例与使用约束",
+                "symbol_raw": [
+                    "&&",
+                    "||",
+                    "+"
+                ],
+                "core_entities": [
+                    {
+                        "name": "逻辑运算符",
+                        "type": "技术概念"
+                    },
+                    {
+                        "name": "布尔或数值类型表达式",
+                        "type": "技术概念"
+                    },
+                    {
+                        "name": "字符串拼接运算符",
+                        "type": "技术概念"
+                    }
+                ],
+                "operation_constraints": [
+                    "逻辑运算符只能连接两个布尔或数值类型的表达式"
+                ],
+                "scene": "数据分析与报表制作",
+                "image_map": {},
+                "image_urls": [],
+                "section_id": "1. 概述"
+            }
+        },
+        {
+            "content": "<table border='1'>\n<tr>\n<th>优先级</th>\n<th>运算符</th>\n<th>含义</th>\n<th>使用形式</th>\n<th>结合方向</th>\n</tr>\n<tr>\n<td>1</td>\n<td>-</td>\n<td>负号</td>\n<td>- 表达式</td>\n<td>右到左</td>\n</tr>\n<tr>\n<td>2</td>\n<td>^</td>\n<td>乘方</td>\n<td>表达式 ^ 表达式</td>\n<td>左到右</td>\n</tr>\n<tr>\n<td>3</td>\n<td>*</td>\n<td>乘</td>\n<td>表达式 * 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td>/</td>\n<td>除</td>\n<td>表达式 / 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td>%</td>\n<td>取余</td>\n<td>表达式 % 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td>4</td>\n<td>+</td>\n<td>加</td>\n<td>表达式 + 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td>-</td>\n<td>减</td>\n<td>表达式 - 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td>5</td>\n<td>></td>\n<td>大于</td>\n<td>表达式 > 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td><</td>\n<td>小于</td>\n<td>表达式 < 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td>>=</td>\n<td>大于等于</td>\n<td>表达式 >= 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td><=</td>\n<td>小于等于</td>\n<td>表达式 <= 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td>6</td>\n<td>=、==</td>\n<td>等于</td>\n<td>表达式 = 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td></td>\n<td></td>\n<td>表达式 == 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td></td>\n<td>!=</td>\n<td>不等于</td>\n<td>表达式 != 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td>7</td>\n<td>&&</td>\n<td>逻辑与</td>\n<td>表达式 && 表达式</td>\n<td></td>\n</tr>\n<tr>\n<td>8</td>\n<td>||</td>\n<td>逻辑或</td>\n<td>表达式 || 表达式</td>\n<td></td>\n</tr>\n</table>",
+            "entity_uuids": [],
+            "metadata": {
+                "chunk_id": "3_运算符和优先级.pdf_h_1",
+                "source_file": "3_运算符和优先级.pdf",
+                "md5": "72b38dcfb70b9610f25855f4fccbb35c",
+                "local_index": 1,
+                "prev_chunk_id": "3_运算符和优先级.pdf_h_0",
+                "next_chunk_id": "3_运算符和优先级.pdf_h_2",
+                "hierarchy": {
+                    "H1": "公式运算的次序",
+                    "H2": "3.1 运算符优先级"
+                },
+                "chunk_type": "Table",
+                "chunk_summary": "运算符优先级表，包含运算符、含义、使用形式及结合方向",
+                "symbol_raw": [
+                    "-",
+                    "^",
+                    "*",
+                    "/",
+                    "%",
+                    "+",
+                    "-",
+                    ">",
+                    "<",
+                    ">=",
+                    "<=",
+                    "=",
+                    "==",
+                    "!=",
+                    "&&",
+                    "||"
+                ],
+                "core_entities": [
+                    {
+                        "name": "运算符",
+                        "type": "运算符"
+                    },
+                    {
+                        "name": "优先级",
+                        "type": "优先级等级"
+                    },
+                    {
+                        "name": "结合方向",
+                        "type": "运算顺序规则"
+                    }
+                ],
+                "operation_constraints": [
+                    "高优先级运算符先计算",
+                    "结合方向决定运算顺序"
+                ],
+                "scene": "数据分析与报表制作",
+                "image_map": {},
+                "image_urls": [],
+                "section_id": "3.1 运算符优先级"
+            }
+        },
+        {
+            "content": "若要更改计算顺序，需要将公式中要先计算的部分用括号括起来。",
+            "entity_uuids": [],
+            "metadata": {
+                "chunk_id": "3_运算符和优先级.pdf_h_2",
+                "source_file": "3_运算符和优先级.pdf",
+                "md5": "27d17a71e12798f9dd251ca6531fcbfb",
+                "local_index": 2,
+                "prev_chunk_id": "3_运算符和优先级.pdf_h_1",
+                "next_chunk_id": null,
+                "hierarchy": {
+                    "H1": "公式运算的次序",
+                    "H2": "3.2 使用括号计算方式"
+                },
+                "chunk_type": "Definition",
+                "chunk_summary": "说明通过括号改变公式计算顺序的方法。",
+                "symbol_raw": [
+                    "("
+                ],
+                "core_entities": [
+                    {
+                        "name": "公式",
+                        "type": "技术概念"
+                    },
+                    {
+                        "name": "计算顺序",
+                        "type": "业务需求"
+                    }
+                ],
+                "operation_constraints": [],
+                "scene": "数据分析与报表制作",
+                "image_map": {},
+                "image_urls": [],
+                "section_id": "3.2 使用括号计算方式"
+            }
+        }
+    ],
+    "raw_markdown": "# 1. 概述\n\n算术运算符 | 示例 | 结果\n\n比较运算符 | 含义 | 示例\n\n逻辑运算符 | 含义 | 示例\n\n<table border='1'>\n  <tr>\n    <th>逻辑运算符</th>\n    <th>含义</th>\n    <th>示例</th>\n  </tr>\n  <tr>\n    <td>&&</td>\n    <td>逻辑与，同时满足多个表达式条件</td>\n    <td>销售额 >=10&& 销售人数 >=2</td>\n  </tr>\n  <tr>\n    <td>||</td>\n    <td>逻辑或，只要满足多个表达式条件中的一个即可</td>\n    <td>销售额 >=10|| 销售人数 >=2</td>\n  </tr>\n</table>\n\n注：逻辑运算符只能连接两个布尔或数值类型的表达式。\n\n2.4 字符串拼接运算符\n\n可以使用 + 运算符对文本字段进行合并。\n\n例如：将文本字段「店风格」和「店名」拼接在一起，当然可以使用 CONCATENATE 字段，但更简单的方案是直接使用「+」，如下图所示：\n\n# 公式运算的次序\n\n## 3.1 运算符优先级\n\n<table border='1'>\n  <tr>\n    <th>优先级</th>\n    <th>运算符</th>\n    <th>含义</th>\n    <th>使用形式</th>\n    <th>结合方向</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>-</td>\n    <td>负号</td>\n    <td>- 表达式</td>\n    <td>右到左</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>^</td>\n    <td>乘方</td>\n    <td>表达式 ^ 表达式</td>\n    <td>左到右</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>*</td>\n    <td>乘</td>\n    <td>表达式 * 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td>/</td>\n    <td>除</td>\n    <td>表达式 / 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td>%</td>\n    <td>取余</td>\n    <td>表达式 % 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td>4</td>\n    <td>+</td>\n    <td>加</td>\n    <td>表达式 + 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td>-</td>\n    <td>减</td>\n    <td>表达式 - 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td>5</td>\n    <td>></td>\n    <td>大于</td>\n    <td>表达式 > 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td><</td>\n    <td>小于</td>\n    <td>表达式 < 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td>>=</td>\n    <td>大于等于</td>\n    <td>表达式 >= 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td><=</td>\n    <td>小于等于</td>\n    <td>表达式 <= 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td>6</td>\n    <td>=、==</td>\n    <td>等于</td>\n    <td>表达式 = 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td></td>\n    <td></td>\n    <td>表达式 == 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td></td>\n    <td>!=</td>\n    <td>不等于</td>\n    <td>表达式 != 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td>7</td>\n    <td>&&</td>\n    <td>逻辑与</td>\n    <td>表达式 && 表达式</td>\n    <td></td>\n  </tr>\n  <tr>\n    <td>8</td>\n    <td>||</td>\n    <td>逻辑或</td>\n    <td>表达式 || 表达式</td>\n    <td></td>\n  </tr>\n</table>\n\n## 3.2 使用括号计算方式\n\n## 3.2 使用括号计算方式\n\n若要更改计算顺序，需要将公式中要先计算的部分用括号括起来。"
+}

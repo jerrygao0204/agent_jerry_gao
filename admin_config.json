@@ -1,13 +1,13 @@
 {
-    "output_root": ".",
-    "prompts_hub_path": "/workspace/hf-conda/RAG/问答机器人/config/prompt_hub.yaml",
-    "patterns_path": "/workspace/hf-conda/RAG/问答机器人/config/patterns.yaml",
+    "output_root": "/workspace/hf-conda/RAG/agent_jerry_gao-main/other/finebi_output/函数专题/1_函数新手入门/3_运算符和优先级.pdf",
+    "prompts_hub_path": "/workspace/hf-conda/RAG/agent_jerry_gao-main/config/prompt_hub.yaml",
+    "patterns_path": "/workspace/hf-conda/RAG/agent_jerry_gao-main/config/patterns.yaml",
     "img_prefix": "https://your-oss-bucket.com/finebi/docs/images",
     "pdf_prefix": "https://your-oss-bucket.com/finebi/pdfs/",
     "namespace_seed": "FineBI_RAG_2026",
     "milvus_host": "172.17.0.1",
     "collection_name": "finebi_knowledge_chunks",
-    "vlm_model_name": "Qwen--Qwen3-VL-32B-Instruct",
-    "llm_model_name": "Qwen/Qwen3-32B",
+    "vlm_model_name": "qwen3-vl-4b",
+    "llm_model_name": "qwen3-4b",
     "score_threshold": 80.0
 }

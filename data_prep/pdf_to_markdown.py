@@ -48,23 +48,23 @@ def print_mem(tag=""):
 
 
 class MarkdownProcessor:
-    def __init__(self, prompt_hub_path="prompt_hub.yaml", cache_dir="/workspace/hf-conda/hf_cache/hub"):
+    def __init__(self, prompt_hub_path="prompt_hub.yaml"):
         self.prompt_hub_path = prompt_hub_path
-        # 实例化 ModelFactory（自动建立软链接并加载 prompt 资产）
-        self.factory = ModelFactory(prompt_hub_path=prompt_hub_path, cache_dir=cache_dir)
+        # 实例化 ModelFactory 并加载 prompt_hub.yaml
+        self.factory = ModelFactory(prompt_hub_path=prompt_hub_path)
         self.prompts = self.factory.prompts
 
-    def load_prompts(self):
-        """复用 ModelFactory 的 prompt 资源"""
-        return self.factory.prompts
+    # def load_prompts(self):
+    #     """复用 ModelFactory 的 prompt 资源"""
+    #     return self.factory.prompts
 
-    def resolve_model_path(self, short_name, cache_dir="/workspace/hf-conda/hf_cache/hub"):
-        """委托给 ModelFactory 统一进行路径解析"""
-        return self.factory.resolve_model_path(short_name)
+    # def resolve_model_path(self, short_name, cache_dir="/workspace/hf-conda/hf_cache/hub"):
+    #     """委托给 ModelFactory 统一进行路径解析"""
+    #     return self.factory.resolve_model_path(short_name)
 
     
     def get_vlm_model(self, vlm='Qwen--Qwen3-VL-32B-Instruct'):
-        """委托 ModelFactory 统一进行多模态模型加载与预热"""
+        """委托 ModelFactory 獲取 LiteLLm/OpenAI 兼容的 Vision 客戶端模型與模型名稱"""
         return self.factory.get_vlm_model(vlm_short_name=vlm)
 
     @staticmethod
@@ -797,24 +797,6 @@ class MarkdownProcessor:
                 logging.error(f"❌ 第 {idx+1} 個切片 API 推理失敗: {e}")
                 tile_output = ""
 
-            # messages = [{"role": "user", "content": content_list}]
-            # text = vl_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            
-            # # 🔥🔥 关键修正：通过配置让 Processor 针对窄长图智能分配最佳 Patch，绝不进行压扁缩放
-            # inputs = vl_processor(
-            #     text=[text], 
-            #     images=current_input_images, 
-            #     padding=True, 
-            #     return_tensors="pt"
-            # ).to(vl_model.device)
-
-            # with torch.no_grad():
-            #     # 配合 do_sample=False 稳定输出，适当降低惩罚防止表格标签被截断
-            #     generated_ids = vl_model.generate(**inputs, max_new_tokens=4096, do_sample=False, repetition_penalty=1.1, no_repeat_ngram_size=10)
-            # generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
-            # tile_output = vl_processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-            
-
             # ─── 4. 状态机更新与全局 Y 轴还原（X轴不再需要缩放因子） ─────────────────────────
 
             
@@ -1320,8 +1302,6 @@ class MarkdownProcessor:
         page_w = page.rect.width
         page_h = page.rect.height
 
-        vl_model, vl_processor = self.get_vlm_model(vlm)
-
         table_special_prompt = self.prompts.get("table_special_prompt_single_column")
 
         results = []
@@ -1394,31 +1374,7 @@ class MarkdownProcessor:
                 logging.error(f"❌ 表格 VLM API 推理失败: {e}")
                 output = ""
 
-            # messages = [{"role": "user", "content": [
-            #     {"type": "image", "image": img},
-            #     {"type": "text",  "text": table_special_prompt},
-            # ]}]
-            # text_input = vl_processor.apply_chat_template(
-            #     messages, tokenize=False, add_generation_prompt=True
-            # )
-            # inputs = vl_processor(
-            #     text=[text_input], images=[img], return_tensors="pt"
-            # ).to(vl_model.device)
-            # logging.info(f"  🤖 开始VLM推理...") 
-            # with torch.no_grad():
-            #     generated_ids = vl_model.generate(
-            #         **inputs, max_new_tokens=2048, do_sample=False
-            #     )
-
-            # trimmed = [o[len(i):] for i, o in zip(inputs.input_ids, generated_ids)]
-            # output  = vl_processor.batch_decode(
-            #     trimmed, skip_special_tokens=True,
-            #     clean_up_tokenization_spaces=False
-            # )[0]
             logging.info(f"  ✅ VLM推理完成，输出长度: {len(output)}")
-            # del inputs, generated_ids, img
-            # if torch.cuda.is_available():
-            #     torch.cuda.empty_cache()
             
             html_match = re.search(r"```html\s*(.*?)```", output, re.DOTALL)
             

@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 
 
 class LLMClient:
-    def __init__(self, default_model_name: str = "qwen3-embedding-4b"):
+    def __init__(self, default_model_name: str = "qwen3-4b"):
         self.default_model_name = default_model_name
         self.factory = ModelFactory()
 
@@ -26,8 +26,7 @@ class LLMClient:
         messages: Optional[List[Dict[str, str]]] = None,
         model_name: Optional[str] = None,
         max_new_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs
+        temperature: float = 0.7
     ) -> Generator[str, None, None]:
         target_model = model_name or self.default_model_name
 
