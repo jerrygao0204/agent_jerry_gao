@@ -15,6 +15,6 @@ class DatasetSummaryTool(BaseTool):
     args_schema = DatasetSummaryInput
     is_read_only: bool = True
 
-    def run(self, dataset_name: str,query: str, **kwargs) -> str:
+    def run(self, table_name: str,query: str, **kwargs) -> str:
         # 模拟数据分析执行逻辑
-        return f"数据集 [{dataset_name}] 摘要: 內容{query}共 10,000 行，15 列，更新时间: 2026-08-25"
+        return f"数据集 [{table_name}] 摘要: 內容{query}共 10,000 行，15 列，更新时间: 2026-08-25"

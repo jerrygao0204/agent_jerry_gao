@@ -323,41 +323,6 @@ prompts:
       请严格仅返回 JSON 数组格式的领域代码，例如: [\"rag_knowledge\"]，不要输出任何额外内容。
 
   - name: agent_react_prompt
-    description: Standard ReAct 循环推理引擎，支持 Thought-Action-Action_Input-Observation 迭代
-    author: gao
-    tags: [agent, react, loop, tool-use]
-    content: |
-      尽可能回答以下问题。你可以使用以下工具：
-
-      {tools_description}
-
-      请严格按照以下格式进行思考和调用工具：
-
-      Question: 你需要回答的输入问题
-      Thought: 你应该总是思考下一步要做什么
-      Action: 要调用的工具名称（必须是 [{tool_names}] 中的一个）
-      Action Input: 传递给工具的 JSON 格式参数（必须是合法 JSON 字符串，例如：{{"query_text": "数据源连接失败"}}）
-      Observation: 工具返回的结果
-
-      ... (这个 Thought/Action/Action Input/Observation 过程可以重复 N 次)
-
-      Thought: 我现在知道最终答案了
-      Final Answer: 针对原始输入问题的最终回答
-      
-      ⚠️【重要指令】：
-      1. 当你输出 Action 和 Action Input 后，必须立即停止输出！绝对不能自己编写 Observation！等待系统执行工具并填入真实 Observation 后，你才能进行下一轮 Thought！
-      2. 【未检索到内容时的兜底处理】：如果工具返回结果提示“未在知识库中检索到有效参考内容”或无相关结果：
-         - **严禁**直接将“未在知识库中检索到有效参考内容”作为 Final Answer 输出！
-         - 你的 Thought 应该转为：“知识库中未查到精确匹配内容，我需要基于已有的通用知识和逻辑，为用户提供解答和建议。”
-         - 在 Final Answer 中，**必须先明确提示**：“⚠️ 专属知识库中未检索到完全匹配的文档说明。”
-         - 随后**利用你自身的通用知识库**给出针对问题的排查步骤、可能原因或解决建议，并提示用户该回答仅供参考。
-      
-      开始！
-
-      Question: {input}
-      Thought: {agent_scratchpad}
-
-  - name: agent_react_prompt
     description: CodeAct 风格 ReAct 引擎，通过编写并执行 Python 代码调用工具 (Code Execution)
     author: gao
     tags: [agent, react, codeact, tool-use]
@@ -380,6 +345,8 @@ prompts:
         FINAL_RESULT = res
         ```
       5. **终止条件**：只有在 Observation 中明确收到工具返回的真实数据后，你才可以在后续轮次输出 `Final Answer: ...`，此时不要再生成代码块。
+      6. **参数不明确时的合法退出**：如果调用工具所需的关键参数（如表名、数据源名称）不明确或存疑，严禁编造"已调用工具"的叙述性文字，也不要生成代码，直接输出：
+         `Final Answer: <向用户提出的澄清问题>`
 
       开始！
 

@@ -1,0 +1,66 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "你好",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "你好！我是 CodeAct 智能助手，请问有什么可以帮您？",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "请问怎么创建预警用户？",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "根据知识库检索结果，创建预警用户的步骤为：1. 打开系统设置；2. 点击新增预警用户。",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "触发自纠错",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "已成功通过纠错后的接口检索到内容。",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "缺失变量",
+    "timestamp": "2026-09-21 18:26:48",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "计算完成，执行结果为: 30",
+    "timestamp": "2026-09-21 18:26:49",
+    "is_active": true,
+    "status": "valid"
+  }
+]

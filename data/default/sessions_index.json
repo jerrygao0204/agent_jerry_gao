@@ -268,5 +268,14 @@
     "updated_at": "2026-09-21 13:32:02",
     "is_deleted": false,
     "status": "active"
+  },
+  "3978cf2f-29a9-40ff-8ecc-0f8452162937": {
+    "session_id": "3978cf2f-29a9-40ff-8ecc-0f8452162937",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-21 18:26:48",
+    "updated_at": "2026-09-21 18:26:49",
+    "is_deleted": false,
+    "status": "active"
   }
 }

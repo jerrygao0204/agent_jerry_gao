@@ -403,7 +403,7 @@ class ReActAgent:
         # 1. 组合系统层指令：双源 Context + CodeAct / Tool 规则
         system_content = (
             f"{self.merged_context_prompt}\n\n"
-            f"你是一个 CodeAct Agent。请基于用户问题与以上约束解决任务。\n"
+            f"{self.system_prompt_template.split('开始！')[0]}\n\n"  # 取出规则部分，不含 Question/scratchpad 占位符
             f"可用工具规范:\n{tools_description}"
         )
         
@@ -425,9 +425,9 @@ class ReActAgent:
         logger.info("🧩 [Assemble Messages] 拼装完成的 Message 结构如下:")
         logger.info(f"  ├─ Message 帧数 (Total Frames): {len(messages)}")
         logger.info(f"  ├─ System Prompt 字符数: {len(system_content)}")
-        logger.info("  ├─ [System Frame 内容 (前 500 字符)]:")
-        # 打印 System 帧前 500 字符，用于验证双源 Context 是否正确注入
-        sys_preview = system_content[:500].replace('\n', '\n  │   ')
+        logger.info("  ├─ [System Frame 内容 (前 5000 字符)]:")
+        # 打印 System 帧前 5000 字符，用于验证双源 Context 是否正确注入
+        sys_preview = system_content[:5000].replace('\n', '\n  │   ')
         logger.info(f"  │   {sys_preview} ...\n  │")
         
         # 打印 User 帧/当前输入
@@ -637,11 +637,12 @@ class ReActAgent:
                     )
 
                 else:
-                    final_ans = clean_response.strip()
-                    yield self._yield_step("final_answer", final_ans)
-                    self.memory_mgr.process_assistant_output(final_ans)
-                    self.memory_mgr.commit()
-                    return
+                    logger.warning(f"[格式违规] 第 {iteration} 轮响应未包含代码块也无 Final Answer 前缀，判定为格式违规，触发重试")
+                    scratchpad += (
+                        f"Observation: [格式错误] 你的上一轮回复未包含 ```python 代码块，"
+                        f"也未以 'Final Answer:' 开头。请严格按规定格式重新输出。\n\n"
+                    )
+                    continue  # 而不是 return
 
         except Exception as e:
             logger.error(f"CodeAct 运行捕获异常: {e}")
