@@ -1,3 +1,4 @@
+# memory/chat_history_file.py
 import os
 import json
 import datetime
@@ -6,18 +7,18 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from config.config_loader import config_loader
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-from config.config_loader import config_loader    
 from atomic_io import file_lock_for, atomic_dump_json
 
 logger = logging.getLogger("ChatHistoryFile")
 
 
 class ChatHistoryFileStorage:
-    """基于 JSON 文件存储历史对话与会话清单（按 user_id 划分独立存储路径，支持 Soft Delete Schema）"""
+    """基于 JSON 文件存储历史对话与会话清单（按 user_id 划分独立存储路径）"""
 
     def __init__(self, base_dir: Optional[str] = None):
         if base_dir is None:
@@ -36,23 +37,6 @@ class ChatHistoryFileStorage:
     def _get_session_file_path(self, user_id: str, session_id: str) -> str:
         return os.path.join(self._get_user_dir(user_id), f"session_{session_id}.json")
 
-    # ==========================================
-    # 🔄 向下兼容归一化函数 (Backward Compatibility)
-    # ==========================================
-    def _normalize_session_record(self, session: Dict[str, Any]) -> Dict[str, Any]:
-        """为旧版 sessions_index.json 节点补齐软删除默认字段"""
-        if isinstance(session, dict):
-            session.setdefault("is_deleted", False)
-            session.setdefault("status", "active")
-        return session
-
-    def _normalize_message_record(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """为旧版 session_xxxx.json Message 节点补齐状态默认字段"""
-        if isinstance(message, dict):
-            message.setdefault("is_active", True)
-            message.setdefault("status", "valid")
-        return message
-
     def _load_json(self, path: str) -> Any:
         if not os.path.exists(path):
             return {}
@@ -63,46 +47,19 @@ class ChatHistoryFileStorage:
             logger.error(f"❌ 读取文件失败 ({path}): {e}")
             return {}
 
-    def _load_sessions(self, user_id: str) -> Dict[str, Any]:
-        """安全读取 sessions_index.json 并执行向下兼容归一化"""
-        sessions_file = self._get_sessions_file(user_id)
-        data = self._load_json(sessions_file)
-        if not isinstance(data, dict):
-            return {}
-        
-        # 对每一个 session 节点执行归一化
-        for s_id, s_data in data.items():
-            data[s_id] = self._normalize_session_record(s_data)
-        return data
-
-    def _load_messages(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
-        """安全读取 session_xxxx.json 并执行 Message 节点归一化"""
-        session_file = self._get_session_file_path(user_id, session_id)
-        data = self._load_json(session_file)
-        if not isinstance(data, list):
-            return []
-            
-        # 对每一条 message 节点执行归一化
-        return [self._normalize_message_record(msg) for msg in data]
-
-    # ==========================================
-    # 🛠️ 会话与消息读写操作
-    # ==========================================
     def create_session(self, user_id: str, session_id: str, title: str = "新对话"):
-        """创建新会话索引（自动包含 is_deleted 与 status 字段）"""
+        """创建新会话索引"""
         sessions_file = self._get_sessions_file(user_id)
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         with file_lock_for(sessions_file):
-            sessions = self._load_sessions(user_id)
+            sessions = self._load_json(sessions_file)
             sessions[session_id] = {
                 "session_id": session_id,
                 "user_id": user_id,
                 "title": title,
                 "created_at": now,
                 "updated_at": now,
-                "is_deleted": False,      # P0 Soft Delete Schema
-                "status": "active"        # P0 Soft Delete Schema
             }
             atomic_dump_json(sessions_file, sessions)
 
@@ -112,13 +69,13 @@ class ChatHistoryFileStorage:
                 atomic_dump_json(session_file, [])
 
     def add_message(self, user_id: str, session_id: str, role: str, content: str):
-        """追加问答消息到指定用户的 session JSON 文件中（自动包含 is_active 与 status 字段）"""
+        """追加问答消息到指定用户的 session JSON 文件中"""
         sessions_file = self._get_sessions_file(user_id)
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # 1. 维护会话标题与更新时间
+        # 1. 维护会话标题与更新时间：读-改-写整段包在锁里
         with file_lock_for(sessions_file):
-            sessions = self._load_sessions(user_id)
+            sessions = self._load_json(sessions_file)
             if session_id not in sessions:
                 title = content[:15] + "..." if len(content) > 15 else content
                 sessions[session_id] = {
@@ -127,46 +84,46 @@ class ChatHistoryFileStorage:
                     "title": title,
                     "created_at": now,
                     "updated_at": now,
-                    "is_deleted": False,
-                    "status": "active"
                 }
             else:
                 if sessions[session_id].get("title") == "新对话" and role == "user":
                     sessions[session_id]["title"] = content[:15] + "..." if len(content) > 15 else content
                 sessions[session_id]["updated_at"] = now
-                
             atomic_dump_json(sessions_file, sessions)
 
-        # 2. 追加消息内容
+        # 2. 追加消息内容：读-改-写整段包在锁里
         session_file = self._get_session_file_path(user_id, session_id)
         with file_lock_for(session_file):
-            messages = self._load_messages(user_id, session_id)
+            messages = self._load_json(session_file)
+            if not isinstance(messages, list):
+                messages = []
             messages.append({
                 "user_id": user_id,
                 "role": role,
                 "content": content,
                 "timestamp": now,
-                "is_active": True,        # P0 Soft Delete Schema
-                "status": "valid"         # P0 Soft Delete Schema
             })
             atomic_dump_json(session_file, messages)
 
     def get_user_sessions(self, user_id: str, limit: int = 30) -> List[Dict[str, Any]]:
-        """获取指定用户的最近对话清单（自动补全 Schema）"""
-        sessions = self._load_sessions(user_id)
+        """获取指定用户的最近对话清单"""
+        sessions_file = self._get_sessions_file(user_id)
+        sessions = self._load_json(sessions_file)
         user_sessions = list(sessions.values())
         user_sessions.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
         return user_sessions[:limit]
 
-    def get_session_messages(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
-        """获取指定用户的某个会话全量聊天记录（自动补全 Schema）"""
-        return self._load_messages(user_id, session_id)
+    def get_session_messages(self, user_id: str, session_id: str) -> List[Dict[str, str]]:
+        """获取指定用户的某个会话全量聊天记录"""
+        session_file = self._get_session_file_path(user_id, session_id)
+        messages = self._load_json(session_file)
+        return messages if isinstance(messages, list) else []
 
     def delete_session(self, user_id: str, session_id: str):
         """删除某个会话索引及对应的 JSON 文件"""
         sessions_file = self._get_sessions_file(user_id)
         with file_lock_for(sessions_file):
-            sessions = self._load_sessions(user_id)
+            sessions = self._load_json(sessions_file)
             if session_id in sessions:
                 del sessions[session_id]
                 atomic_dump_json(sessions_file, sessions)
@@ -177,7 +134,6 @@ class ChatHistoryFileStorage:
                 os.remove(session_file)
             except Exception as e:
                 logger.error(f"⚠️ 删除会话文件失败 ({session_file}): {e}")
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

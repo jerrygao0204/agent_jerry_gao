@@ -1,8 +1,8 @@
 # memory_growth/3_context_builder.py
-
 import json
 import logging
 from pathlib import Path
+import yaml
 from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -15,8 +15,28 @@ logger = logging.getLogger(__name__)
 class ContextBuilder:
     """語境構建器：將 layered_context.json 渲染為結構化 Markdown 系統語境"""
 
-    def __init__(self, data_dir: str):
+    def __init__(self, 
+                 data_dir: str,
+                prompt_hub_path: str = ""
+    ):
         self.data_dir = Path(data_dir)
+        self.prompt_hub_path = prompt_hub_path
+        self.prompt_hub = self._load_prompt_hub(prompt_hub_path)
+
+    def _load_prompt_hub(self, prompt_hub_path: str) -> Dict[str, Any]:
+        """從 YAML 加載 Prompt Hub 映射表 (按 name 建立索引)"""
+        hub_file = Path(prompt_hub_path)
+        if not hub_file.exists():
+            logger.error(f"❌ Prompt HUB 配置文件不存在: {prompt_hub_path}")
+            return {}
+        try:
+            with open(hub_file, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                prompts_list = data.get("prompts", [])
+                return {item["name"]: item["content"] for item in prompts_list if "name" in item}
+        except Exception as e:
+            logger.error(f"⚠️ 加載 Prompt HUB 失敗 ({prompt_hub_path}): {e}")
+            return {}
 
     def _load_json(self, file_path: Path) -> Dict[str, Any]:
         if not file_path.exists():
@@ -113,16 +133,18 @@ class ContextBuilder:
         state_sec = self._render_state(ctx.get("state", {}))
 
         # 組合 11 個標準模組範本結構
-        rendered_doc = (
-            "# SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY\n"
-            "====================================================\n"
-            "以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。\n\n"
-            f"{profile_sec}\n"
-            f"{state_sec}\n"
-            f"{memory_sec}\n"
-            "====================================================\n"
-            "END OF SYSTEM CONTEXT\n"
-        )
+        template = self.prompt_hub.get("context_builder_system_context_render_prompt")
+        
+        if template:
+            try:
+                rendered_doc = template.format(
+                    profile_sec=profile_sec,
+                    state_sec=state_sec,
+                    memory_sec=memory_sec
+                )
+            except Exception as e:
+                logger.error(f"⚠️ Template 渲染失敗: {e}，回退至預設渲染格式")
+                template = None
 
         self._save_text(output_text_path, rendered_doc)
         logger.info(f"✅ 成功渲染並導出 Context 文本至: {output_text_path}")
@@ -139,10 +161,15 @@ if __name__ == "__main__":
 
     test_user = "admin"
     paths = UserMemoryPathConfig(user_id=test_user)
+    prompt_hub_path = getattr(paths, "prompt_hub_path", "")
 
     print(f"--- 測試 3_context_builder.py (模組化渲染) [{test_user}] ---")
+    print(f"📜 Prompt Hub Path: {prompt_hub_path}")
 
-    builder = ContextBuilder(data_dir=str(paths.data_dir))
+    builder = ContextBuilder(
+        data_dir=str(paths.data_dir),
+        prompt_hub_path=str(prompt_hub_path)
+    )
     context_text = builder.build(
         layered_context_path=paths.layered_context_path,
         output_text_path=paths.user_prompt_context_path

@@ -3,7 +3,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 import os
 import sys
-
+from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
@@ -18,7 +18,15 @@ from memory.memory_manager import MemoryManager
 from agent.sandbox import SandboxExecutor
 from agent.tool_transport import ToolDispatcher
 
+# ==========================================
+# ⚙️ 2. 全局配置与用户凭证加载
+# ==========================================
+load_dotenv()
+
 logger = logging.getLogger("ReActAgent")
+context_logger = logging.getLogger("context_logger")
+
+DATA_DIR = os.path.join(project_root, "data")
 
 
 class ReActAgent:
@@ -36,13 +44,13 @@ class ReActAgent:
         package_router_prompt_template: Optional[str] = None,
         max_iterations: int = 5,
         user_role: Optional[str] = None,
+        user_state: Optional[Union[Dict[str, Any], str]] = None,
         memory_mgr: Optional[MemoryManager] = None,
         sandbox_timeout: int = 2,
         top_k_ret: int = 5,
         top_k_rerank: int = 3,
         filter_str: str = "",
-        min_query_length: int = 3
-    ):
+        min_query_length: int = 3):  
         # ---------------------------------------------------------------------
         # 💡 [适配 1]: 自动转换旧版参数 (llm_client 缺失时自动补全)
         # ---------------------------------------------------------------------
@@ -56,6 +64,7 @@ class ReActAgent:
         self.tool_factory = tool_factory or default_tool_factory
         self.prompt_hub = prompt_hub
         self.user_role = user_role
+        self.user_state = user_state or "default"
         # 优先使用 max_steps，无则使用 max_iterations
         self.max_iterations = max_steps if max_steps is not None else max_iterations
         
@@ -74,7 +83,86 @@ class ReActAgent:
         self.min_query_length = min_query_length
 
         self._init_prompts(system_prompt_template, router_prompt_template, package_router_prompt_template)
-        
+        self.merged_context_prompt = self._build_merged_context()
+    
+    # ---------------------------------------------------------------------
+    # 💡 [适配 0]: 合并双源 Context
+    # ---------------------------------------------------------------------
+
+    def get_user_context_filepath(self, user_info) -> str:
+        """获取指定 user_id 的 Context 文件绝对路径，不存在则创建文件夹"""
+        if isinstance(user_info, dict):
+            user_id = str(user_info.get("username") or user_info.get("user_id") or "default").strip()
+        elif isinstance(user_info, str) and user_info.strip():
+            user_id = user_info.strip()
+        else:
+            user_id = "default"
+
+        # 路径解析: data/{user_id}/user_prompt_context.txt
+        user_dir = os.path.join(DATA_DIR, user_id)
+        os.makedirs(user_dir, exist_ok=True)
+        return os.path.join(user_dir, "user_prompt_context.txt")
+
+    def _load_user_prompt_context(self) -> str:
+        """动态读取 data/{user_id}/user_prompt_context.txt"""
+        target_path = self.get_user_context_filepath(self.user_state)
+        if not os.path.exists(target_path):
+            return ""
+        try:
+            with open(target_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                logging.info(f"✅ 成功读取上下文 [{target_path}], 字符数: {len(content)}")
+                return content
+        except Exception as e:
+            logging.error(f"❌ 读取上下文失败 [{target_path}]: {e}")
+            return ""
+
+    def _load_system_memory_context(self) -> str:
+        """仅读取 Memory Growth 自动生成的 Context"""
+        if isinstance(self.user_state, dict):
+            username = self.user_state.get("username", "default")
+        elif isinstance(self.user_state, str):
+            username = self.user_state
+        else:
+            username = "default"
+        MEMORY_GROWTH_CONTEXT_DIR = os.path.join(project_root, "memory_growth", "context", "users","admin",'user_prompt_context.txt')
+        # 🎯 注意：此处保留您代码中的 MEMORY_GROWTH_CONTEXT_DIR 逻辑，必要时可拼接 username
+        target_path = os.path.join(MEMORY_GROWTH_CONTEXT_DIR)
+        if not os.path.exists(target_path):
+            return ""
+        try:
+            with open(target_path, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception as e:
+            logging.error(f"❌ 读取 Memory Growth Context 失败 [{target_path}]: {e}")
+            return ""
+
+    def _build_merged_context(self) -> str:
+        """🎯 合并双源 Context"""
+        user_custom_ctx = self._load_user_prompt_context()
+        system_memory_ctx = self._load_system_memory_context()
+
+        context_blocks = []
+        if user_custom_ctx:
+            context_blocks.append(f"### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】\n{user_custom_ctx}")
+        if system_memory_ctx:
+            context_blocks.append(f"### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】\n{system_memory_ctx}")
+
+        merged_context_prompt = ""
+        if context_blocks:
+            username = self.user_state.get("username", "default") if isinstance(self.user_state, dict) else str(self.user_state)
+            merged_context_prompt = (
+                "\n\n====================================================\n"
+                "🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)\n"
+                "====================================================\n"
+                f"{'\n\n'.join(context_blocks)}\n"
+                "====================================================\n"
+                "⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。\n"
+            )
+            context_logger.info(f"✅ 成功拼接用户 [{username}] 双源 Context，总字符数: {len(merged_context_prompt)}")
+            
+        return merged_context_prompt
+    
 
     def _format_packages_summary(self, packages_summary: List[Dict[str, Any]]) -> str:
         """将 Package 与 Tool 描述格式化为结构化 Markdown DSL，提升 LLM 的上下文感知力"""
@@ -113,6 +201,7 @@ class ReActAgent:
 
     def _init_prompts(self, system_prompt_template, router_prompt_template, package_router_prompt_template):
         """初始化 Prompt 模板（支持 Domain Router 与 Package Router 拆分）"""
+        
         if system_prompt_template:
             self.system_prompt_template = system_prompt_template
         elif self.prompt_hub and hasattr(self.prompt_hub, "get_prompt"):
@@ -307,9 +396,52 @@ class ReActAgent:
             "content": content
         }
 
+    def _assemble_messages(self, tools_description: str, history_messages: list, current_input: str, scratchpad: str = "") -> list:
+        """
+        核心辅助函数：统一构建 LLM 输入消息队列，确保 Context 100% 不丢失
+        """
+        # 1. 组合系统层指令：双源 Context + CodeAct / Tool 规则
+        system_content = (
+            f"{self.merged_context_prompt}\n\n"
+            f"你是一个 CodeAct Agent。请基于用户问题与以上约束解决任务。\n"
+            f"可用工具规范:\n{tools_description}"
+        )
+        
+        messages = [{"role": "system", "content": system_content}]
+        
+        # 2. 追加来自 memory_mgr 的多轮对话历史
+        for msg in history_messages:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+            
+        # 3. 追加当前 User 输入或 ReAct 执行轨迹 (Scratchpad)
+        user_content = current_input
+        if scratchpad:
+            user_content = f"原始问题: {current_input}\n\n当前 Scratchpad 执行轨迹:\n{scratchpad}"
+            
+        messages.append({"role": "user", "content": user_content})
+
+        # ==================== 🔍 【DEBUG 打印: 校验拼好的 Messages】 ====================
+        logger.info("=" * 60)
+        logger.info("🧩 [Assemble Messages] 拼装完成的 Message 结构如下:")
+        logger.info(f"  ├─ Message 帧数 (Total Frames): {len(messages)}")
+        logger.info(f"  ├─ System Prompt 字符数: {len(system_content)}")
+        logger.info("  ├─ [System Frame 内容 (前 500 字符)]:")
+        # 打印 System 帧前 500 字符，用于验证双源 Context 是否正确注入
+        sys_preview = system_content[:500].replace('\n', '\n  │   ')
+        logger.info(f"  │   {sys_preview} ...\n  │")
+        
+        # 打印 User 帧/当前输入
+        user_preview = user_content[:200].replace('\n', '\n  │   ')
+        logger.info("  └─ [User Frame 内容 (当前输入)]:")
+        logger.info(f"      {user_preview} ...")
+        logger.info("=" * 60)
+        
+        return messages
+
     def run_stream(
         self, 
         query: str, 
+        history_messages: Optional[List[Dict[str, Any]]] = None,
         tools_schema: Optional[Union[str, List[Dict[str, Any]]]] = None
     ) -> Generator[Dict[str, Any], None, None]:
         """
@@ -319,6 +451,15 @@ class ReActAgent:
         """
         self.memory_mgr.begin_transaction()
         self.memory_mgr.process_user_input(query)
+        # 若外部显式传入 history_messages，则优先使用；否则从 memory_mgr 中获取
+        if history_messages is not None:
+            chat_history_messages = history_messages
+        else:
+            context_data = self.memory_mgr.get_context_for_llm()
+            history_msgs = context_data.get("messages", [])[:-1]
+            chat_history_messages = [
+                {"role": m["role"], "content": m["content"]} for m in history_msgs
+            ]
 
         # 从 MemoryManager 取出历史消息，组成标准多轮 messages（排除刚存进去的这次 query）
         context_data = self.memory_mgr.get_context_for_llm()
@@ -338,7 +479,13 @@ class ReActAgent:
                 yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
                 
                 full_response = ""
-                turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+                # 🎯【修改 1】：通过 _assemble_messages 注入双源 Context System Prompt
+                turn_messages = self._assemble_messages(
+                    tools_description="无可用工具 (超短文本问答)",
+                    history_messages=chat_history_messages,
+                    current_input=query,
+                    scratchpad=""
+                )
                 for chunk in self.llm_client.stream_generate(messages=turn_messages):
                     full_response += chunk
                 
@@ -365,15 +512,11 @@ class ReActAgent:
                         tool_names_list.append(name)
                         descriptions.append(f"- **{name}**: {desc}\n  参数规范: {json.dumps(params, ensure_ascii=False)}")
                     
-                    # tool_names = ", ".join(tool_names_list)
                     tools_description = "\n".join(descriptions)
                     available_tool_names = tool_names_list  # 💡 修复：正确填充沙箱白名单
                     pkg_names = tool_names_list
-
-                    pkg_names = tool_names_list  # 给报错打印提示用
                 else:
                     tools_description = str(tools_schema)
-                    # tool_names = "已加载工具"
                     available_tool_names = []  # 若为纯字符串描述，由沙箱自行处理或默认放行
 
             else:
@@ -406,7 +549,13 @@ class ReActAgent:
                     yield self._yield_step("thought", f"⚠️ 工具元数据加载异常: {str(e)}，降级到通用回复模式...")
                     # 降级处理：跳过工具调用，直接 LLM 回复
                     full_response = ""
-                    turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+                    # 🎯【修改 2】：降级模式下注入双源 Context System Prompt
+                    turn_messages = self._assemble_messages(
+                        tools_description="工具不可用 (已降级模式)",
+                        history_messages=chat_history_messages,
+                        current_input=query,
+                        scratchpad=""
+                    )
                     for chunk in self.llm_client.stream_generate(messages=turn_messages):
                         full_response += chunk
                     final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
@@ -423,14 +572,16 @@ class ReActAgent:
             # 3. 核心 CodeAct 循环：LLM 生成代码 -> AST 预检 -> 沙箱执行 -> Observation 喂回
             for iteration in range(1, self.max_iterations + 1):
                 logger.info(f"[CodeAct Step] 开始第 {iteration}/{self.max_iterations} 轮推理/执行...")
-                prompt = self.system_prompt_template.format(
+                
+                # 🎯【修改 3】：彻底替代原本废弃的 prompt 格式化逻辑，使用 _assemble_messages 构建标准的 OpenAI messages 格式
+                turn_messages = self._assemble_messages(
                     tools_description=tools_description,
-                    input=query,
-                    agent_scratchpad=scratchpad
+                    history_messages=chat_history_messages,
+                    current_input=query,
+                    scratchpad=scratchpad
                 )
 
                 full_response = ""
-                turn_messages = chat_history_messages + [{"role": "user", "content": prompt}]
                 for chunk in self.llm_client.stream_generate(messages=turn_messages):
                     full_response += chunk
 
@@ -485,23 +636,6 @@ class ReActAgent:
                         f"Observation: {observation}\n\n"
                     )
 
-                    # # 💡 [自动终止判断]: 若没有工具调用且非报错执行（例如纯变量计算），直接收敛输出，无需死循环
-                    # is_pure_calc = sandbox_res["status"] == "success" and not any(t in code for t in available_tool_names)
-                    # if is_pure_calc and sandbox_res.get("result") is not None:
-                    #     final_ans = f"计算完成，执行结果为: {sandbox_res['result']}"
-                    #     yield self._yield_step("final_answer", final_ans)
-                    #     self.memory_mgr.process_assistant_output(final_ans)
-                    #     self.memory_mgr.commit()
-                    #     return
-
-                    # # 记录轨迹供下一轮 Self-Correction 纠错
-
-
-                    # scratchpad += (
-                    #     f"<reflection>{reflection}</reflection>\n"
-                    #     f"```python\n{code}\n```\n"
-                    #     f"Observation: {observation}\n\n"
-                    # )
                 else:
                     final_ans = clean_response.strip()
                     yield self._yield_step("final_answer", final_ans)
@@ -513,6 +647,195 @@ class ReActAgent:
             logger.error(f"CodeAct 运行捕获异常: {e}")
             self.memory_mgr.rollback()
             yield self._yield_step("rollback", f"🚨 运行异常已触发 Memory Rollback: {str(e)}")
+
+    # def run_stream(
+    #     self, 
+    #     query: str, 
+    #     tools_schema: Optional[Union[str, List[Dict[str, Any]]]] = None
+    # ) -> Generator[Dict[str, Any], None, None]:
+    #     """
+    #     流式 Agent 推理逻辑
+    #     :param query: 用户输入 Query
+    #     :param tools_schema: (可选) 外部传入的工具 Schema。支持标准的 Specs List[Dict] 或描述字符串
+    #     """
+    #     self.memory_mgr.begin_transaction()
+    #     self.memory_mgr.process_user_input(query)
+
+    #     # 从 MemoryManager 取出历史消息，组成标准多轮 messages（排除刚存进去的这次 query）
+    #     context_data = self.memory_mgr.get_context_for_llm()
+    #     history_msgs = context_data.get("messages", [])[:-1]
+    #     chat_history_messages: List[Dict[str, str]] = [
+    #         {"role": m["role"], "content": m["content"]} for m in history_msgs
+    #     ]
+
+    #     # 📌【修复 1】：在入口处安全初始化变量，防范 UnboundLocalError
+    #     selected_packages: List[Tuple[str, str]] = []
+    #     pkg_names: List[str] = ["injected_custom_schema"]
+    #     available_tool_names: List[str] = []
+
+    #     try:
+    #         # 1. 短文本拦截
+    #         if self._is_short_query(query):
+    #             yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
+                
+    #             full_response = ""
+    #             turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+    #             for chunk in self.llm_client.stream_generate(messages=turn_messages):
+    #                 full_response += chunk
+                
+    #             final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+    #             yield self._yield_step("final_answer", final_ans)
+                
+    #             self.memory_mgr.process_assistant_output(final_ans)
+    #             self.memory_mgr.commit()
+    #             return
+            
+    #         # 2. 三级分级路由机制 (Hierarchical Routing)
+    #         # 📌 优先使用外部注入的 tools_schema；若无，则自动触发内部路由获取
+    #         if tools_schema is not None:
+    #             yield self._yield_step("thought", "检测到沙盒注入的预剪枝工具 Schema，直接载入...")
+    #             if isinstance(tools_schema, list):
+    #                 # 转换标准的 Tool Spec 结构为 Prompt 渲染需要的文本格式
+    #                 tool_names_list = []
+    #                 descriptions = []
+    #                 for spec in tools_schema:
+    #                     func_info = spec.get("function", spec) if isinstance(spec, dict) else {}
+    #                     name = func_info.get("name", "unknown_tool")
+    #                     desc = func_info.get("description", "")
+    #                     params = func_info.get("parameters", {})
+    #                     tool_names_list.append(name)
+    #                     descriptions.append(f"- **{name}**: {desc}\n  参数规范: {json.dumps(params, ensure_ascii=False)}")
+                    
+    #                 # tool_names = ", ".join(tool_names_list)
+    #                 tools_description = "\n".join(descriptions)
+    #                 available_tool_names = tool_names_list  # 💡 修复：正确填充沙箱白名单
+    #                 pkg_names = tool_names_list
+
+    #             else:
+    #                 tools_description = str(tools_schema)
+    #                 # tool_names = "已加载工具"
+    #                 available_tool_names = []  # 若为纯字符串描述，由沙箱自行处理或默认放行
+
+    #         else:
+    #             yield self._yield_step("thought", "正在分析用户意图，匹配业务领域 (Domain)...")
+    #             selected_domains = self._route_domains(query)
+                
+    #             yield self._yield_step("thought", f"锁定业务领域: `{selected_domains}`，正在筛选工具包 (Package)...")
+    #             selected_packages = self._route_packages(query, selected_domains)
+                
+    #             pkg_names = [pkg for _, pkg in selected_packages]
+    #             yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
+
+    #             # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_BEGIN 🧩✨ ====================
+    #             logger.info(f"🔧 [Tool Schema Loading] 开始装载工具元数据，共 {len(selected_packages)} 个工具包...")
+    #             for domain, pkg in selected_packages:
+    #                 logger.info(f"  → 加载 [{domain}] - [{pkg}]...")
+
+    #             import time as time_module
+    #             t_schema_start = time_module.time()
+    #             try:
+    #                 tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(
+    #                     selected_packages, 
+    #                     user_role=self.user_role
+    #                 )
+    #                 t_schema_end = time_module.time()
+    #                 logger.info(f"✅ [Tool Schema Loading] 完成！耗时 {(t_schema_end - t_schema_start):.2f}s，共获取 {len(tool_names.split(','))} 个工具。")
+    #             except Exception as e:
+    #                 t_schema_end = time_module.time()
+    #                 logger.error(f"❌ [Tool Schema Loading] 异常耗时 {(t_schema_end - t_schema_start):.2f}s：{str(e)}", exc_info=True)
+    #                 yield self._yield_step("thought", f"⚠️ 工具元数据加载异常: {str(e)}，降级到通用回复模式...")
+    #                 # 降级处理：跳过工具调用，直接 LLM 回复
+    #                 full_response = ""
+    #                 turn_messages = chat_history_messages + [{"role": "user", "content": query}]
+    #                 for chunk in self.llm_client.stream_generate(messages=turn_messages):
+    #                     full_response += chunk
+    #                 final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+    #                 yield self._yield_step("final_answer", final_ans)
+    #                 self.memory_mgr.process_assistant_output(final_ans)
+    #                 self.memory_mgr.commit()
+    #                 return
+
+    #             available_tool_names = [t.strip() for t in tool_names.split(",") if t.strip()]
+    #             # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_END 🧩✨ ====================
+           
+    #         scratchpad = ""
+
+    #         # 3. 核心 CodeAct 循环：LLM 生成代码 -> AST 预检 -> 沙箱执行 -> Observation 喂回
+    #         for iteration in range(1, self.max_iterations + 1):
+    #             logger.info(f"[CodeAct Step] 开始第 {iteration}/{self.max_iterations} 轮推理/执行...")
+    #             prompt = self.system_prompt_template.format(
+    #                 tools_description=tools_description,
+    #                 input=query,
+    #                 agent_scratchpad=scratchpad
+    #             )
+
+    #             full_response = ""
+    #             turn_messages = chat_history_messages + [{"role": "user", "content": prompt}]
+    #             for chunk in self.llm_client.stream_generate(messages=turn_messages):
+    #                 full_response += chunk
+
+    #             clean_response = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+    #             think_match = re.search(r"<think>(.*?)</think>", full_response, re.DOTALL)
+    #             extracted_think = think_match.group(1).strip() if think_match else ""
+
+    #             reflection, code = self._extract_reflection_and_code(clean_response)
+    #             final_answer_match = re.search(r"Final Answer:\s*(.*)", clean_response, re.DOTALL)
+
+    #             if final_answer_match and not code:
+    #                 final_ans = final_answer_match.group(1).strip()
+    #                 if extracted_think:
+    #                     yield self._yield_step("thought", extracted_think)
+    #                 yield self._yield_step("final_answer", final_ans)
+
+    #                 self.memory_mgr.process_assistant_output(final_ans)
+    #                 self.memory_mgr.commit()
+    #                 return
+
+    #             if code:
+    #                 yield self._yield_step("thought", f"【第 {iteration}/{self.max_iterations} 步】{reflection or extracted_think or '准备执行代码...'}")
+    #                 yield self._yield_step("code", f"```python\n{code}\n```")
+
+    #                 sandbox_res = self.sandbox.run(
+    #                     code_str=code,
+    #                     tool_names=available_tool_names,
+    #                     tool_dispatcher=self.tool_dispatcher,
+    #                 )
+    #                 if sandbox_res["status"] == "security_blocked":
+    #                     raise ValueError(f"安全沙箱检测到高危指令: {sandbox_res['error']}")
+
+    #                 observation = self._build_observation(sandbox_res)
+    #                 yield self._yield_step("observation", observation)
+
+    #                 # 💡 [收敛机制 1]: 纯变量计算自动收敛
+    #                 is_pure_calc = sandbox_res["status"] == "success" and not any(t in code for t in available_tool_names)
+    #                 if is_pure_calc and sandbox_res.get("result") is not None:
+    #                     final_ans = f"计算完成，执行结果为: {sandbox_res['result']}"
+    #                     yield self._yield_step("final_answer", final_ans)
+    #                     self.memory_mgr.process_assistant_output(final_ans)
+    #                     self.memory_mgr.commit()
+    #                     return
+
+    #                 # 💡 [收敛机制 2]: 工具已成功返回结果且无异常，若 LLM 代码未包含后续操作逻辑，标记可收敛上下文
+    #                 if sandbox_res["status"] == "success" and sandbox_res.get("result") is not None:
+    #                     logger.info(f"[CodeAct] 工具执行成功并获取结果: {sandbox_res['result']}")
+
+    #                 scratchpad += (
+    #                     f"<reflection>{reflection}</reflection>\n"
+    #                     f"```python\n{code}\n```\n"
+    #                     f"Observation: {observation}\n\n"
+    #                 )
+
+    #             else:
+    #                 final_ans = clean_response.strip()
+    #                 yield self._yield_step("final_answer", final_ans)
+    #                 self.memory_mgr.process_assistant_output(final_ans)
+    #                 self.memory_mgr.commit()
+    #                 return
+
+    #     except Exception as e:
+    #         logger.error(f"CodeAct 运行捕获异常: {e}")
+    #         self.memory_mgr.rollback()
+    #         yield self._yield_step("rollback", f"🚨 运行异常已触发 Memory Rollback: {str(e)}")
 
 
 # =============================================================================

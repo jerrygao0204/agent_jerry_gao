@@ -39,10 +39,9 @@ tools:
     module: factory.tools.dataset_summary
     class: DatasetSummaryTool
     domain: finebi_system
-    package: metadata_pkg
+    package: dashboard_pkg
     enabled: true
-    role_whitelist: ["admin"] # 📌 特例覆盖：该高危元数据工具仅允许 admin 触发
-
+    
   - name: web_search
     module: factory.tools.web_search_tool
     class: WebSearchTool

@@ -1,0 +1,34 @@
+[
+  {
+    "user_id": "admin",
+    "role": "user",
+    "content": "哈嘍",
+    "timestamp": "2026-09-21 17:58:43",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "admin",
+    "role": "assistant",
+    "content": "你好！有什么我可以帮你的吗？😊",
+    "timestamp": "2026-09-21 17:58:43",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "admin",
+    "role": "user",
+    "content": "我想看一下表A的table有多少行",
+    "timestamp": "2026-09-21 17:58:43",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "admin",
+    "role": "assistant",
+    "content": "我将调用数据查询工具获取表A的元数据信息。请稍等片刻...\n\n📊 已调用 get_dataset_summary 工具，查询参数：\n- 数据集名称：表A\n- 查询内容：行数\n\n正在从系统中获取表A的元数据信息，请稍等...",
+    "timestamp": "2026-09-21 17:59:35",
+    "is_active": true,
+    "status": "valid"
+  }
+]

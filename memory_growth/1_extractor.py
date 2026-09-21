@@ -2,6 +2,7 @@
 import json
 import logging
 from pathlib import Path
+import yaml
 from typing import List, Dict, Any, Optional
 try:
     from llm_guard import LLMGuard
@@ -56,14 +57,36 @@ class LLMClientAdapter:
 class FactExtractor:
     """高召回率事實與關係圖譜抽取器 (支持增量/全量與 Hash 狀態追蹤)"""
 
-    def __init__(self, data_dir: str, llm_adapter: LLMClientAdapter):
+    def __init__(self, 
+                 data_dir: str, 
+                 llm_adapter: LLMClientAdapter,
+                 prompt_hub_path: str = ""
+                 ):
         self.data_dir = Path(data_dir)
         self.llm_adapter = llm_adapter
         self.guard = LLMGuard(
             llm_client=self.llm_adapter.llm_client, 
             default_model=self.llm_adapter.model_name,
-            max_retries=5
+            max_retries=5,
+            
         )
+        self.prompt_hub_path = prompt_hub_path
+        self.prompt_hub = self._load_prompt_hub(prompt_hub_path)
+
+    def _load_prompt_hub(self, prompt_hub_path: str) -> Dict[str, Any]:
+        """從 YAML 加載 Prompt Hub 映射表 (按 name 建立索引)"""
+        hub_file = Path(prompt_hub_path)
+        if not hub_file.exists():
+            logger.error(f"❌ Prompt HUB 配置文件不存在: {prompt_hub_path}")
+            return {}
+        try:
+            with open(hub_file, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                prompts_list = data.get("prompts", [])
+                return {item["name"]: item["content"] for item in prompts_list if "name" in item}
+        except Exception as e:
+            logger.error(f"⚠️ 加載 Prompt HUB 失敗 ({prompt_hub_path}): {e}")
+            return {}
 
     def _load_json(self, file_path: str) -> Any:
         """安全載入 JSON 文件"""
@@ -117,21 +140,11 @@ class FactExtractor:
         if not chunk_messages:
             return []
 
-        system_prompt = (
-            "你是一個高召回率的事實提取專家。請仔細分析給出的用戶對話歷史，提取所有真實發生的事實碎片。\n"
-            "類別包括：identity (身份/姓名/職業), preference (偏好), constraint (限制/規避), decision (決策), goal (目標) 等。\n"
-            "請嚴格輸出合法 JSON 格式：\n"
-            '{\n  "raw_facts": [\n    {\n      "category": "identity",\n      "content": "用戶姓名是xxx",\n      "confidence": "high"\n    }\n  ]\n}'
-        )
+        system_prompt = self.prompt_hub.get("extractor_extract_chunk_system_prompt")
+            
         user_prompt = f"【待分析對話記錄】:\n{json.dumps(chunk_messages, ensure_ascii=False, indent=2)}"
 
-        schema_desc = (
-            "必須返回包含根鍵 'raw_facts' 的 JSON 物件。\n"
-            "'raw_facts' 為列表，列表中每個對象必須包含：\n"
-            "- category (string): 類別 (如 identity, preference, constraint, decision, goal)\n"
-            "- content (string): 詳細的事實內容描述\n"
-            "- confidence (string): 置信度 ('high', 'medium', 'low')"
-        )
+        schema_desc = self.prompt_hub.get("extractor_extract_chunk_schema_prompt")
         
         try:
             result_json = self.guard.generate_guaranteed_json(
@@ -227,15 +240,21 @@ if __name__ == "__main__":
 
     test_user = "admin"
     paths = UserMemoryPathConfig(user_id=test_user)
+    prompt_hub_path = getattr(paths, "prompt_hub_path", "")
 
     print(f"--- 測試 1_extractor.py (Qwen3-32B + 圖譜/態度/重疊窗口模式) [{test_user}] ---")
+    print(f"📜 Prompt Hub Path: {prompt_hub_path}")
     
     # 1. 初始化網關與適配器
     client = LLMClient(default_model_name="qwen3-32b")
     adapter = LLMClientAdapter(llm_client=client, model_name="qwen3-32b")
 
-    # 2. 初始化並執行 Phase 1 抽取
-    extractor = FactExtractor(data_dir=str(paths.data_dir), llm_adapter=adapter)
+    # 2. 初始化並執行 Phase 1 抽取 (傳入 prompt_hub_path)
+    extractor = FactExtractor(
+        data_dir=str(paths.data_dir), 
+        llm_adapter=adapter,
+        prompt_hub_path=str(prompt_hub_path)
+    )
     extracted_facts = extractor.run(
         user_id=paths.user_id,
         state_path=str(paths.processed_state_path),

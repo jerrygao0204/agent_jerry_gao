@@ -1,7 +1,7 @@
 # memory_growth/2_layer_mapper.py
-
 import json
 import logging
+import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 try:
@@ -56,7 +56,9 @@ class LLMClientAdapter:
 class LayerMapper:
     """事實規範化與 Profile / Memory / State 三層語境映射器 (集成 LLMGuard 防護)"""
 
-    def __init__(self, llm_adapter: LLMClientAdapter):
+    def __init__(self, 
+                 llm_adapter: LLMClientAdapter,
+                 prompt_hub_path: str = ""):
         self.llm_adapter = llm_adapter
         # 裝配 LLMGuard 防護層，底層共用 llm_adapter 的 llm_client
         self.guard = LLMGuard(
@@ -64,7 +66,24 @@ class LayerMapper:
             default_model=self.llm_adapter.model_name,
             max_retries=5
         )
+        self.prompt_hub_path = prompt_hub_path
+        self.prompt_hub = self._load_prompt_hub(prompt_hub_path)
 
+    def _load_prompt_hub(self, prompt_hub_path: str) -> Dict[str, Any]:
+        """從 YAML 加載 Prompt Hub 映射表 (按 name 建立索引)"""
+        hub_file = Path(prompt_hub_path)
+        if not hub_file.exists():
+            logger.error(f"❌ Prompt HUB 配置文件不存在: {prompt_hub_path}")
+            return {}
+        try:
+            with open(hub_file, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                prompts_list = data.get("prompts", [])
+                return {item["name"]: item["content"] for item in prompts_list if "name" in item}
+        except Exception as e:
+            logger.error(f"⚠️ 加載 Prompt HUB 失敗 ({prompt_hub_path}): {e}")
+            return {}
+        
     def _load_json(self, file_path: str) -> Any:
         """安全載入 JSON 文件"""
         path = Path(file_path)
@@ -89,22 +108,14 @@ class LayerMapper:
         if not raw_facts:
             return []
 
-        system_prompt = (
-            "你是一個數據清洗與規範化專家。請分析以下抽取出的原始事實碎片 (Raw Facts)：\n"
-            "1. 去除重複或高相似度的無效事實。\n"
-            "2. 修正模稜兩可的描述，使其符合標準語法結構。\n"
-            "3. 確保包含 category, content, confidence 欄位。\n"
-            "請嚴格輸出合法 JSON 格式，根節點必須包含 'cleaned_facts' 列表。"
-        )
+        system_prompt = self.prompt_hub.get(
+            "layer_mapper_clean_and_canonicalize_facts_system_prompt")
+
         user_prompt = f"【待處理的 Raw Facts】:\n{json.dumps(raw_facts, ensure_ascii=False, indent=2)}"
 
-        schema_desc = (
-            "必須返回包含根鍵 'cleaned_facts' 的 JSON 物件。\n"
-            "'cleaned_facts' 為列表，列表中每個對象必須包含：\n"
-            "- category (string): 類別 (如 identity, preference, constraint, decision, goal)\n"
-            "- content (string): 清洗後的精準事實描述\n"
-            "- confidence (string): 置信度 ('high', 'medium', 'low')"
-        )
+        schema_desc = self.prompt_hub.get(
+            "layer_mapper_clean_and_canonicalize_facts_schema_prompt")
+
 
         try:
             result_json = self.guard.generate_guaranteed_json(
@@ -123,22 +134,14 @@ class LayerMapper:
 
     def _map_layered_context(self, cleaned_facts: List[Dict[str, Any]]) -> Dict[str, Any]:
         """【Pass 2】三層語境映射 (Profile / Memory / State，使用 LLMGuard 防護)"""
-        
-        system_prompt = (
-            "你是一個 AI 記憶系統三層語境映射專家。\n"
-            "請將整理後的事實碎片，映射至 Profile、Memory、State 三層結構中：\n"
-            "- Profile (靜態畫像): identity (身份/姓名/角色), preferences (偏好/習慣), constraints (硬性限制/禁忌)\n"
-            "- Memory (動態記憶鏈與關係圖譜): user_growth_chains (個人成長演進鏈), social_and_attitude_graph (人際關係與態度圖譜)\n"
-            "- State (當前狀態): current_goals (當前短期目標), active_focus (當前關注焦點/任務)\n"
-            "請嚴格輸出合法 JSON 格式。"
+
+        system_prompt = self.prompt_hub.get(
+            "layer_mapper_map_layered_context_system_prompt"
         )
         user_prompt = f"【待映射的事實數據】:\n{json.dumps(cleaned_facts, ensure_ascii=False, indent=2)}"
 
-        schema_desc = (
-            "必須返回包含三個根鍵 'profile', 'memory', 'state' 的 JSON 物件：\n"
-            "1. 'profile' (dict): 包含 'identity' (list), 'preferences' (list), 'constraints' (list)\n"
-            "2. 'memory' (dict): 包含 'user_growth_chains' (list), 'social_and_attitude_graph' (list)\n"
-            "3. 'state' (dict): 包含 'current_goals' (list), 'active_focus' (list)"
+        schema_desc = self.prompt_hub.get(
+            "layer_mapper_map_layered_context_schema_prompt"
         )
 
         default_fallback = {
@@ -200,15 +203,20 @@ if __name__ == "__main__":
 
     test_user = "admin"
     paths = UserMemoryPathConfig(user_id=test_user)
+    prompt_hub_path = getattr(paths, "prompt_hub_path", "")
 
     print(f"--- 測試 2_layer_mapper.py (Qwen3-32B + LLMGuard 護航模式) [{test_user}] ---")
+    print(f"📜 Prompt Hub Path: {prompt_hub_path}")
 
     # 1. 初始化網關與適配器
     client = LLMClient(default_model_name="qwen3-32b")
     adapter = LLMClientAdapter(llm_client=client, model_name="qwen3-32b")
 
-    # 2. 初始化並執行 Phase 2 映射
-    mapper = LayerMapper(llm_adapter=adapter)
+    # 2. 初始化並執行 Phase 2 映射 (傳入 prompt_hub_path)
+    mapper = LayerMapper(
+        llm_adapter=adapter,
+        prompt_hub_path=str(prompt_hub_path)
+    )
     layered_data = mapper.run(
         facts_path=str(paths.facts_path),
         output_path=str(paths.layered_context_path)

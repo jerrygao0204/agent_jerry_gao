@@ -95,8 +95,6 @@ logger = setup_logger(
 logging.root.handlers = logger.handlers
 logging.root.setLevel(logging.INFO)
 
-import yaml
-
 def load_litellm_models_from_yaml() -> List[str]:
     """直接从本地 /workspace/hf-conda/litellm/litellm_config.yaml 读取模型清单"""
     config_path = "/workspace/hf-conda/litellm/litellm_config.yaml"
@@ -131,7 +129,6 @@ DEFAULT_QA_CONFIG = {
     "llm_model_name": os.getenv("LLM_MODEL", LLM_OPTIONS[0] if LLM_OPTIONS else "qwen3-4b"),
     "vlm_model_name": os.getenv("VLM_MODEL", "qwen3-vl-4b"),
     "emb_model_name": os.getenv("EMB_MODEL", "qwen3-embedding-4b"),
-    "cuda_device": os.getenv("CUDA_DEVICE", "0"),
     "top_k_retrieval": int(os.getenv("TOP_K_RETRIEVAL", 10)),
     "top_k_rerank": int(os.getenv("TOP_K_RERANK", 3)),
 }
@@ -203,6 +200,76 @@ def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
     choices = [(f"💬 {s.get('title', '新对话')} ({s.get('updated_at', '')[5:16]})", s['session_id']) for s in sessions]
     return choices
 
+# ==========================================
+# 📄 2.1 UI 上下文注入与预览函数
+# ==========================================
+MEMORY_GROWTH_CONTEXT_DIR = os.path.join(SCRIPT_DIR, "memory_growth", "context", "users","admin",'user_prompt_context.txt')
+
+def get_user_context_filepath(user_info) -> str:
+    """获取指定 user_id 的 Context 文件绝对路径，不存在则创建文件夹"""
+    if isinstance(user_info, dict):
+        user_id = str(user_info.get("username") or user_info.get("user_id") or "default").strip()
+    elif isinstance(user_info, str) and user_info.strip():
+        user_id = user_info.strip()
+    else:
+        user_id = "default"
+
+    # 路径解析: data/{user_id}/user_prompt_context.txt
+    user_dir = os.path.join(DATA_DIR, user_id)
+    os.makedirs(user_dir, exist_ok=True)
+    return os.path.join(user_dir, "user_prompt_context.txt")
+
+def load_user_prompt_context(user_info) -> str:
+    """动态读取 data/{user_id}/user_prompt_context.txt"""
+    target_path = get_user_context_filepath(user_info)
+    if not os.path.exists(target_path):
+        return ""
+    try:
+        with open(target_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            logging.info(f"✅ 成功读取上下文 [{target_path}], 字符数: {len(content)}")
+            return content
+    except Exception as e:
+        logging.error(f"❌ 读取上下文失败 [{target_path}]: {e}")
+        return ""
+
+def save_user_context(user_info, content: str) -> str:
+                        """保存 Context 到 data/{user_id}/user_prompt_context.txt"""
+                        target_path = get_user_context_filepath(user_info)
+                        try:
+                            with open(target_path, "w", encoding="utf-8") as f:
+                                f.write(content)
+                            logging.info(f"✅ 成功保存上下文到 [{target_path}]")
+                            return f"✅ **保存成功！** 已更新文件：`{target_path}`"
+                        except Exception as e:
+                            logging.error(f"❌ 保存上下文失败 [{target_path}]: {e}")
+                            return f"❌ **保存失败：** {str(e)}"
+
+# # ------------------------------------------
+# # 📄 Part 2: 读取系统认知图谱 Context
+# # ------------------------------------------
+# def load_system_memory_context(user_info) -> str:
+#     """仅读取 Memory Growth 自动生成的 Context (memory_growth/context/users/{user_id}/user_prompt_context.txt)"""
+#     # 🎯 1. 容错解析出纯粹的 username（如 "admin"），避免返回完整文件路径
+#     if isinstance(user_info, dict):
+#         username = user_info.get("username", "default")
+#     elif isinstance(user_info, str):
+#         username = user_info
+#     else:
+#         username = "default"
+
+#     # 🎯 2. 正确拼装标准路径: MEMORY_GROWTH_CONTEXT_DIR
+#     target_path = os.path.join(MEMORY_GROWTH_CONTEXT_DIR)
+#     if not os.path.exists(target_path):
+#         return ""
+#     try:
+#         with open(target_path, "r", encoding="utf-8") as f:
+#             return f.read().strip()
+#     except Exception as e:
+#         logging.error(f"❌ 读取 Memory Growth Context 失败 [{target_path}]: {e}")
+#         return ""
+
+                        
 # ==========================================
 # 🛠️ 3. 显存管理与安全函数
 # ==========================================
@@ -383,7 +450,6 @@ def get_qa_chain(llm_choice: str, top_k_ret: int, top_k_rerank: int):
     if global_qa_chain is None or current_llm_choice != llm_choice:
         logging.info(f"🚀 [QA Admin] 初始化/更新全局 QAChain 句柄, 模型: {llm_choice}")
         global_qa_chain = QAChain(
-            cuda_device=DEFAULT_QA_CONFIG["cuda_device"],
             top_k_retrieval=top_k_ret,
             top_k_rerank=top_k_rerank,
             llm_model_name=llm_choice,
@@ -673,27 +739,53 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
+    # # ====================================================
+    # # 🎯 在 agent_stream_predict 中合并双源 Context
+    # # ====================================================
+    # user_custom_ctx = load_user_prompt_context(user_state)
+    # system_memory_ctx = load_system_memory_context(user_state)
+
+    # context_blocks = []
+    # if user_custom_ctx:
+    #     context_blocks.append(f"### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】\n{user_custom_ctx}")
+    # if system_memory_ctx:
+    #     context_blocks.append(f"### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】\n{system_memory_ctx}")
+
+    # merged_context_prompt = ""
+    # if context_blocks:
+    #     merged_context_prompt = (
+    #         "\n\n====================================================\n"
+    #         "🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)\n"
+    #         "====================================================\n"
+    #         f"{'\n\n'.join(context_blocks)}\n"
+    #         "====================================================\n"
+    #         "⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。\n"
+    #     )
+    #     context_logger.info(f"✅ 成功拼接用户 [{username}] 双源 Context，总字符数: {len(merged_context_prompt)}")
+
     agent = ReActAgent(
-            llm_client=LLMClient(default_model_name=llm_model),
-            model_name=llm_model,
-            top_k_ret=top_k_ret,
-            top_k_rerank=top_k_rerank,
-            filter_str=filter_input,
-            memory_mgr=user_mem_mgr,
-            user_role=user_role,
-            max_steps=5,
-            sandbox_timeout=2,
-        )
+        llm_client=LLMClient(default_model_name=llm_model),
+        model_name=llm_model,
+        top_k_ret=top_k_ret,
+        top_k_rerank=top_k_rerank,
+        filter_str=filter_input,
+        memory_mgr=user_mem_mgr,
+        user_role=user_role,
+        user_state=user_state,
+        max_steps=5,
+        sandbox_timeout=2,
+    )
+
     raw_user_key = RAW_KEY_MAP.get(username, f"{username}({user_role})")
     history_context = user_mem_mgr.short_term.get_messages()[:-1]  # 排除刚刚加入的当前 prompt
+    print(f"📝 [Agent] 用户 [{username}] 会话 [{user_mem_mgr.session_id}] 历史消息条数: {(history_context)}")
 
     inspector_log = f"🚀 **Agent 任务启动 (用户: {username}     {raw_user_key} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "🤖 推理中...", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
     final_reply = ""
     for step in agent.run_stream(clean_message
-                                 # ,tools_schema=tool_specs
-                                #  ,history_messages=history_context
+                                ,history_messages=history_context
                                  ):
         stage = step.get("stage")
         content = step.get("content", "")
@@ -789,7 +881,6 @@ def switch_session_event(selected_session_id: str, user_state: dict):
     return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
 
 
-# ==================== ✨🧩 TAB3_MESSAGE_SANITIZE_BEGIN 🧩✨ ====================
 # 添加缓存以加快重复标准化同一内容的性能（如在编辑面板重建中）
 _normalize_cache = {}
 _normalize_cache_hits = 0  # 统计缓存命中数
@@ -987,8 +1078,6 @@ def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kep
     t_end = time_module.time()
     logging.info(f"  → 重建内存消息耗时 {(t_end - t_process):.2f}s，总耗时 {(t_end - t_start):.2f}s")
     logging.info(f"✅ [会话重建] 完成")
-    # ==================== ✨🧩 REBUILD_SESSION_DEBUG_END 🧩✨ ====================
-
 
 def regenerate_agent_from_edited_turn(
     history: List[Dict[str, str]],
@@ -1135,6 +1224,7 @@ def stream_agent_sandbox_execution(
         top_k_rerank=top_k_rerank,
         filter_str=filter_input,
         user_role=user_role,
+        user_state=user_state,
         max_steps=5,
         sandbox_timeout=2,
     )
@@ -1375,6 +1465,38 @@ JS_CLEAR_COOKIE = """
 }
 """
 
+custom_modal_css = """
+/* 遮罩层：强制铺满 Viewport 窗口 */
+div.custom-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.65) !important;
+    z-index: 999999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* 居中对话框卡片 */
+div.custom-modal-content {
+    position: relative !important;
+    background: #ffffff !important;
+    width: 600px !important;
+    max-width: 90vw !important;
+    padding: 24px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    z-index: 1000000 !important;
+}
+"""
+
 def build_qa_admin_ui(qa_chain: Optional[Any] = None):
     # 📌 1. 显式加载 tools.yaml，确保配置文件中的工具与角色白名单全量载入
     yaml_path = os.path.join(SCRIPT_DIR, "config", "tools.yaml")
@@ -1395,9 +1517,8 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 milvus_host=DEFAULT_QA_CONFIG["milvus_host"], 
                 milvus_port=DEFAULT_QA_CONFIG["milvus_port"], 
                 collection_name=DEFAULT_QA_CONFIG["collection_name"], 
-                cuda_device=DEFAULT_QA_CONFIG["cuda_device"]
             )
-            reranker = Reranker(cuda_device=DEFAULT_QA_CONFIG["cuda_device"])
+            reranker = Reranker()
             init_tools(retriever=retriever, reranker=reranker)
     except Exception as e:
         logging.warning(f"⚠️ 工具初始化说明: {e}")
@@ -1477,10 +1598,40 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                             slider_top_k_ret = gr.Slider(minimum=1, maximum=30, value=10, step=1, label="初筛 Top-K")
                             slider_top_k_rerank = gr.Slider(minimum=1, maximum=10, value=3, step=1, label="精排 Top-K")
                             filter_input = gr.Textbox(label="🎯 Milvus 元数据过滤表达式", placeholder="target_version == 'V6.0'", lines=2)
+                            # 📄 精致原生折叠组件（嵌入右侧栏，默认收起）
+                            with gr.Accordion("📄 自定义 System Context 偏好设定", open=False):
+                                context_textbox = gr.Textbox(
+                                    label="Context 内容",
+                                    lines=6,
+                                    placeholder="请输入当前用户的专属上下文/偏好指令...",
+                                    interactive=True
+                                )
+                                context_status = gr.Markdown(value="")
+                                with gr.Row():
+                                    btn_context_load = gr.Button("🔄 读取", size="sm", variant="secondary")
+                                    btn_context_save = gr.Button("💾 保存", size="sm", variant="primary")
+                                    
                             gr.Markdown("### 🔍 检索召回溯源")
                             sources_display = gr.Markdown(value="*暂无召回数据...*")
 
                     # Tab 1 事件绑定
+                    # 页面加载/点击读取时自动载入 Context
+                    btn_context_load.click(
+                        fn=load_user_prompt_context,
+                        inputs=[user_state],
+                        outputs=[context_textbox]
+                    )
+
+                    # 点击保存
+                    def handle_save_context(user_info, content):
+                        msg = save_user_context(user_info, content)
+                        return msg
+
+                    btn_context_save.click(
+                        fn=handle_save_context,
+                        inputs=[user_state, context_textbox],
+                        outputs=[context_status]
+                    )
                     btn_send.click(
                         fn=qa_stream_predict,
                         inputs=[msg_input, chatbot, llm_dropdown, slider_top_k_ret, slider_top_k_rerank, filter_input, user_state],
@@ -1563,7 +1714,6 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                                     gr.Markdown("### 🔬 Agent 运行诊断 (Inspector)")
                                     agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
 
-                                    # ==================== ✨🧩 TAB3_EDIT_UI_BEGIN 🧩✨ ====================
                                     with gr.Accordion("✏️ 编辑历史提问并重新生成", open=False):
                                         t3_edit_turn_selector = gr.Dropdown(
                                             label="选择要编辑的用户提问轮次",
@@ -1577,7 +1727,42 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                                             lines=3
                                         )
                                         btn_t3_apply_edit = gr.Button("🔁 更新并重新生成", variant="secondary")
-                                    # ==================== ✨🧩 TAB3_EDIT_UI_END 🧩✨ ====================
+                                    
+                                    # 📄 精致原生折叠组件（嵌入右侧栏，默认收起）
+                                    with gr.Accordion("📄 自定义 System Context 偏好设定", open=False):
+                                        context_textbox = gr.Textbox(
+                                            label="Context 内容",
+                                            lines=6,
+                                            placeholder="请输入当前用户的专属上下文/偏好指令...",
+                                            interactive=True
+                                        )
+                                        context_status = gr.Markdown(value="")
+                                        with gr.Row():
+                                            btn_context_load = gr.Button("🔄 读取", size="sm", variant="secondary")
+                                            btn_context_save = gr.Button("💾 保存", size="sm", variant="primary")
+                                            
+                                    gr.Markdown("### 🔍 检索召回溯源")
+                                    sources_display = gr.Markdown(value="*暂无召回数据...*")
+        
+                            # Tab 1 事件绑定
+                            # 页面加载/点击读取时自动载入 Context
+                            btn_context_load.click(
+                                fn=load_user_prompt_context,
+                                inputs=[user_state],
+                                outputs=[context_textbox]
+                            )
+        
+                            # 点击保存
+                            def handle_save_context(user_info, content):
+                                msg = save_user_context(user_info, content)
+                                return msg
+        
+                            btn_context_save.click(
+                                fn=handle_save_context,
+                                inputs=[user_state, context_textbox],
+                                outputs=[context_status]
+                            )
+
 
                     # Tab 3 事件绑定
                     # 用户赞踩反馈机制

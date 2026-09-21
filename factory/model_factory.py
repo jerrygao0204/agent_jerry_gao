@@ -28,7 +28,8 @@ class ModelFactory:
     # 🌟 类级别全局缓存：确保 Rerank 模型与分词器在整个生命周期中只被加载一次
     _rerank_tokenizer = None
     _rerank_model = None
-    _device = "cuda" if torch.cuda.is_available() else "cpu"
+    # _device = "cuda" if torch.cuda.is_available() else "cpu"
+    _device = "cpu"
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:

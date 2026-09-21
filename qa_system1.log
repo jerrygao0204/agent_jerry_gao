@@ -1,0 +1,1328 @@
+2026-09-21 05:35:44,350 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 05:35:44,350 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 05:35:44,350 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 05:35:44,350 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 05:35:44,351 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 05:35:44,351 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 05:35:44,351 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 05:35:44,351 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 05:35:44,351 - [INFO] - [qa_admin.py:1386] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 05:35:44,351 - [WARNING] - [qa_admin.py:1403] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 05:35:47,750 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 05:37:30,775 - [INFO] - [qa_admin.py:1972] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 05:37:30,775 - [WARNING] - [qa_admin.py:223] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 05:37:31,079 - [INFO] - [qa_admin.py:239] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 05:53:13,267 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 05:53:13,267 - [INFO] - [qa_admin.py:1416] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 05:53:13,267 - [WARNING] - [qa_admin.py:1433] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 05:53:15,320 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 05:53:26,081 - [INFO] - [qa_admin.py:1845] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 05:53:26,082 - [INFO] - [qa_admin.py:1859] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 05:53:26,082 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 05:53:26,085 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 05:53:26,086 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 05:53:26,086 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [b87a679b-5868-471e-88f6-27f6e31583fa] (模式: File JSON)
+2026-09-21 05:53:26,086 - [INFO] - [qa_admin.py:1888] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 05:53:26,191 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 05:53:26,377 - [INFO] - [qa_admin.py:928] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 05:53:26,378 - [INFO] - [qa_admin.py:934] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 05:53:26,378 - [INFO] - [qa_admin.py:937] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:02:31,654 - [INFO] - [qa_admin.py:2042] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:02:31,654 - [WARNING] - [qa_admin.py:253] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:02:31,973 - [INFO] - [qa_admin.py:269] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:02:41,279 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:02:41,279 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:02:41,279 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:02:41,279 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:02:41,280 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:02:41,280 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:02:41,280 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:02:41,280 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:02:41,280 - [INFO] - [qa_admin.py:1431] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:02:41,280 - [WARNING] - [qa_admin.py:1448] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:02:44,327 - [INFO] - [qa_admin.py:2074] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:02:44,327 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:02:44,602 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:03:20,926 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:03:20,926 - [INFO] - [qa_admin.py:1431] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:03:20,926 - [WARNING] - [qa_admin.py:1448] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:03:24,251 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:03:24,251 - [INFO] - [qa_admin.py:2074] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:03:24,251 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:03:24,542 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:04:06,131 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:04:06,131 - [INFO] - [qa_admin.py:1431] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:04:06,131 - [WARNING] - [qa_admin.py:1448] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:04:08,681 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:04:08,682 - [INFO] - [qa_admin.py:2074] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:04:08,682 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:04:08,971 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:10:28,606 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:10:28,606 - [INFO] - [qa_admin.py:1431] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:10:28,606 - [WARNING] - [qa_admin.py:1448] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:10:30,670 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:10:30,671 - [INFO] - [qa_admin.py:2074] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:10:30,671 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:10:30,978 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:11:21,497 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:11:21,497 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:11:21,497 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:11:21,497 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:11:21,498 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:11:21,498 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:11:21,498 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:11:21,498 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:11:21,498 - [INFO] - [qa_admin.py:1431] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:11:21,498 - [WARNING] - [qa_admin.py:1448] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:11:23,914 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:11:28,868 - [INFO] - [qa_admin.py:1877] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:11:28,868 - [INFO] - [qa_admin.py:1891] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:11:28,868 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:11:28,871 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:11:28,872 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:11:28,872 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [e545b9df-964b-4d13-99e1-47ace9f9e15e] (模式: File JSON)
+2026-09-21 06:11:28,872 - [INFO] - [qa_admin.py:1920] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:11:28,941 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:11:29,001 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:11:29,001 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:11:29,001 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:11:56,473 - [INFO] - [qa_admin.py:245] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 06:13:10,935 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:16:19,153 - [INFO] - [qa_admin.py:2074] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:16:19,154 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:16:19,491 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:16:24,400 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:16:24,400 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:16:24,401 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:16:24,401 - [INFO] - [qa_admin.py:1457] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:16:24,401 - [WARNING] - [qa_admin.py:1474] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:16:28,306 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:16:28,772 - [INFO] - [qa_admin.py:1905] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:16:28,772 - [INFO] - [qa_admin.py:1919] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:16:28,772 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:16:28,778 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:16:28,780 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:16:28,780 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [8bef399b-f8dc-458f-b6b8-5f8ef9ce80c2] (模式: File JSON)
+2026-09-21 06:16:28,781 - [INFO] - [qa_admin.py:1948] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:16:28,853 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:16:28,954 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:16:28,954 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:16:28,954 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:16:31,644 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:16:43,098 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:16:44,278 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:16:45,006 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:16:48,277 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:23:16,611 - [INFO] - [qa_admin.py:2102] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:23:16,611 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:23:16,788 - [ERROR] - [qa_admin.py:283] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 06:23:16,788 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:23:21,573 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:23:21,573 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:23:21,573 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:23:21,573 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:23:21,574 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:23:21,574 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:23:21,574 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:23:21,574 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:23:21,574 - [INFO] - [qa_admin.py:1462] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:23:21,574 - [WARNING] - [qa_admin.py:1479] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:23:24,070 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:25:05,264 - [INFO] - [qa_admin.py:1908] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:25:05,265 - [INFO] - [qa_admin.py:1922] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:25:05,265 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:25:05,268 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:25:05,268 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:25:05,268 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [49329f55-04d2-4c77-a645-6b8bf634616a] (模式: File JSON)
+2026-09-21 06:25:05,268 - [INFO] - [qa_admin.py:1951] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:25:05,339 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:25:05,444 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:25:05,445 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:25:05,445 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:25:09,862 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:25:57,403 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:25:58,011 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:35:34,487 - [INFO] - [qa_admin.py:2105] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:35:34,488 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:35:34,823 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:35:39,749 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:35:39,749 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:35:39,749 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:35:39,749 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:35:39,750 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:35:39,750 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:35:39,750 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:35:39,750 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:35:39,750 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:35:39,750 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:35:42,241 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:36:49,696 - [INFO] - [qa_admin.py:1910] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:36:49,697 - [INFO] - [qa_admin.py:1924] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:36:49,697 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:36:49,702 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:36:49,703 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:36:49,704 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [1eec1e4d-bf66-4215-9200-3517cb59b873] (模式: File JSON)
+2026-09-21 06:36:49,705 - [INFO] - [qa_admin.py:1953] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:36:49,816 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:36:49,881 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:36:49,881 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:36:49,881 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:36:57,782 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:37:03,133 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:37:03,450 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:38:18,811 - [INFO] - [qa_admin.py:2107] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:38:18,812 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:38:19,133 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:38:24,074 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:38:24,074 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:38:24,074 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:38:24,074 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:38:24,075 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:38:24,075 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:38:24,075 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:38:24,075 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:38:24,075 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:38:24,075 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:38:26,837 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:38:29,289 - [INFO] - [qa_admin.py:1910] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:38:29,289 - [INFO] - [qa_admin.py:1924] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:38:29,289 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:38:29,295 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:38:29,296 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:38:29,297 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [d148756e-5368-447f-8613-a8cbbf6dda39] (模式: File JSON)
+2026-09-21 06:38:29,297 - [INFO] - [qa_admin.py:1953] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:38:29,406 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:38:29,499 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:38:29,499 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:38:29,499 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:38:32,351 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:45:28,713 - [INFO] - [qa_admin.py:2107] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:45:28,713 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:45:29,048 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:45:33,986 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:45:33,986 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:45:33,986 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:45:33,986 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:45:33,987 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:45:33,987 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:45:33,987 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:45:33,987 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:45:33,987 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:45:33,987 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:45:37,519 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:45:37,520 - [INFO] - [qa_admin.py:2094] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:45:37,520 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:45:37,806 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:46:22,746 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:46:22,746 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:46:22,746 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:46:22,746 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:46:22,747 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:46:22,747 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:46:22,747 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:46:22,747 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:46:22,747 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:46:22,747 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:46:25,792 - [INFO] - [qa_admin.py:2094] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:46:25,792 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:46:26,078 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:49:15,762 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:49:15,762 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:49:15,762 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:49:20,803 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:49:20,803 - [INFO] - [qa_admin.py:2095] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:49:20,804 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:49:20,943 - [ERROR] - [qa_admin.py:283] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 06:49:20,943 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:50:25,949 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:50:25,950 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:50:25,950 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:50:25,950 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:50:29,001 - [INFO] - [qa_admin.py:2071] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:50:29,001 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:50:29,282 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:51:00,650 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:51:00,651 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:51:00,651 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:51:03,537 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:53:35,005 - [INFO] - [qa_admin.py:2049] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 06:53:35,005 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 06:53:35,330 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 06:53:40,187 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 06:53:40,187 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 06:53:40,188 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 06:53:40,188 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 06:53:40,188 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 06:53:42,241 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 06:53:48,305 - [INFO] - [qa_admin.py:1907] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 06:53:48,305 - [INFO] - [qa_admin.py:1921] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 06:53:48,305 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 06:53:48,311 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 06:53:48,313 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 06:53:48,313 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [43a12145-4840-4ea2-a2fe-a917b9976da7] (模式: File JSON)
+2026-09-21 06:53:48,313 - [INFO] - [qa_admin.py:1950] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 06:53:48,381 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 06:53:48,448 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 06:53:48,449 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 06:53:48,449 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 06:53:55,045 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:55:06,632 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:55:12,038 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 06:55:14,274 - [INFO] - [qa_admin.py:245] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 06:55:16,217 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 06:55:18,391 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 06:55:49,340 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 07:34:46,641 - [INFO] - [qa_admin.py:2104] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 07:34:46,641 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 07:34:46,797 - [ERROR] - [qa_admin.py:283] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 07:34:46,797 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 07:34:53,728 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 07:34:53,729 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 07:34:53,729 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 07:34:53,729 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 07:34:56,113 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 07:34:56,114 - [INFO] - [qa_admin.py:2112] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 07:34:56,114 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 07:34:56,403 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 07:36:23,445 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 07:36:23,445 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 07:36:23,445 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 07:36:23,445 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 07:36:23,446 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 07:36:23,446 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 07:36:23,446 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 07:36:23,446 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 07:36:23,446 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 07:36:23,446 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 07:39:29,858 - [INFO] - [qa_admin.py:1882] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 07:39:29,858 - [INFO] - [qa_admin.py:1896] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 07:39:29,858 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 07:39:29,864 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 07:39:29,865 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 07:39:29,866 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [8d7cc07c-d8e1-4ae9-93de-db6fab4200c6] (模式: File JSON)
+2026-09-21 07:39:29,866 - [INFO] - [qa_admin.py:1925] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 07:39:29,977 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 07:39:30,053 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 07:39:30,053 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 07:39:30,053 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 07:39:41,194 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 07:39:49,636 - [INFO] - [qa_admin.py:245] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 07:43:02,850 - [INFO] - [qa_admin.py:2079] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 07:43:02,850 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 07:43:03,003 - [ERROR] - [qa_admin.py:283] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 07:43:03,003 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 07:43:07,792 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 07:43:07,792 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 07:43:07,792 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 07:43:07,792 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 07:43:07,793 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 07:43:07,793 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 07:43:07,793 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 07:43:07,793 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 07:43:07,793 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 07:43:07,793 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 07:43:09,870 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 07:43:39,577 - [INFO] - [qa_admin.py:1916] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 07:43:39,577 - [INFO] - [qa_admin.py:1930] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 07:43:39,577 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 07:43:39,580 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 07:43:39,580 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 07:43:39,580 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [70b6cbe6-bacb-4e37-bb9c-9f7166026922] (模式: File JSON)
+2026-09-21 07:43:39,580 - [INFO] - [qa_admin.py:1959] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 07:43:39,646 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 07:43:39,709 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 07:43:39,709 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 07:43:39,709 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 07:46:11,453 - [INFO] - [qa_admin.py:2113] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 07:46:11,453 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 07:46:11,773 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 07:46:16,683 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 07:46:16,683 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 07:46:16,683 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 07:46:16,683 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 07:46:16,684 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 07:46:16,684 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 07:46:16,684 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 07:46:16,684 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 07:46:16,684 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 07:46:16,684 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 07:46:19,312 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 07:46:22,256 - [INFO] - [qa_admin.py:1916] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 07:46:22,256 - [INFO] - [qa_admin.py:1930] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 07:46:22,256 - [INFO] - [qa_admin.py:192] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 07:46:22,262 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 07:46:22,262 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 07:46:22,263 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [214036b5-e1ed-450b-b934-56feacdeb874] (模式: File JSON)
+2026-09-21 07:46:22,264 - [INFO] - [qa_admin.py:1959] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 07:46:22,331 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 07:46:22,428 - [INFO] - [qa_admin.py:943] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 07:46:22,428 - [INFO] - [qa_admin.py:949] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 07:46:22,428 - [INFO] - [qa_admin.py:952] -   → 未找到用户轮次，返回空选项
+2026-09-21 07:47:42,855 - [INFO] - [qa_admin.py:233] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 08:22:44,723 - [INFO] - [qa_admin.py:2113] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:22:44,723 - [WARNING] - [qa_admin.py:268] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:22:45,057 - [INFO] - [qa_admin.py:284] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:23:22,305 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:23:22,305 - [INFO] - [qa_admin.py:1461] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:23:22,305 - [WARNING] - [qa_admin.py:1478] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 08:23:39,667 - [INFO] - [qa_admin.py:2111] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:23:39,668 - [WARNING] - [qa_admin.py:269] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:23:40,001 - [INFO] - [qa_admin.py:285] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:23:44,878 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:23:44,878 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:23:44,878 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:23:44,878 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:23:44,879 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:23:44,879 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:23:44,879 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:23:44,879 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:23:44,879 - [INFO] - [qa_admin.py:1462] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:23:44,879 - [WARNING] - [qa_admin.py:1479] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 08:23:47,801 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:26:44,938 - [INFO] - [qa_admin.py:2112] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:26:44,938 - [WARNING] - [qa_admin.py:270] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:26:45,254 - [INFO] - [qa_admin.py:286] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:26:50,188 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:26:50,188 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:26:50,188 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:26:50,188 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:26:50,189 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:26:50,189 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:26:50,189 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:26:50,189 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:26:50,189 - [INFO] - [qa_admin.py:1465] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:26:50,189 - [WARNING] - [qa_admin.py:1482] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 08:26:53,068 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:33:39,938 - [INFO] - [qa_admin.py:2115] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:33:39,938 - [WARNING] - [qa_admin.py:273] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:33:40,124 - [ERROR] - [qa_admin.py:288] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 08:33:40,124 - [INFO] - [qa_admin.py:289] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:33:44,986 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:33:44,986 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:33:44,987 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:33:44,987 - [INFO] - [qa_admin.py:1465] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:33:44,987 - [WARNING] - [qa_admin.py:1482] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 08:33:47,038 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:35:28,114 - [INFO] - [qa_admin.py:2115] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:35:28,114 - [WARNING] - [qa_admin.py:273] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:35:28,407 - [INFO] - [qa_admin.py:289] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:35:33,307 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:35:33,308 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:35:33,308 - [INFO] - [qa_admin.py:1463] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:35:33,308 - [WARNING] - [qa_admin.py:1480] - ⚠️ 工具初始化说明: Retriever.__init__() got an unexpected keyword argument 'cuda_device'
+2026-09-21 08:35:35,700 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:36:52,009 - [INFO] - [qa_admin.py:2113] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:36:52,009 - [WARNING] - [qa_admin.py:271] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:36:52,305 - [INFO] - [qa_admin.py:287] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:42:16,561 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:42:16,561 - [INFO] - [qa_admin.py:1461] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:42:16,568 - [INFO] - [model_factory.py:95] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 08:42:16,580 - [INFO] - [model_factory.py:121] - ⏳ 正在初始化本地 Rerank 模型至设备: cuda...
+2026-09-21 08:42:17,971 - [ERROR] - [model_factory.py:128] - ❌ 初始化 Rerank 模型失败: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 08:42:17,971 - [INFO] - [model_factory.py:74] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 08:42:17,995 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 08:42:17,995 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cuda)
+2026-09-21 08:42:17,996 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:42:17,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 08:42:17,997 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 08:42:17,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:42:17,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:42:20,960 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:44:07,801 - [INFO] - [qa_admin.py:2110] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:44:07,801 - [WARNING] - [qa_admin.py:270] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:44:07,996 - [ERROR] - [qa_admin.py:285] - CUDA 显存回收异常: CUDA error: out of memory
+Search for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+For more detailed error information, run with CUDA_LOG_FILE=stderr
+
+2026-09-21 08:44:07,996 - [INFO] - [qa_admin.py:286] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:44:12,945 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:44:12,945 - [INFO] - [qa_admin.py:1461] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:44:12,951 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 08:44:12,964 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 08:44:14,361 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 08:44:14,361 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 08:44:14,370 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 08:44:14,370 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 08:44:14,372 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:44:14,372 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 08:44:14,372 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 08:44:14,372 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:44:14,372 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:44:17,880 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 08:45:12,847 - [INFO] - [qa_admin.py:2110] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 08:45:12,848 - [WARNING] - [qa_admin.py:270] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 08:45:13,168 - [INFO] - [qa_admin.py:286] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 08:45:18,202 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:45:18,202 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 08:45:18,202 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 08:45:18,202 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 08:45:18,203 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:45:18,203 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 08:45:18,203 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:45:18,203 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 08:45:18,203 - [INFO] - [qa_admin.py:1461] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 08:45:18,209 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 08:45:18,222 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 08:45:19,590 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 08:45:19,591 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 08:45:19,599 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 08:45:19,599 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 08:45:19,600 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 08:45:19,600 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 08:45:19,600 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 08:45:19,600 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 08:45:19,600 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 08:45:23,117 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 09:31:49,642 - [INFO] - [qa_admin.py:2110] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 09:31:49,643 - [WARNING] - [qa_admin.py:270] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 09:31:49,957 - [INFO] - [qa_admin.py:286] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 09:31:54,997 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 09:31:54,997 - [INFO] - [qa_admin.py:1497] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 09:31:55,004 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 09:31:55,016 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 09:31:56,401 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 09:31:56,401 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 09:31:56,408 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 09:31:56,408 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 09:31:56,410 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 09:31:56,410 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 09:31:56,410 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 09:31:56,410 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 09:31:56,410 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 09:31:59,435 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 09:32:46,708 - [INFO] - [qa_admin.py:1949] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 09:32:46,709 - [INFO] - [qa_admin.py:1963] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 09:32:46,709 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 09:32:46,715 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 09:32:46,717 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 09:32:46,717 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [33b6200b-9194-4a6e-b7ff-57a58a6b8980] (模式: File JSON)
+2026-09-21 09:32:46,717 - [INFO] - [qa_admin.py:1992] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 09:32:46,819 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 09:32:46,869 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:32:46,870 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:32:46,870 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:32:47,861 - [INFO] - [qa_admin.py:1949] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 09:32:47,862 - [INFO] - [qa_admin.py:1963] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 09:32:47,862 - [INFO] - [qa_admin.py:1992] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 09:32:47,945 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:32:47,945 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:32:47,945 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:32:51,720 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 7
+2026-09-21 09:33:19,028 - [INFO] - [qa_admin.py:242] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 09:33:20,388 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 13
+2026-09-21 09:33:28,441 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 13
+2026-09-21 09:33:32,480 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [208b5c6e-3ee6-4319-9632-6b4a0f33eb53]
+2026-09-21 09:33:32,481 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [2b9b44f2-672d-49ae-8d30-de774274bc1d]
+2026-09-21 09:33:32,571 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:33:32,571 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:33:32,571 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:33:32,653 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:33:32,654 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:33:32,654 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:33:41,528 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,爲叫jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:33:41,528 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,爲叫jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:33:41,531 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 09:33:41,532 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 13
+2026-09-21 09:33:41,533 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:你好,爲叫jerry] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 260
+2026-09-21 09:33:41,533 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:你好,爲叫jerry] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 260
+2026-09-21 09:33:41,844 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:34:02,600 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 746
+2026-09-21 09:34:02,739 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:34:18,688 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 09:34:18,689 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 09:34:18,689 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 09:34:18,689 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 09:34:18,777 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:35:11,121 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 89592.88, "timestamp": "2026-09-21 09:35:11", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 09:35:11,388 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 09:35:11,388 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 09:35:11,388 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 09:35:11,388 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 09:35:11,388 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 09:36:35,086 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [2b9b44f2-672d-49ae-8d30-de774274bc1d]
+2026-09-21 09:36:35,086 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [8c741b12-f1a5-4430-b60d-a672e8207f18]
+2026-09-21 09:36:35,175 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:36:35,176 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:36:35,176 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:36:35,258 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:36:35,258 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:36:35,258 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:36:46,644 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,我的名字是jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:36:46,644 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,我的名字是jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:36:46,645 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 13
+2026-09-21 09:36:46,645 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:你好,我的名字是jerry] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 260
+2026-09-21 09:36:46,645 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:你好,我的名字是jerry] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 260
+2026-09-21 09:36:46,719 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:37:29,045 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 1257
+2026-09-21 09:37:29,168 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:37:54,028 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 4 个工具包...
+2026-09-21 09:37:54,029 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 09:37:54,029 - [INFO] - [react_agent.py:392] -   → 加载 [finebi_system] - [dashboard_pkg]...
+2026-09-21 09:37:54,029 - [INFO] - [react_agent.py:392] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-21 09:37:54,029 - [INFO] - [react_agent.py:392] -   → 加载 [web_search] - [search_pkg]...
+2026-09-21 09:37:54,030 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 4 个工具。
+2026-09-21 09:37:54,030 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 09:37:54,106 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:38:31,532 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 104887.25, "timestamp": "2026-09-21 09:38:31", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 09:38:31,739 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 09:38:31,740 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 09:38:31,740 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 09:38:31,740 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 09:38:31,740 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 09:53:10,637 - [INFO] - [qa_admin.py:1949] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 09:53:10,637 - [INFO] - [qa_admin.py:1963] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 09:53:10,637 - [INFO] - [qa_admin.py:1992] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 09:53:10,778 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 09:53:10,778 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 09:53:10,778 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 09:53:10,778 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 09:53:10,778 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 09:53:35,812 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 13
+2026-09-21 09:53:43,606 - [INFO] - [qa_admin.py:242] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 09:53:52,239 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [8c741b12-f1a5-4430-b60d-a672e8207f18]
+2026-09-21 09:53:52,239 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [82d0eb22-dfaa-46a0-b031-0fbc9dcedcb0]
+2026-09-21 09:53:52,325 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:53:52,325 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:53:52,325 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:53:52,396 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:53:52,396 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:53:52,396 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:53:54,494 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,我的名字是jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:53:54,494 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:你好,我的名字是jerry] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:53:54,494 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 0
+2026-09-21 09:53:54,568 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:54:38,824 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 749
+2026-09-21 09:54:38,886 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:54:47,972 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 09:54:47,972 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 09:54:47,972 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 09:54:47,972 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 09:54:48,093 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:55:01,011 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 66517.14, "timestamp": "2026-09-21 09:55:01", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 09:55:01,283 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 09:55:01,283 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 09:55:01,283 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 09:55:01,283 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 09:55:01,283 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 09:55:19,659 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [82d0eb22-dfaa-46a0-b031-0fbc9dcedcb0]
+2026-09-21 09:55:19,659 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [3688a84e-8f32-40ea-8e35-10804b50fe44]
+2026-09-21 09:55:19,794 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:55:19,794 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:55:19,794 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:55:19,863 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 09:55:19,863 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 09:55:19,863 - [INFO] - [qa_admin.py:988] -   → 未找到用户轮次，返回空选项
+2026-09-21 09:55:29,573 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的名字是什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:55:29,573 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的名字是什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:55:29,573 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 0
+2026-09-21 09:55:29,646 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:55:43,482 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 744
+2026-09-21 09:55:43,557 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:56:11,620 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 09:56:11,621 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 09:56:11,621 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 09:56:11,621 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 09:56:11,708 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:56:27,177 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 57603.41, "timestamp": "2026-09-21 09:56:27", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 09:56:27,435 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 09:56:27,435 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 09:56:27,435 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 09:56:27,435 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 09:56:27,435 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 09:57:19,585 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的核心身份與定位] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:57:19,585 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的核心身份與定位] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 09:57:19,585 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 0
+2026-09-21 09:57:19,666 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:57:33,157 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 745
+2026-09-21 09:57:33,237 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:57:40,986 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 09:57:40,986 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 09:57:40,987 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 09:57:40,987 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 09:57:41,099 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:57:59,269 - [INFO] - [rag_tool.py:39] - 🔍 [RAGTool] 触发知识库检索: query='我的核心身份與定位', top_k=3
+2026-09-21 09:57:59,276 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [search_knowledge_base] 执行失败: <MilvusException: (code=100, message=collection not found[database=default][collection=_knowledge_chunks])>
+2026-09-21 09:57:59,330 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 2/5 轮推理/执行...
+2026-09-21 09:57:59,422 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:58:30,648 - [INFO] - [rag_tool.py:39] - 🔍 [RAGTool] 触发知识库检索: query='系统角色定义', top_k=3
+2026-09-21 09:58:30,651 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [search_knowledge_base] 执行失败: <MilvusException: (code=100, message=collection not found[database=default][collection=_knowledge_chunks])>
+2026-09-21 09:58:30,708 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 3/5 轮推理/执行...
+2026-09-21 09:58:30,785 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:58:52,961 - [INFO] - [rag_tool.py:39] - 🔍 [RAGTool] 触发知识库检索: query='智能体定位', top_k=3
+2026-09-21 09:58:52,965 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [search_knowledge_base] 执行失败: <MilvusException: (code=100, message=collection not found[database=default][collection=_knowledge_chunks])>
+2026-09-21 09:58:53,022 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 4/5 轮推理/执行...
+2026-09-21 09:58:53,153 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 09:59:41,604 - [INFO] - [rag_tool.py:39] - 🔍 [RAGTool] 触发知识库检索: query='智能体角色定义', top_k=3
+2026-09-21 09:59:41,608 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [search_knowledge_base] 执行失败: <MilvusException: (code=100, message=collection not found[database=default][collection=_knowledge_chunks])>
+2026-09-21 09:59:41,666 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 5/5 轮推理/执行...
+2026-09-21 09:59:41,754 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:00:01,341 - [INFO] - [rag_tool.py:39] - 🔍 [RAGTool] 触发知识库检索: query='系统智能体角色', top_k=3
+2026-09-21 10:00:01,345 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [search_knowledge_base] 执行失败: <MilvusException: (code=100, message=collection not found[database=default][collection=_knowledge_chunks])>
+2026-09-21 10:00:01,403 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 161817.37, "timestamp": "2026-09-21 10:00:01", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:00:01,634 - [INFO] - [qa_admin.py:979] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 10:00:01,634 - [INFO] - [qa_admin.py:973] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 10:00:01,634 - [INFO] - [qa_admin.py:985] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 10:00:01,634 - [INFO] - [qa_admin.py:999] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:00:01,634 - [INFO] - [qa_admin.py:1005] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 10:04:56,600 - [INFO] - [qa_admin.py:2146] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:04:56,600 - [WARNING] - [qa_admin.py:282] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:04:56,986 - [INFO] - [qa_admin.py:298] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:05:04,696 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:05:04,697 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:05:04,697 - [INFO] - [qa_admin.py:1502] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:05:04,703 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:05:04,716 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:05:06,096 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:05:06,096 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:05:06,106 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:05:06,106 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:05:06,107 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:05:06,107 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:05:06,107 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:05:06,107 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:05:06,107 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:05:09,412 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:07:30,230 - [INFO] - [qa_admin.py:1954] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:07:30,230 - [INFO] - [qa_admin.py:1968] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:07:30,230 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:07:30,236 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:07:30,236 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:07:30,237 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [390e3a0e-3d55-417c-83a1-ab8740241d3e] (模式: File JSON)
+2026-09-21 10:07:30,238 - [INFO] - [qa_admin.py:1997] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:07:30,369 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [3688a84e-8f32-40ea-8e35-10804b50fe44]
+2026-09-21 10:07:30,447 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 3...
+2026-09-21 10:07:30,447 - [INFO] - [qa_admin.py:978] -   → build_choices 完成：扫描 3 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 10:07:30,447 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 10:07:30,447 - [INFO] - [qa_admin.py:1004] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:07:30,447 - [INFO] - [qa_admin.py:1010] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 10:07:36,561 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的核心身份與定位] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:07:36,561 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:我的核心身份與定位] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:07:36,568 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:07:36,569 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 0
+2026-09-21 10:07:36,764 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:07:52,444 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 745
+2026-09-21 10:07:52,523 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:08:16,878 - [INFO] - [qa_admin.py:2151] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:08:16,878 - [WARNING] - [qa_admin.py:282] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:08:17,232 - [INFO] - [qa_admin.py:298] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:08:22,362 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:08:22,362 - [INFO] - [qa_admin.py:1502] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:08:22,369 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:08:22,382 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:08:23,760 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:08:23,760 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:08:23,767 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:08:23,767 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:08:23,769 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:08:23,769 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:08:23,769 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:08:23,769 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:08:23,769 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:08:25,347 - [INFO] - [qa_admin.py:1954] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:08:25,347 - [INFO] - [qa_admin.py:1968] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:08:25,347 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:08:25,351 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:08:25,351 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:08:25,351 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [27583240-c558-4aa5-9372-5703c3c18fb1] (模式: File JSON)
+2026-09-21 10:08:25,351 - [INFO] - [qa_admin.py:1997] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:08:25,438 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [3688a84e-8f32-40ea-8e35-10804b50fe44]
+2026-09-21 10:08:25,536 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 10:08:25,536 - [INFO] - [qa_admin.py:978] -   → build_choices 完成：扫描 4 条历史，找到 3 个用户轮次，总耗时 0.00s
+2026-09-21 10:08:25,536 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 3 个用户提问轮次
+2026-09-21 10:08:25,536 - [INFO] - [qa_admin.py:1004] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:08:25,536 - [INFO] - [qa_admin.py:1010] - ✅ [编辑面板逻辑] 完成，返回 3 个选项
+2026-09-21 10:08:26,331 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:09:19,067 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [3688a84e-8f32-40ea-8e35-10804b50fe44]
+2026-09-21 10:09:19,067 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [c214dafb-faa6-42e3-bbfc-9777fb9b77ad]
+2026-09-21 10:09:19,152 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:09:19,153 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:09:19,153 - [INFO] - [qa_admin.py:993] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:09:19,239 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:09:19,239 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:09:19,239 - [INFO] - [qa_admin.py:993] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:09:36,192 - [INFO] - [qa_admin.py:242] - ✅ 成功保存上下文到 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt]
+2026-09-21 10:09:44,374 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:09:44,374 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:09:44,381 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:09:44,383 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:09:44,383 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 257
+2026-09-21 10:09:44,383 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 257
+2026-09-21 10:09:44,615 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:10:07,591 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 744
+2026-09-21 10:10:07,668 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:10:22,240 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 10:10:22,240 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 10:10:22,241 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 10:10:22,241 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 10:10:22,328 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:10:39,417 - [INFO] - [qa_admin.py:436] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 55041.87, "timestamp": "2026-09-21 10:10:39", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:10:39,620 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:10:39,620 - [INFO] - [qa_admin.py:978] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:10:39,620 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:10:39,620 - [INFO] - [qa_admin.py:1004] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:10:39,620 - [INFO] - [qa_admin.py:1010] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:13:19,905 - [INFO] - [qa_admin.py:2151] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:13:19,905 - [WARNING] - [qa_admin.py:282] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:13:20,234 - [INFO] - [qa_admin.py:298] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:13:25,401 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:13:25,401 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:13:25,401 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:13:25,401 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:13:25,402 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:13:25,402 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:13:25,402 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:13:25,402 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:13:25,402 - [INFO] - [qa_admin.py:1502] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:13:25,408 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:13:25,420 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:13:26,770 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:13:26,770 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:13:26,778 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:13:26,779 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:13:26,780 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:13:26,780 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:13:26,780 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:13:26,780 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:13:26,780 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:13:31,465 - [INFO] - [qa_admin.py:1954] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:13:31,465 - [INFO] - [qa_admin.py:1968] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:13:31,465 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:13:31,471 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:13:31,472 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:13:31,472 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [4df164d0-5ff6-4d34-8c03-7e4955092c7c] (模式: File JSON)
+2026-09-21 10:13:31,472 - [INFO] - [qa_admin.py:1997] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:13:31,605 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [c214dafb-faa6-42e3-bbfc-9777fb9b77ad]
+2026-09-21 10:13:31,703 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:13:31,704 - [INFO] - [qa_admin.py:978] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:13:31,704 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:13:31,704 - [INFO] - [qa_admin.py:1004] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:13:31,704 - [INFO] - [qa_admin.py:1010] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:13:36,426 - [INFO] - [qa_admin.py:317] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [c214dafb-faa6-42e3-bbfc-9777fb9b77ad]
+2026-09-21 10:13:36,426 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [172609d1-5ba0-41b6-8f7f-309415ce0ea7]
+2026-09-21 10:13:36,545 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:13:36,545 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:13:36,545 - [INFO] - [qa_admin.py:993] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:13:36,611 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:13:36,611 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:13:36,611 - [INFO] - [qa_admin.py:993] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:13:39,528 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:13:39,528 - [INFO] - [qa_admin.py:705] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:13:39,535 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:13:39,536 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:13:39,536 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:13:39,536 - [INFO] - [qa_admin.py:755] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:13:39,723 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:14:03,033 - [INFO] - [qa_admin.py:1954] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:14:03,033 - [INFO] - [qa_admin.py:1968] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:14:03,033 - [INFO] - [qa_admin.py:1997] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:14:03,211 - [INFO] - [qa_admin.py:984] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 1...
+2026-09-21 10:14:03,211 - [INFO] - [qa_admin.py:978] -   → build_choices 完成：扫描 1 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:14:03,211 - [INFO] - [qa_admin.py:990] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:14:03,211 - [INFO] - [qa_admin.py:1004] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:14:03,211 - [INFO] - [qa_admin.py:1010] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:15:12,497 - [INFO] - [qa_admin.py:2151] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:15:12,497 - [WARNING] - [qa_admin.py:282] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:15:12,848 - [INFO] - [qa_admin.py:298] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:15:18,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:15:18,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:15:18,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:15:18,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:15:18,049 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:15:18,049 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:15:18,049 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:15:18,049 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:15:18,049 - [INFO] - [qa_admin.py:1503] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:15:18,055 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:15:18,068 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:15:19,452 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:15:19,452 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:15:19,458 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:15:19,459 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:15:19,460 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:15:19,460 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:15:19,460 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:15:19,460 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:15:19,460 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:15:23,709 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:16:13,645 - [INFO] - [qa_admin.py:1955] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:16:13,645 - [INFO] - [qa_admin.py:1969] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:16:13,646 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:16:13,652 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:16:13,654 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:16:13,654 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [6ccb124a-f8a2-4dba-9cc7-39687c8c93f7] (模式: File JSON)
+2026-09-21 10:16:13,655 - [INFO] - [qa_admin.py:1998] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:16:13,783 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [172609d1-5ba0-41b6-8f7f-309415ce0ea7]
+2026-09-21 10:16:13,837 - [INFO] - [qa_admin.py:985] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 1...
+2026-09-21 10:16:13,837 - [INFO] - [qa_admin.py:979] -   → build_choices 完成：扫描 1 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:16:13,837 - [INFO] - [qa_admin.py:991] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:16:13,837 - [INFO] - [qa_admin.py:1005] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:16:13,837 - [INFO] - [qa_admin.py:1011] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:16:19,076 - [INFO] - [qa_admin.py:706] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:16:19,076 - [INFO] - [qa_admin.py:706] - [User:admin] [Query:哈嘍,我叫什麼?] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:16:19,079 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:16:19,080 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:16:19,080 - [INFO] - [qa_admin.py:756] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:16:19,080 - [INFO] - [qa_admin.py:756] - [User:admin] [Query:哈嘍,我叫什麼?] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:16:19,308 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:17:01,989 - [INFO] - [react_agent.py:251] - [Package Router] Prompt 打印检查完成，Length: 744
+2026-09-21 10:17:02,049 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:17:21,672 - [INFO] - [react_agent.py:390] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 10:17:21,673 - [INFO] - [react_agent.py:392] -   → 加载 [rag_knowledge] - [knowledge_search_pkg]...
+2026-09-21 10:17:21,674 - [INFO] - [react_agent.py:402] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 1 个工具。
+2026-09-21 10:17:21,674 - [INFO] - [react_agent.py:425] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 10:17:21,739 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:17:32,177 - [INFO] - [qa_admin.py:437] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 73101.21, "timestamp": "2026-09-21 10:17:32", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:17:32,447 - [INFO] - [qa_admin.py:985] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 3...
+2026-09-21 10:17:32,447 - [INFO] - [qa_admin.py:979] -   → build_choices 完成：扫描 3 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 10:17:32,447 - [INFO] - [qa_admin.py:991] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 10:17:32,447 - [INFO] - [qa_admin.py:1005] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:17:32,447 - [INFO] - [qa_admin.py:1011] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 10:20:35,106 - [INFO] - [qa_admin.py:2152] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:20:35,107 - [WARNING] - [qa_admin.py:283] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:20:35,458 - [INFO] - [qa_admin.py:299] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:20:40,588 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:20:40,588 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:20:40,588 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:20:40,588 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:20:40,589 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:20:40,589 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:20:40,589 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:20:40,589 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:20:40,589 - [INFO] - [qa_admin.py:1504] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:20:40,595 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:20:40,608 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:20:42,014 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:20:42,014 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:20:42,021 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:20:42,021 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:20:42,023 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:20:42,023 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:20:42,023 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:20:42,023 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:20:42,023 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:20:44,433 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:21:59,395 - [INFO] - [qa_admin.py:1956] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:21:59,395 - [INFO] - [qa_admin.py:1970] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:21:59,395 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:21:59,398 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:21:59,398 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:21:59,398 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [f7412352-5aad-4c55-9535-fe3556f8779d] (模式: File JSON)
+2026-09-21 10:21:59,399 - [INFO] - [qa_admin.py:1999] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:21:59,488 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [172609d1-5ba0-41b6-8f7f-309415ce0ea7]
+2026-09-21 10:21:59,549 - [INFO] - [qa_admin.py:986] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:21:59,549 - [INFO] - [qa_admin.py:992] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:21:59,549 - [INFO] - [qa_admin.py:995] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:22:06,376 - [INFO] - [qa_admin.py:319] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [172609d1-5ba0-41b6-8f7f-309415ce0ea7]
+2026-09-21 10:22:06,376 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [c5b43c26-b391-420c-abdc-d75e33ec44b8]
+2026-09-21 10:22:06,457 - [INFO] - [qa_admin.py:986] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:22:06,457 - [INFO] - [qa_admin.py:992] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:22:06,457 - [INFO] - [qa_admin.py:995] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:22:06,523 - [INFO] - [qa_admin.py:986] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-21 10:22:06,523 - [INFO] - [qa_admin.py:992] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-21 10:22:06,523 - [INFO] - [qa_admin.py:995] -   → 未找到用户轮次，返回空选项
+2026-09-21 10:22:14,371 - [INFO] - [qa_admin.py:707] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:22:14,371 - [INFO] - [qa_admin.py:707] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:22:14,374 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:22:14,375 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:22:14,375 - [INFO] - [qa_admin.py:757] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:22:14,375 - [INFO] - [qa_admin.py:757] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:22:14,555 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:22:22,013 - [INFO] - [qa_admin.py:438] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 7642.59, "timestamp": "2026-09-21 10:22:22", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:22:22,166 - [INFO] - [qa_admin.py:986] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:22:22,166 - [INFO] - [qa_admin.py:980] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:22:22,166 - [INFO] - [qa_admin.py:992] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:22:22,166 - [INFO] - [qa_admin.py:1006] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:22:22,166 - [INFO] - [qa_admin.py:1012] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:26:49,088 - [INFO] - [qa_admin.py:2153] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:26:49,088 - [WARNING] - [qa_admin.py:284] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:26:49,414 - [INFO] - [qa_admin.py:300] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:26:54,616 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:26:54,616 - [INFO] - [qa_admin.py:1512] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:26:54,623 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:26:54,635 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:26:56,039 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:26:56,039 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:26:56,046 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:26:56,046 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:26:56,047 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:26:56,047 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:26:56,047 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:26:56,047 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:26:56,047 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:26:58,169 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:27:06,928 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:27:06,928 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:27:06,928 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:27:06,931 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:27:06,933 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:27:06,933 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [ba4e56ae-25a4-466a-84fd-21bd911b8ab6] (模式: File JSON)
+2026-09-21 10:27:06,934 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:27:07,067 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [c5b43c26-b391-420c-abdc-d75e33ec44b8]
+2026-09-21 10:27:07,164 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:27:07,164 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:27:07,164 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:27:07,164 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:27:07,164 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:27:23,405 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:27:23,405 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:27:23,405 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:27:23,566 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:27:23,566 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:27:23,566 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:27:23,566 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:27:23,566 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:27:32,443 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:27:32,444 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:27:32,444 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:27:32,618 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-21 10:27:32,618 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-21 10:27:32,618 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-21 10:27:32,618 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:27:32,618 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-21 10:27:44,335 - [INFO] - [qa_admin.py:715] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:27:44,335 - [INFO] - [qa_admin.py:715] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:27:44,341 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:27:44,343 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:27:44,343 - [INFO] - [qa_admin.py:765] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:27:44,343 - [INFO] - [qa_admin.py:765] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+====================================================
+
+2026-09-21 10:27:44,528 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:27:57,678 - [INFO] - [qa_admin.py:446] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 13343.18, "timestamp": "2026-09-21 10:27:57", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:27:57,888 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 10:27:57,889 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 10:27:57,889 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 10:27:57,889 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:27:57,889 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 10:28:59,373 - [INFO] - [qa_admin.py:2161] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:28:59,373 - [WARNING] - [qa_admin.py:292] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:28:59,713 - [INFO] - [qa_admin.py:308] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 10:29:06,301 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:29:06,301 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 10:29:06,301 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 10:29:06,301 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 10:29:06,301 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:29:06,302 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: ['admin']
+2026-09-21 10:29:06,302 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:29:06,302 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 10:29:06,302 - [INFO] - [qa_admin.py:1512] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 10:29:06,308 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 10:29:06,320 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 10:29:07,684 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 10:29:07,684 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 10:29:07,691 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 10:29:07,691 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 10:29:07,692 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 10:29:07,692 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 10:29:07,692 - [INFO] - [tool_factory.py:139] - 🛡️ [RBAC 阻断保护] 工具 [get_dataset_summary] 被二次注册，已强制继承 YAML 白名单: ['admin']
+2026-09-21 10:29:07,692 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 10:29:07,692 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 10:29:09,828 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 10:29:51,566 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 10:29:51,566 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 10:29:51,566 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 10:29:51,570 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 10:29:51,570 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 10:29:51,570 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [6bf5eacb-3ff9-4ad9-b0b9-6686747b8cae] (模式: File JSON)
+2026-09-21 10:29:51,570 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 10:29:51,702 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [c5b43c26-b391-420c-abdc-d75e33ec44b8]
+2026-09-21 10:29:51,795 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 10:29:51,795 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 10:29:51,795 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 10:29:51,795 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:29:51,795 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 10:29:57,172 - [INFO] - [qa_admin.py:715] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:29:57,172 - [INFO] - [qa_admin.py:715] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 10:29:57,179 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 10:29:57,180 - [INFO] - [qa_admin.py:230] - ✅ 成功读取上下文 [/workspace/hf-conda/RAG/agent_jerry_gao/data/admin/user_prompt_context.txt], 字符数: 10
+2026-09-21 10:29:57,180 - [INFO] - [qa_admin.py:765] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+
+### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+# SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+====================================================
+以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+
+### [模組 01: 核心身份與定位 (Identity & Role)]
+- **高铮**
+
+### [模組 02: 技術與工作偏好 (Preferences)]
+- 無特殊偏好
+
+### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+- 無硬性限制
+
+### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+**核心目標**:
+- 無
+
+**當前研發焦點**:
+- 無
+
+### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+- 尚無紀錄
+
+### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+- 尚無社交關係與態度數據
+
+====================================================
+END OF SYSTEM CONTEXT
+====================================================
+
+2026-09-21 10:29:57,180 - [INFO] - [qa_admin.py:765] - [User:admin] [Query:哈嘍] ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 
+
+====================================================
+🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+====================================================
+### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】
+我的名字是jerry
+
+### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+# SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+====================================================
+以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+
+### [模組 01: 核心身份與定位 (Identity & Role)]
+- **高铮**
+
+### [模組 02: 技術與工作偏好 (Preferences)]
+- 無特殊偏好
+
+### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+- 無硬性限制
+
+### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+**核心目標**:
+- 無
+
+**當前研發焦點**:
+- 無
+
+### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+- 尚無紀錄
+
+### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+- 尚無社交關係與態度數據
+
+====================================================
+END OF SYSTEM CONTEXT
+====================================================
+
+2026-09-21 10:29:57,412 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 10:30:09,262 - [INFO] - [qa_admin.py:446] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 12088.52, "timestamp": "2026-09-21 10:30:09", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 10:30:09,469 - [INFO] - [qa_admin.py:994] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 6...
+2026-09-21 10:30:09,470 - [INFO] - [qa_admin.py:988] -   → build_choices 完成：扫描 6 条历史，找到 3 个用户轮次，总耗时 0.00s
+2026-09-21 10:30:09,470 - [INFO] - [qa_admin.py:1000] -   → 构建选项耗时 0.00s，共 3 个用户提问轮次
+2026-09-21 10:30:09,470 - [INFO] - [qa_admin.py:1014] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 10:30:09,470 - [INFO] - [qa_admin.py:1020] - ✅ [编辑面板逻辑] 完成，返回 3 个选项
+2026-09-21 10:31:02,002 - [INFO] - [qa_admin.py:2161] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 10:31:02,002 - [WARNING] - [qa_admin.py:292] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 10:31:02,338 - [INFO] - [qa_admin.py:308] - ✨ [QA Admin] 显存与网关代理清理完毕！
