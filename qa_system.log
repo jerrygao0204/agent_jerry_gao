@@ -2288,3 +2288,90 @@ END OF SYSTEM CONTEXT
 2026-09-21 18:00:31,616 - [INFO] - [qa_admin.py:2157] - ⚡关闭QA服务，清除GPU显存...
 2026-09-21 18:00:31,616 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
 2026-09-21 18:00:31,963 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-21 18:06:40,390 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 18:06:40,390 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 18:06:40,391 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-21 18:06:40,391 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-21 18:06:40,397 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-21 18:06:40,410 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-21 18:06:41,782 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-21 18:06:41,782 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-21 18:06:41,789 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-21 18:06:41,789 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-21 18:06:41,790 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-21 18:06:41,790 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-21 18:06:41,791 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-21 18:06:41,791 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-21 18:06:44,898 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-21 18:06:46,187 - [INFO] - [qa_admin.py:1960] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-21 18:06:46,188 - [INFO] - [qa_admin.py:1974] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-21 18:06:46,188 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-21 18:06:46,191 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-21 18:06:46,191 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-21 18:06:46,191 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [6b1e38f3-6dda-45f5-8310-1c95711fd04a] (模式: File JSON)
+2026-09-21 18:06:46,192 - [INFO] - [qa_admin.py:2003] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-21 18:06:46,286 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-21 18:06:46,383 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 18:06:46,384 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 18:06:46,384 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 18:06:46,384 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 18:06:46,384 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 18:06:54,061 - [INFO] - [qa_admin.py:1039] - 🔄 [会话重建] 开始重建会话 9e0c799c...，保留消息数: 2
+2026-09-21 18:06:54,062 - [INFO] - [qa_admin.py:1045] -   → 删除旧会话耗时 0.00s
+2026-09-21 18:06:54,064 - [INFO] - [qa_admin.py:1054] -   → 创建新会话索引耗时 0.00s
+2026-09-21 18:06:54,064 - [INFO] - [qa_admin.py:1061] -   → 清空内存缓存耗时 0.00s
+2026-09-21 18:06:54,067 - [INFO] - [qa_admin.py:1079] -   → 重建内存消息耗时 0.00s，总耗时 0.01s
+2026-09-21 18:06:54,067 - [INFO] - [qa_admin.py:1080] - ✅ [会话重建] 完成
+2026-09-21 18:06:54,067 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:我想看一下表A的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 18:06:54,067 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:我想看一下表A的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-21 18:06:54,073 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-21 18:06:54,080 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-21 18:06:54,294 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 18:07:08,668 - [INFO] - [react_agent.py:340] - [Package Router] Prompt 打印检查完成，Length: 1052
+2026-09-21 18:07:08,756 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 18:07:16,360 - [INFO] - [react_agent.py:533] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-21 18:07:16,360 - [INFO] - [react_agent.py:535] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-21 18:07:16,361 - [INFO] - [react_agent.py:545] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 2 个工具。
+2026-09-21 18:07:16,361 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-21 18:07:16,361 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 1565
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 500 字符)]:
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constrai ...
+  │
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:436] -       我想看一下表A的table有多少行 ...
+2026-09-21 18:07:16,362 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-21 18:07:16,450 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-21 18:07:33,370 - [INFO] - [qa_admin.py:444] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 39301.49, "timestamp": "2026-09-21 18:07:33", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:1152] - 开始重建编辑选项...
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-21 18:07:33,372 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-21 18:08:03,494 - [INFO] - [qa_admin.py:2157] - ⚡关闭QA服务，清除GPU显存...
+2026-09-21 18:08:03,494 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-21 18:08:03,833 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
