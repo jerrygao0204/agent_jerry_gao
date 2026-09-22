@@ -3,7 +3,7 @@ from factory.tool_factory import BaseTool
 
 # 1. 定义入参 Schema
 class DatasetSummaryInput(BaseModel):
-    dataset_name: str = Field(description="需要查询的数据集名称")
+    table_name: str = Field(description="需要查询的数据集名称")
     query: str = Field(description="具體查詢的內容")
 
 # 2. 定义工具类 (Level 3)

@@ -2,16 +2,19 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>GitHub 使用文档</title>
+  <title>GitHub 使用与排错文档</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; color: #24292e; }
     h1, h2 { color: #0366d6; }
-    code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; }
-    pre { background: #f6f8fa; padding: 10px; border-radius: 6px; }
+    code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace; }
+    pre { background: #f6f8fa; padding: 10px; border-radius: 6px; overflow-x: auto; }
+    ul, ol { margin-bottom: 15px; }
+    li { margin-bottom: 6px; }
+    .warning { color: #d73a49; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>GitHub 使用文档</h1>
+  <h1>GitHub 使用与排错指南</h1>
 
   <h2>1. 生成 Personal Access Token (PAT)</h2>
   <ul>
@@ -23,42 +26,53 @@
     <li>点击 <strong>Generate token</strong> 并复制生成的 Token</li>
   </ul>
 
-  <h2>2. 在容器中配置 Token</h2>
+  <h2>2. 在容器中配置 Token 与凭证存储</h2>
   <pre><code>git config --global credential.helper store
 echo "https://jerrygao0204:ghp_xxxxxxxxxxxxxxxxxxxxx@github.com" > ~/.git-credentials
 </code></pre>
-  <p>确认配置：</p>
+  <p>确认配置是否生效：</p>
   <pre><code>cat ~/.git-credentials
 git config --global credential.helper
 </code></pre>
 
-  <h2>3. 提交代码流程</h2>
+  <h2>3. 标准提交代码流程（含缓存规避）</h2>
   <ol>
-    <li>进入仓库目录：<code>/workspace/hf-conda/RAG/agent_jerry_gao</code></li>
-    <li>添加修改的文件：
-      <pre><code>git add .
-git add 文件名.py</code></pre>
+    <li>进入仓库目录：<code>cd /workspace/hf-conda/RAG/agent_jerry_gao</code></li>
+    <li>检查当前工作区变动：
+      <pre><code>git status</code></pre>
     </li>
-    <li>提交修改：
-      <pre><code>git commit -m "描述你的修改内容"</code></pre>
+    <li>添加修改的文件（使用 <code>git add -A</code> 或指定檔案）：
+      <pre><code>git add -A</code></pre>
+    </li>
+    <li>提交修改并编写清晰的日志：
+      <pre><code>git commit -m "refactor: 描述你的修改内容"</code></pre>
     </li>
     <li>推送到远程仓库：
       <pre><code>git push origin main</code></pre>
     </li>
   </ol>
 
-  <h2>4. 验证配置</h2>
+  <h2>4. 进阶故障排查与最佳实践</h2>
   <ul>
-    <li>执行 <code>git pull origin main</code> → 如果显示 <code>Already up to date</code>，说明同步成功</li>
-    <li>执行 <code>git push origin main</code> → 如果有新提交，会直接推送成功</li>
+    <li><strong>如何彻底清理 Python 编译缓存（*.pyc / __pycache__）</strong>：
+      若发现不小心将 <code>.pyc</code> 二进制缓存提交到了 Git 仓库，可配置 <code>.gitignore</code> 并执行以下命令将其从版本追踪中彻底剥离：
+      <pre><code>git rm -r --cached "**/__pycache__"
+git rm -r --cached "**/*.pyc"
+git add -A
+git commit -m "chore: 清理歷史緩存並加入 gitignore"</code></pre>
+    </li>
+    <li><strong>理解 Git 档案数与傳輸物件數（Objects）的差異</strong>：
+      执行提交时输出的物件数（如 39 个 objects）通常与实际变动檔案数（如 42 个）不完全一致，这是由于 Git 底层的 Tree、Blob 物件拆解与 Delta 压缩机制导致的，属于正常现象。可使用 <code>git show --stat HEAD</code> 核对变动明细。
+    </li>
   </ul>
 
-  <h2>5. 注意事项</h2>
+  <h2>5. 注意事项与危险操作红线</h2>
   <ul>
     <li>不要在 <code>~/.git-credentials</code> 文件里写尖括号 <code>&lt;&gt;</code></li>
     <li>Token 只显示一次，记得妥善保存</li>
     <li>只勾选 <code>repo</code> 权限即可，避免过多权限带来安全风险</li>
+    <li>严禁将 <code>*.pyc</code> 字节码及 <code>__pycache__</code> 目录提交至远程仓库，务必在仓库根目录维护好 <code>.gitignore</code> 文件</li>
+    <li><span class="warning">严禁盲目使用具破坏性的 Git 命令</span>：切勿随意执行 <code class="warning">git reset --hard</code> 或未经确认的 <code class="warning">git checkout .</code>，这会导致本地已修改、尚未提交的高价值代码或重构逻辑被直接清空并永久删除！如需撤销应优先选择温和的软回退（如 <code>git reset --soft</code>）。</li>
   </ul>
 </body>
 </html>
-

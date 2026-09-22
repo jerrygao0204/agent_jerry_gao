@@ -83,7 +83,6 @@ DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 LOG_FILE_PATH = os.path.join(SCRIPT_DIR, "qa_system.log")
 
 
-######### 注意：關於log輪詢已經改爲按天計算，並且嵌入user_id與question上下文，請參考 factory/log_factory.py 中的 RAGContextLoggerAdapter 與 setup_logger 函數。###################
 from factory.log_factory import setup_logger
 
 # 初始化统一轮转 Logger（基础底座）
@@ -92,6 +91,7 @@ logger = setup_logger(
     log_file=LOG_FILE_PATH,
     level=logging.INFO
 )
+logger.propagate = False 
 logging.root.handlers = logger.handlers
 logging.root.setLevel(logging.INFO)
 
@@ -1710,9 +1710,13 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                                         btn_agent_clear = gr.Button("🗑️ 清空当前对话")
                                     agent_status_box = gr.Textbox(label="Agent 状态", value="就绪", interactive=False)
 
+                                # with gr.Column(scale=5):
+                                #     gr.Markdown("### 🔬 Agent 运行诊断 (Inspector)")
+                                #     agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
+
                                 with gr.Column(scale=5):
-                                    gr.Markdown("### 🔬 Agent 运行诊断 (Inspector)")
-                                    agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
+                                    with gr.Accordion("🔬 Agent 运行诊断 (Inspector)", open=True):
+                                        agent_inspector_display = gr.Markdown(value="*等待启动诊断...*")
 
                                     with gr.Accordion("✏️ 编辑历史提问并重新生成", open=False):
                                         t3_edit_turn_selector = gr.Dropdown(

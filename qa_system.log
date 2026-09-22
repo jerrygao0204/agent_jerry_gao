@@ -1,0 +1,1304 @@
+2026-09-22 03:19:51,211 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:19:51,212 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:19:51,212 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:19:51,218 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:19:51,231 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:19:52,699 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:19:52,699 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:19:52,717 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:19:52,717 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:19:52,718 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:19:52,718 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:19:52,718 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:19:52,718 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:19:55,715 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:20:07,508 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:20:07,508 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:20:07,514 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:20:07,527 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:20:08,925 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:20:08,925 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:20:08,932 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:20:08,932 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:20:08,933 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:20:08,933 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:20:08,933 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:20:08,933 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:20:10,877 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 03:20:10,878 - [INFO] - [qa_admin.py:2157] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 03:20:10,878 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 03:20:11,171 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:21:09,856 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:21:09,856 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:21:09,862 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:21:09,875 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:21:11,242 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:21:11,242 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:21:11,249 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:21:11,249 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:21:11,250 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:21:11,250 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:21:11,250 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:21:11,250 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:21:14,299 - [INFO] - [qa_admin.py:2157] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 03:21:14,300 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 03:21:14,589 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:23:22,841 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:23:22,841 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:23:22,847 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:23:22,860 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:23:24,242 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:23:24,242 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:23:24,250 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:23:24,250 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:23:24,251 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:23:24,251 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:23:24,251 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:23:24,251 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:23:27,144 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 03:23:48,243 - [INFO] - [qa_admin.py:1960] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 03:23:48,243 - [INFO] - [qa_admin.py:1974] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 03:23:48,243 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-22 03:23:48,247 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-22 03:23:48,247 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-22 03:23:48,247 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [0a22238e-bb61-4b51-a5a8-3d83209fd109] (模式: File JSON)
+2026-09-22 03:23:48,247 - [INFO] - [qa_admin.py:2003] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 03:23:48,353 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 03:23:48,539 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 03:23:48,539 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 03:23:48,539 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 03:23:48,539 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 03:23:48,539 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 03:24:00,705 - [INFO] - [qa_admin.py:1039] - 🔄 [会话重建] 开始重建会话 9e0c799c...，保留消息数: 2
+2026-09-22 03:24:00,705 - [INFO] - [qa_admin.py:1045] -   → 删除旧会话耗时 0.00s
+2026-09-22 03:24:00,708 - [INFO] - [qa_admin.py:1054] -   → 创建新会话索引耗时 0.00s
+2026-09-22 03:24:00,708 - [INFO] - [qa_admin.py:1061] -   → 清空内存缓存耗时 0.00s
+2026-09-22 03:24:00,709 - [INFO] - [qa_admin.py:1079] -   → 重建内存消息耗时 0.00s，总耗时 0.00s
+2026-09-22 03:24:00,709 - [INFO] - [qa_admin.py:1080] - ✅ [会话重建] 完成
+2026-09-22 03:24:00,709 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:我想看一下表N的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 03:24:00,709 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:我想看一下表N的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 03:24:00,712 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-22 03:24:00,716 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-22 03:24:01,563 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:24:14,919 - [INFO] - [react_agent.py:340] - [Package Router] Prompt 打印检查完成，Length: 1052
+2026-09-22 03:24:15,028 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:24:28,845 - [INFO] - [react_agent.py:533] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-22 03:24:28,845 - [INFO] - [react_agent.py:535] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:545] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 2 个工具。
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2221
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'dataset_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['dataset_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:24:28,846 - [INFO] - [react_agent.py:436] -       我想看一下表N的table有多少行 ...
+2026-09-22 03:24:28,847 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:24:28,996 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:24:48,772 - [WARNING] - [sandbox.py:167] - ⚙️ 工具调用 [get_dataset_summary] 执行失败: DatasetSummaryTool.run() missing 1 required positional argument: 'table_name'
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 2/5 轮推理/执行...
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2221
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'dataset_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['dataset_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下表N的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询名为“表N”的数据集的行数，需调用get_dataset_summary函数并指定dataset_name和query参数。</reflection>
+  │   ```python
+  │   # 调用数据集元数据查询接口获取行数
+  │   res = get_dataset_summary(datase ...
+2026-09-22 03:24:48,828 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:24:48,926 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:25:39,345 - [WARNING] - [react_agent.py:640] - [格式违规] 第 2 轮响应未包含代码块也无 Final Answer 前缀，判定为格式违规，触发重试
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 3/5 轮推理/执行...
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2221
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'dataset_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['dataset_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下表N的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询名为“表N”的数据集的行数，需调用get_dataset_summary函数并指定dataset_name和query参数。</reflection>
+  │   ```python
+  │   # 调用数据集元数据查询接口获取行数
+  │   res = get_dataset_summary(datase ...
+2026-09-22 03:25:39,345 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:25:39,409 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:631] - [CodeAct] 工具执行成功并获取结果: 数据集 [表N] 摘要: 內容行数共 10,000 行，15 列，更新时间: 2026-08-25
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 4/5 轮推理/执行...
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2221
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'dataset_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['dataset_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下表N的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询名为“表N”的数据集的行数，需调用get_dataset_summary函数并指定dataset_name和query参数。</reflection>
+  │   ```python
+  │   # 调用数据集元数据查询接口获取行数
+  │   res = get_dataset_summary(datase ...
+2026-09-22 03:26:23,007 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:26:23,109 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:26:39,778 - [INFO] - [qa_admin.py:444] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 159068.85, "timestamp": "2026-09-22 03:26:39", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:1152] - 开始重建编辑选项...
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 03:26:39,780 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 03:28:50,952 - [INFO] - [qa_admin.py:2157] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 03:28:50,953 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 03:28:51,365 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:28:56,991 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:28:56,991 - [INFO] - [qa_admin.py:1509] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:28:56,998 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:28:57,010 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:28:58,397 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:28:58,397 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:28:58,404 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:28:58,404 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:28:58,405 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:28:58,405 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:28:58,405 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:28:58,405 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:30:04,399 - [INFO] - [qa_admin.py:1961] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 03:30:04,399 - [INFO] - [qa_admin.py:1975] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 03:30:04,399 - [INFO] - [qa_admin.py:190] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-22 03:30:04,405 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-22 03:30:04,406 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-22 03:30:04,407 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [83834ef1-f26f-4d08-b519-90637cac38bd] (模式: File JSON)
+2026-09-22 03:30:04,407 - [INFO] - [qa_admin.py:2004] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 03:30:04,528 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 03:30:04,589 - [INFO] - [qa_admin.py:990] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 03:30:04,590 - [INFO] - [qa_admin.py:984] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 03:30:04,590 - [INFO] - [qa_admin.py:996] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 03:30:04,590 - [INFO] - [qa_admin.py:1010] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 03:30:04,590 - [INFO] - [qa_admin.py:1016] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 03:30:22,564 - [INFO] - [qa_admin.py:1040] - 🔄 [会话重建] 开始重建会话 9e0c799c...，保留消息数: 2
+2026-09-22 03:30:22,565 - [INFO] - [qa_admin.py:1046] -   → 删除旧会话耗时 0.00s
+2026-09-22 03:30:22,567 - [INFO] - [qa_admin.py:1055] -   → 创建新会话索引耗时 0.00s
+2026-09-22 03:30:22,567 - [INFO] - [qa_admin.py:1062] -   → 清空内存缓存耗时 0.00s
+2026-09-22 03:30:22,571 - [INFO] - [qa_admin.py:1080] -   → 重建内存消息耗时 0.00s，总耗时 0.01s
+2026-09-22 03:30:22,571 - [INFO] - [qa_admin.py:1081] - ✅ [会话重建] 完成
+2026-09-22 03:30:22,571 - [INFO] - [qa_admin.py:714] - [User:admin] [Query:我想看一下訂單表的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 03:30:22,578 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-22 03:30:22,585 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-22 03:30:22,812 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:30:33,929 - [INFO] - [react_agent.py:340] - [Package Router] Prompt 打印检查完成，Length: 1053
+2026-09-22 03:30:34,022 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:30:43,254 - [INFO] - [react_agent.py:533] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-22 03:30:43,254 - [INFO] - [react_agent.py:535] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:545] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 2 个工具。
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:436] -       我想看一下訂單表的table有多少行 ...
+2026-09-22 03:30:43,255 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:30:43,350 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:631] - [CodeAct] 工具执行成功并获取结果: 数据集 [訂單表] 摘要: 內容行数共 10,000 行，15 列，更新时间: 2026-08-25
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 2/5 轮推理/执行...
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下訂單表的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询订单表的行数，使用get_dataset_summary函数并传入table_name和query参数。表名假设为"訂單表"，query参数设置为"行数"以获取行数信息。</reflection>
+  │   ```python
+  │   # 调用数据集摘要查询接口获取订单表行数
+  │   res =  ...
+2026-09-22 03:31:07,395 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 03:31:07,485 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 03:31:29,735 - [INFO] - [qa_admin.py:445] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 67163.88, "timestamp": "2026-09-22 03:31:29", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-22 03:31:29,737 - [INFO] - [qa_admin.py:1153] - 开始重建编辑选项...
+2026-09-22 03:31:29,737 - [INFO] - [qa_admin.py:990] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 03:31:29,737 - [INFO] - [qa_admin.py:984] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 03:31:29,738 - [INFO] - [qa_admin.py:996] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 03:31:29,738 - [INFO] - [qa_admin.py:1010] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 03:31:29,738 - [INFO] - [qa_admin.py:1016] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 03:59:29,359 - [INFO] - [qa_admin.py:2158] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 03:59:29,359 - [WARNING] - [qa_admin.py:291] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 03:59:29,760 - [INFO] - [qa_admin.py:307] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:59:35,383 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 03:59:35,384 - [INFO] - [qa_admin.py:1509] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 03:59:35,390 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 03:59:35,402 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 03:59:36,746 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 03:59:36,747 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 03:59:36,753 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 03:59:36,753 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 03:59:36,755 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 03:59:36,755 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 03:59:36,755 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 03:59:36,755 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 03:59:40,175 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 03:59:48,037 - [INFO] - [qa_admin.py:1965] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 03:59:48,037 - [INFO] - [qa_admin.py:1979] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 03:59:48,037 - [INFO] - [qa_admin.py:190] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-22 03:59:48,043 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-22 03:59:48,044 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-22 03:59:48,044 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [852d3b5a-bb60-42b2-91ab-fb040c4546e3] (模式: File JSON)
+2026-09-22 03:59:48,044 - [INFO] - [qa_admin.py:2008] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 03:59:48,165 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 03:59:48,255 - [INFO] - [qa_admin.py:990] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 03:59:48,255 - [INFO] - [qa_admin.py:984] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 03:59:48,255 - [INFO] - [qa_admin.py:996] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 03:59:48,255 - [INFO] - [qa_admin.py:1010] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 03:59:48,255 - [INFO] - [qa_admin.py:1016] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 04:00:08,401 - [INFO] - [qa_admin.py:1040] - 🔄 [会话重建] 开始重建会话 9e0c799c...，保留消息数: 2
+2026-09-22 04:00:08,402 - [INFO] - [qa_admin.py:1046] -   → 删除旧会话耗时 0.00s
+2026-09-22 04:00:08,403 - [INFO] - [qa_admin.py:1055] -   → 创建新会话索引耗时 0.00s
+2026-09-22 04:00:08,403 - [INFO] - [qa_admin.py:1062] -   → 清空内存缓存耗时 0.00s
+2026-09-22 04:00:08,405 - [INFO] - [qa_admin.py:1080] -   → 重建内存消息耗时 0.00s，总耗时 0.00s
+2026-09-22 04:00:08,405 - [INFO] - [qa_admin.py:1081] - ✅ [会话重建] 完成
+2026-09-22 04:00:08,406 - [INFO] - [qa_admin.py:714] - [User:admin] [Query:我想看一下訂單表的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 04:00:08,409 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-22 04:00:08,413 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-22 04:00:08,588 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:00:24,376 - [INFO] - [react_agent.py:340] - [Package Router] Prompt 打印检查完成，Length: 1053
+2026-09-22 04:00:24,459 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:00:36,784 - [INFO] - [react_agent.py:533] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-22 04:00:36,784 - [INFO] - [react_agent.py:535] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-22 04:00:36,785 - [INFO] - [react_agent.py:545] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 2 个工具。
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:436] -       我想看一下訂單表的table有多少行 ...
+2026-09-22 04:00:36,786 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:00:36,863 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:00:58,439 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 2/5 轮推理/执行...
+2026-09-22 04:00:58,439 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:00:58,440 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:00:58,440 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 04:00:58,440 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 04:00:58,440 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:00:58,440 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 04:00:58,441 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:00:58,441 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下訂單表的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询订单表的行数，需调用get_dataset_summary函数，参数为table_name和query。假设表名为"訂單表"，query设为"行数"。</reflection>
+  │   ```python
+  │   # 调用数据集摘要接口查询订单表行数
+  │   res = get_dataset_ ...
+2026-09-22 04:00:58,441 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:00:58,520 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:01:33,882 - [INFO] - [qa_admin.py:1965] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 04:01:33,882 - [INFO] - [qa_admin.py:1979] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 04:01:33,883 - [INFO] - [qa_admin.py:2008] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 04:01:34,087 - [INFO] - [qa_admin.py:990] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 3...
+2026-09-22 04:01:34,087 - [INFO] - [qa_admin.py:984] -   → build_choices 完成：扫描 3 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 04:01:34,087 - [INFO] - [qa_admin.py:996] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 04:01:34,087 - [INFO] - [qa_admin.py:1010] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 04:01:34,087 - [INFO] - [qa_admin.py:1016] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 04:01:50,408 - [WARNING] - [react_agent.py:640] - [格式违规] 第 2 轮响应未包含代码块也无 Final Answer 前缀，判定为格式违规，触发重试
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 3/5 轮推理/执行...
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:01:50,408 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 04:01:50,409 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:01:50,409 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下訂單表的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询订单表的行数，需调用get_dataset_summary函数，参数为table_name和query。假设表名为"訂單表"，query设为"行数"。</reflection>
+  │   ```python
+  │   # 调用数据集摘要接口查询订单表行数
+  │   res = get_dataset_ ...
+2026-09-22 04:01:50,409 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:01:50,470 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:02:31,829 - [INFO] - [qa_admin.py:2162] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 04:02:31,829 - [WARNING] - [qa_admin.py:291] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 04:02:32,245 - [INFO] - [qa_admin.py:307] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:02:37,593 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 04:02:37,593 - [INFO] - [qa_admin.py:1509] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 04:02:37,600 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 04:02:37,613 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 04:02:39,011 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 04:02:39,011 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 04:02:39,018 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 04:02:39,018 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 04:02:39,019 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:02:39,019 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 04:02:39,019 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 04:02:39,020 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:02:41,737 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 04:09:11,699 - [INFO] - [qa_admin.py:2162] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 04:09:11,699 - [WARNING] - [qa_admin.py:291] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 04:09:12,020 - [INFO] - [qa_admin.py:307] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:09:17,103 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 04:09:17,103 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 04:09:17,109 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 04:09:17,122 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 04:09:18,512 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 04:09:18,512 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 04:09:18,519 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 04:09:18,519 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 04:09:18,521 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:09:18,521 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 04:09:18,521 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 04:09:18,521 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:09:20,415 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 04:11:27,622 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 04:11:27,622 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 04:11:27,622 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-22 04:11:27,625 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-22 04:11:27,625 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-22 04:11:27,625 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [c47a785b-0875-4d9b-b085-2058225e4a9c] (模式: File JSON)
+2026-09-22 04:11:27,625 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 04:11:27,712 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 04:11:27,804 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 3...
+2026-09-22 04:11:27,805 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 3 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 04:11:27,805 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 04:11:27,805 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 04:11:27,805 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 04:12:22,677 - [INFO] - [qa_admin.py:2161] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 04:12:22,677 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 04:12:22,983 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:12:28,048 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 04:12:28,048 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 04:12:28,055 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 04:12:28,068 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 04:12:29,449 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 04:12:29,449 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 04:12:29,456 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 04:12:29,456 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 04:12:29,457 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 04:12:29,457 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 04:12:29,458 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 04:12:29,458 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 04:12:32,614 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 04:13:35,473 - [INFO] - [qa_admin.py:1964] - 🔍 [Cookie 诊断] 收到 Header Cookie: ajs_anonymous_id=7d6030ad-a27f-4d68-94e8-fdfd88ee6465; qa_session_user=admin
+2026-09-22 04:13:35,473 - [INFO] - [qa_admin.py:1978] - 🔍 [Cookie 诊断] 解析到用户名: 'admin' | VALID_USERS 匹配结果: True
+2026-09-22 04:13:35,473 - [INFO] - [qa_admin.py:189] - 🛠️ 为账号 [admin] 初始化 MemoryManager...
+2026-09-22 04:13:35,479 - [INFO] - [entity_memory.py:46] - 🌐 [EntityMemory] 已成功加载全局规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/patterns.yaml
+2026-09-22 04:13:35,479 - [INFO] - [entity_memory.py:57] - 🔒 [EntityMemory] 已成功叠加用户 [admin] 规则: /workspace/hf-conda/RAG/agent_jerry_gao/config/users/admin_patterns.yaml
+2026-09-22 04:13:35,479 - [INFO] - [memory_manager.py:39] - 🧠 MemoryManager 已初始化 | 用户: [admin] | 会话: [91af3408-b03e-4f0d-8304-171d03b0120f] (模式: File JSON)
+2026-09-22 04:13:35,480 - [INFO] - [qa_admin.py:2007] - ✅ [Cookie 校验] 成功免密自动登录！用户: admin| 角色: admin
+2026-09-22 04:13:35,601 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 04:13:35,668 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 3...
+2026-09-22 04:13:35,668 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 3 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 04:13:35,668 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 04:13:35,668 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 04:13:35,668 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 04:13:45,390 - [INFO] - [qa_admin.py:1039] - 🔄 [会话重建] 开始重建会话 9e0c799c...，保留消息数: 2
+2026-09-22 04:13:45,391 - [INFO] - [qa_admin.py:1045] -   → 删除旧会话耗时 0.00s
+2026-09-22 04:13:45,393 - [INFO] - [qa_admin.py:1054] -   → 创建新会话索引耗时 0.00s
+2026-09-22 04:13:45,394 - [INFO] - [qa_admin.py:1061] -   → 清空内存缓存耗时 0.00s
+2026-09-22 04:13:45,397 - [INFO] - [qa_admin.py:1079] -   → 重建内存消息耗时 0.00s，总耗时 0.01s
+2026-09-22 04:13:45,397 - [INFO] - [qa_admin.py:1080] - ✅ [会话重建] 完成
+2026-09-22 04:13:45,397 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:我想看一下訂單表的table有多少行] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 04:13:45,403 - [INFO] - [compliance.py:49] - ✅ [Compliance] 成功装载 4 条敏感正则与 2 条脱敏规则。
+2026-09-22 04:13:45,410 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-22 04:13:45,634 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:14:01,152 - [INFO] - [react_agent.py:340] - [Package Router] Prompt 打印检查完成，Length: 1053
+2026-09-22 04:14:01,238 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:14:15,321 - [INFO] - [react_agent.py:533] - 🔧 [Tool Schema Loading] 开始装载工具元数据，共 1 个工具包...
+2026-09-22 04:14:15,321 - [INFO] - [react_agent.py:535] -   → 加载 [finebi_system] - [metadata_pkg]...
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:545] - ✅ [Tool Schema Loading] 完成！耗时 0.00s，共获取 2 个工具。
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 1/5 轮推理/执行...
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:14:15,322 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 04:14:15,323 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:14:15,323 - [INFO] - [react_agent.py:436] -       我想看一下訂單表的table有多少行 ...
+2026-09-22 04:14:15,323 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:14:15,403 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:631] - [CodeAct] 工具执行成功并获取结果: 数据集 [訂單表] 摘要: 內容行数共 10,000 行，15 列，更新时间: 2026-08-25
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:574] - [CodeAct Step] 开始第 2/5 轮推理/执行...
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 4
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 2217
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   [{'type': 'function', 'function': {'name': 'get_finebi_dashboards', 'description': '查询系统中的可视化仪表板、看板、报表组件列表及其配置。', 'parameters': {'properties': {'keyword': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': '', 'description': '仪表板名称或关键词，为空则查询全部'}}, 'type': 'object'}}}, {'type': 'function', 'function': {'name': 'get_dataset_summary', 'description': '查询指定数据集/数据表的元数据信息，如行数、列数、字段列表、表结构摘要。适用于获取数据表规模及明细结构。', 'parameters': {'properties': {'table_name': {'description': '需要查询的数据集名称', 'type': 'string'}, 'query': {'description': '具體查詢的內容', 'type': 'string'}}, 'required': ['table_name', 'query'], 'type': 'object'}}}] ...
+  │
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:436] -       原始问题: 我想看一下訂單表的table有多少行
+  │   
+  │   当前 Scratchpad 执行轨迹:
+  │   <reflection>用户需要查询“訂單表”的行数，应调用get_dataset_summary函数并传入table_name和query参数。需确认表名是否准确及函数参数是否正确。</reflection>
+  │   ```python
+  │   # 调用函数查询订单表行数
+  │   res = get_dataset_summar ...
+2026-09-22 04:14:38,891 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:14:38,977 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:14:50,879 - [INFO] - [qa_admin.py:444] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 65481.73, "timestamp": "2026-09-22 04:14:50", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-22 04:14:50,881 - [INFO] - [qa_admin.py:1152] - 开始重建编辑选项...
+2026-09-22 04:14:50,881 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 4...
+2026-09-22 04:14:50,882 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 4 条历史，找到 2 个用户轮次，总耗时 0.00s
+2026-09-22 04:14:50,882 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 2 个用户提问轮次
+2026-09-22 04:14:50,882 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 04:14:50,882 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 2 个选项
+2026-09-22 04:24:51,755 - [INFO] - [qa_admin.py:325] - 🗑️ 已成功从存储中删除用户 [admin] 的会话 [9e0c799c-99da-48ed-95ec-758daf0d627d]
+2026-09-22 04:24:51,756 - [INFO] - [memory_manager.py:55] - 🔄 用户 [admin] 已切换至会话: [d53f5c86-66af-47e3-a813-61b22dbedfd2]
+2026-09-22 04:24:51,870 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-22 04:24:51,870 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-22 04:24:51,870 - [INFO] - [qa_admin.py:998] -   → 未找到用户轮次，返回空选项
+2026-09-22 04:24:51,943 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 0...
+2026-09-22 04:24:51,943 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 0 个用户提问轮次
+2026-09-22 04:24:51,944 - [INFO] - [qa_admin.py:998] -   → 未找到用户轮次，返回空选项
+2026-09-22 04:26:48,021 - [INFO] - [qa_admin.py:713] - [User:admin] [Query:哈嘍] 🤖 用户 [admin] (角色: admin) 启动 ReAct Agent 任务...
+2026-09-22 04:26:48,028 - [INFO] - [react_agent.py:162] - ✅ 成功拼接用户 [admin] 双源 Context，总字符数: 893
+2026-09-22 04:26:48,032 - [INFO] - [react_agent.py:424] - ============================================================
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:425] - 🧩 [Assemble Messages] 拼装完成的 Message 结构如下:
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:426] -   ├─ Message 帧数 (Total Frames): 2
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:427] -   ├─ System Prompt 字符数: 1610
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:428] -   ├─ [System Frame 内容 (前 5000 字符)]:
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:431] -   │   
+  │   
+  │   ====================================================
+  │   🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)
+  │   ====================================================
+  │   ### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】
+  │   # SYSTEM CONTEXT: USER COGNITIVE PROFILE & MEMORY
+  │   ====================================================
+  │   以下內容為用戶的個人化認知圖譜、語境記憶與當前狀態。請在對話中嚴格遵循此 context，提供精準、個性化且符合硬性約束的回應。
+  │   
+  │   ### [模組 01: 核心身份與定位 (Identity & Role)]
+  │   - **姓名: 高錚**
+  │   
+  │   ### [模組 02: 技術與工作偏好 (Preferences)]
+  │   - 無特殊偏好
+  │   
+  │   ### [模組 08: 硬性約束與禁忌 (Hard Constraints)]
+  │   - 無硬性限制
+  │   
+  │   ### [模組 05: 當前階段目標與技術焦點 (Current Goals & Active Focus)]
+  │   **核心目標**:
+  │   - 無
+  │   
+  │   **當前研發焦點**:
+  │   - 無
+  │   
+  │   ### [模組 10: 用戶能力與專案演進軌跡 (User Growth Chains)]
+  │   - 尚無紀錄
+  │   
+  │   ### [模組 12: 人際關係網絡與態度時間演進 (Social & Attitude Graph)]
+  │   - 尚無社交關係與態度數據
+  │   
+  │   ====================================================
+  │   END OF SYSTEM CONTEXT
+  │   ====================================================
+  │   ⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。
+  │   
+  │   
+  │   你是一个 CodeAct 智能体：通过编写并执行 Python 代码来完成任务。
+  │   
+  │   你可以在代码里直接调用以下函数（就像调用普通 Python 函数一样，不需要 import）：
+  │   {tools_description}
+  │   
+  │   ### 执行规范与纠错指令：
+  │   1. **输出结构**：严格先输出 `<reflection>自检反思</reflection>`，再输出 ` ```python ` 代码块。
+  │   2. **关键变量**：必须将关键计算结果或工具返回赋值给 `FINAL_RESULT` 变量，并使用 `print()` 打印关键中间过程。
+  │   3. **自动纠错 (Self-Correction)**：若上一轮 Observation 包含 `[执行异常]` 或 `runtime_error`，你**必须**在 `<reflection>` 中分析报错原因（如函数名拼错、参数缺失等），并在本轮修正代码。**严禁连续生成完全相同的无效代码！**
+  │   4. **终止条件**：如果通过之前的 Observation 已经获得完整答案，直接输出 `Final Answer: ...`，不要再生成代码块。
+  │   
+  │   示例：
+  │   <reflection>上一轮提示 search_knowledge 未定义，检查工具列表发现正确名称为 search_knowledge_base，现予以更正。</reflection>
+  │   ```python
+  │   res = search_knowledge_base(query="怎么创建预警用户")
+  │   print(res)
+  │   FINAL_RESULT = res
+  │   ```
+  │   
+  │   
+  │   
+  │   可用工具规范:
+  │   无可用工具 (超短文本问答) ...
+  │
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:435] -   └─ [User Frame 内容 (当前输入)]:
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:436] -       哈嘍 ...
+2026-09-22 04:26:48,033 - [INFO] - [react_agent.py:437] - ============================================================
+2026-09-22 04:26:48,100 - [INFO] - [_client.py:1025] - HTTP Request: POST http://172.17.0.1:4000/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-22 04:27:05,500 - [INFO] - [qa_admin.py:444] - 📊 [METRICS] {"event": "rag_pipeline_metrics", "stage": "agent_execution", "elapsed_ms": 17478.5, "timestamp": "2026-09-22 04:27:05", "gpu_allocated_gb": 0.0, "llm_model": "qwen3-32b", "username": "admin"}
+2026-09-22 04:27:05,729 - [INFO] - [qa_admin.py:989] - 🔍 [编辑面板逻辑] 开始构建可编辑选项，历史条数: 2...
+2026-09-22 04:27:05,730 - [INFO] - [qa_admin.py:983] -   → build_choices 完成：扫描 2 条历史，找到 1 个用户轮次，总耗时 0.00s
+2026-09-22 04:27:05,730 - [INFO] - [qa_admin.py:995] -   → 构建选项耗时 0.00s，共 1 个用户提问轮次
+2026-09-22 04:27:05,730 - [INFO] - [qa_admin.py:1009] -   → 加载最新用户轮次内容耗时 0.00s
+2026-09-22 04:27:05,730 - [INFO] - [qa_admin.py:1015] - ✅ [编辑面板逻辑] 完成，返回 1 个选项
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [search_knowledge_base] 白名单已锁定为: None
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_finebi_dashboards]
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_finebi_dashboards] 白名单已锁定为: None
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> dashboard_pkg -> get_dataset_summary]
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [get_dataset_summary] 白名单已锁定为: None
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 07:07:49,576 - [INFO] - [tool_factory.py:373] - 🔒 [RBAC 装载] 工具 [web_search] 白名单已锁定为: None
+2026-09-22 07:07:49,576 - [INFO] - [qa_admin.py:1508] - ✅ 成功从 tools.yaml 装载动态工具元数据
+2026-09-22 07:07:49,582 - [INFO] - [model_factory.py:96] - 📂 Prompt Hub 资产加载成功: [/workspace/hf-conda/RAG/agent_jerry_gao/config/prompt_hub.yaml] | Keys: ['structure_prompt', 'structure_prompt_sliding_window', 'table_special_prompt_single_column', 'finebi_doc_semantic_analysis', 'doc_entity_constraint_extraction', 'doc_chunk_five_dimension_parsing', 'agent_router_prompt1', 'agent_router_prompt2', 'agent_react_prompt', 'extractor_extract_chunk_system_prompt', 'extractor_extract_chunk_schema_prompt', 'layer_mapper_clean_and_canonicalize_facts_system_prompt', 'layer_mapper_clean_and_canonicalize_facts_schema_prompt', 'layer_mapper_map_layered_context_system_prompt', 'layer_mapper_map_layered_context_schema_prompt', 'context_builder_system_context_render_prompt']
+2026-09-22 07:07:49,595 - [INFO] - [model_factory.py:122] - ⏳ 正在初始化本地 Rerank 模型至设备: cpu...
+2026-09-22 07:07:50,958 - [INFO] - [model_factory.py:127] - ✅ Rerank 模型已成功常驻于 cpu
+2026-09-22 07:07:50,958 - [INFO] - [model_factory.py:75] - 🚀 ModelFactory (LiteLLM Mode) 初始化完成 | Endpoint: http://172.17.0.1:4000/v1
+2026-09-22 07:07:50,965 - [INFO] - [retriever.py:48] - ⚡ 标准规范检索器成功绑定 Milvus 数据库连接集群。
+2026-09-22 07:07:50,965 - [INFO] - [reranker.py:54] - ✅ [Zero-Copy Load] Reranker 成功挂载复用 ModelFactory 常驻模型 (Device: cpu)
+2026-09-22 07:07:50,966 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [rag_knowledge -> knowledge_search_pkg -> search_knowledge_base]
+2026-09-22 07:07:50,966 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_finebi_dashboards]
+2026-09-22 07:07:50,966 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [finebi_system -> metadata_pkg -> get_dataset_summary]
+2026-09-22 07:07:50,966 - [INFO] - [tool_factory.py:152] - 🛠️ [ToolFactory] 注册成功: [web_search -> search_pkg -> web_search]
+2026-09-22 07:07:54,651 - [INFO] - [_client.py:1025] - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-09-22 07:07:54,652 - [INFO] - [qa_admin.py:2161] - ⚡关闭QA服务，清除GPU显存...
+2026-09-22 07:07:54,652 - [WARNING] - [qa_admin.py:290] - 🚨 [QA Admin] 触发应急显存与网关会话回收操作！
+2026-09-22 07:07:54,946 - [INFO] - [qa_admin.py:306] - ✨ [QA Admin] 显存与网关代理清理完毕！
