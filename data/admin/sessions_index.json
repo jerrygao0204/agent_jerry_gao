@@ -1,10 +1,19 @@
 {
-  "d53f5c86-66af-47e3-a813-61b22dbedfd2": {
-    "session_id": "d53f5c86-66af-47e3-a813-61b22dbedfd2",
+  "dedda88a-a999-493c-b989-ce45bc8e043e": {
+    "session_id": "dedda88a-a999-493c-b989-ce45bc8e043e",
     "user_id": "admin",
-    "title": "哈嘍",
-    "created_at": "2026-09-22 04:24:51",
-    "updated_at": "2026-09-22 04:27:05",
+    "title": "新对话",
+    "created_at": "2026-09-22 10:46:10",
+    "updated_at": "2026-09-22 10:48:12",
+    "is_deleted": true,
+    "status": "deleted"
+  },
+  "62a6c9d1-64cc-437f-b4a3-6e1619207d78": {
+    "session_id": "62a6c9d1-64cc-437f-b4a3-6e1619207d78",
+    "user_id": "admin",
+    "title": "新對話",
+    "created_at": "2026-09-22 10:48:07",
+    "updated_at": "2026-09-22 10:49:54",
     "is_deleted": false,
     "status": "active"
   }

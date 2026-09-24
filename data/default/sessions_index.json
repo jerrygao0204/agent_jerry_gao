@@ -277,5 +277,14 @@
     "updated_at": "2026-09-21 18:26:49",
     "is_deleted": false,
     "status": "active"
+  },
+  "ce8b8f16-64a7-4964-9078-e0f4b45556ab": {
+    "session_id": "ce8b8f16-64a7-4964-9078-e0f4b45556ab",
+    "user_id": "default",
+    "title": "我想知道表A一共有多少行",
+    "created_at": "2026-09-22 10:47:40",
+    "updated_at": "2026-09-22 10:48:15",
+    "is_deleted": false,
+    "status": "active"
   }
 }

@@ -194,11 +194,25 @@ def get_or_create_user_memory(username: str, session_id: Optional[str] = None) -
     return user_memory_managers[username]
 
 def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
-    """获取指定用户的历史会话列表，用于 Radio/Dropdown 组件展示"""
+    """获取前端 Dropdown/Radio 使用的会话选项列表 (会自动过滤已软删的 Session)"""
     mem_mgr = get_or_create_user_memory(username)
+    # 确保 get_user_sessions 的 include_deleted 默认为 False (无需特意传参)
     sessions = mem_mgr.get_recent_sessions_list()
-    choices = [(f"💬 {s.get('title', '新对话')} ({s.get('updated_at', '')[5:16]})", s['session_id']) for s in sessions]
+    
+    choices = []
+    for s in sessions:
+        session_id = s.get("session_id", "")
+        title = s.get("title", "未命名对话")
+        if session_id:
+            choices.append((f"{title} ({session_id[:8]})", session_id))
     return choices
+
+# def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
+#     """获取指定用户的历史会话列表，用于 Radio/Dropdown 组件展示"""
+#     mem_mgr = get_or_create_user_memory(username)
+#     sessions = mem_mgr.get_recent_sessions_list()
+#     choices = [(f"💬 {s.get('title', '新对话')} ({s.get('updated_at', '')[5:16]})", s['session_id']) for s in sessions]
+#     return choices
 
 # ==========================================
 # 📄 2.1 UI 上下文注入与预览函数
@@ -286,9 +300,10 @@ def get_gpu_memory_status() -> str:
         return f"显存获取异常: {str(e)}"
 
 def emergency_force_cleanup() -> str:
-    global global_qa_chain
+    global global_qa_chain, current_llm_choice
     logging.warning("🚨 [QA Admin] 触发应急显存与网关会话回收操作！")
     global_qa_chain = None
+    current_llm_choice = None
     try:
         if hasattr(ModelFactory, "_instance"):
             ModelFactory._instance = None
@@ -313,30 +328,36 @@ def get_compliance_checker() -> ComplianceChecker:
     return global_compliance_checker
 
 def clear_agent_memory(user_state: dict):
-    """【修正】物理删除当前 Session，清空内存并更新前端 Radio 选择框"""
+    """【修正】软删除当前 Session，清空内存并更新前端 Radio/Dropdown 选择框"""
     username = user_state.get("username", "default") if user_state else "default"
+    req_session_id = user_state.get("current_session_id") if user_state else None
+    
+    # 1. 获取用户 Memory 管理器单例
     mem_mgr = get_or_create_user_memory(username)
+
+    # 2. 上下文强行对齐：如果前端传入了特定的 session_id 且与当前不一致，先进行切换
+    if req_session_id and mem_mgr.session_id != req_session_id:
+        logging.warning(f"⚠️ [清空对话上下文强转] 内存会话 ({mem_mgr.session_id[:8]}) 与请求会话 ({req_session_id[:8]}) 不一致，自动切换")
+        mem_mgr.switch_session(req_session_id)
+
     current_session_id = mem_mgr.session_id
 
-    # 1. 物理删除持久化存储中的当前 Session
-    if hasattr(mem_mgr, "history_storage") and current_session_id:
+    # 3. 执行软清空（仅在索引中打上 is_deleted/status 标记，磁盘文件完好保留，同时清空 short_term/entity 内存）
+    if current_session_id:
         try:
-            mem_mgr.history_storage.delete_session(username, current_session_id)
-            logging.info(f"🗑️ 已成功从存储中删除用户 [{username}] 的会话 [{current_session_id}]")
+            mem_mgr.soft_clear_all()  # 内部已包含历史存储软删 + 内存清空，切勿再调用 clear_all()
+            logging.info(f"🗑️ [软清空成功] 用户 [{username}] 的会话 [{current_session_id[:8]}] 已标记为软删除")
         except Exception as e:
-            logging.error(f"❌ 删除会话记录失败: {e}")
+            logging.error(f"❌ [软清空失败] 用户 [{username}] 会话 [{current_session_id[:8]}] 标记失败: {e}", exc_info=True)
 
-    # 2. 清空内存对象
-    mem_mgr.clear_all()
-
-    # 3. 重新获取最新的会话列表
+    # 4. 重新获取最新的有效会话列表（fetch_session_dropdown_choices 调用的 get_user_sessions 已自动过滤软删会话）
     choices = fetch_session_dropdown_choices(username)
 
-    # 4. 如果会话已被空，自动生成一个全新的 Session
+    # 5. 如果有效会话列表为空，自动新建一个全新 Session；否则切到第一个有效会话
     if not choices:
         new_sess_id = str(uuid.uuid4())
         mem_mgr.switch_session(new_sess_id)
-        if hasattr(mem_mgr, "history_storage"):
+        if hasattr(mem_mgr, "history_storage") and mem_mgr.history_storage:
             mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
         choices = fetch_session_dropdown_choices(username)
         new_choice = new_sess_id
@@ -344,7 +365,42 @@ def clear_agent_memory(user_state: dict):
         new_choice = choices[0][1]
         mem_mgr.switch_session(new_choice)
 
-    return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
+    return [], "*等待启动诊断...*", "✅ 已成功软删除当前对话与记忆", "", gr.update(choices=choices, value=new_choice)
+
+# def clear_agent_memory(user_state: dict):
+#     """【修正】物理删除当前 Session，清空内存并更新前端 Radio 选择框"""
+#     username = user_state.get("username", "default") if user_state else "default"
+#     mem_mgr = get_or_create_user_memory(username)
+#     current_session_id = mem_mgr.session_id
+
+#     # 1. 物理删除持久化存储中的当前 Session
+#     if hasattr(mem_mgr, "history_storage") and current_session_id:
+#         try:
+#             # mem_mgr.history_storage.delete_session(username, current_session_id)
+#             mem_mgr.soft_clear_all()  # 软删除内存中的消息
+#             logging.info(f"🗑️ 已成功从存储中删除用户 [{username}] 的会话 [{current_session_id}]")
+#         except Exception as e:
+#             logging.error(f"❌ 删除会话记录失败: {e}")
+
+#     # 2. 清空内存对象
+#     mem_mgr.clear_all()
+
+#     # 3. 重新获取最新的会话列表
+#     choices = fetch_session_dropdown_choices(username)
+
+#     # 4. 如果会话已被空，自动生成一个全新的 Session
+#     if not choices:
+#         new_sess_id = str(uuid.uuid4())
+#         mem_mgr.switch_session(new_sess_id)
+#         if hasattr(mem_mgr, "history_storage"):
+#             mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
+#         choices = fetch_session_dropdown_choices(username)
+#         new_choice = new_sess_id
+#     else:
+#         new_choice = choices[0][1]
+#         mem_mgr.switch_session(new_choice)
+
+#     return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
 def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
     """解析 log_pipeline_metrics 輸出的 JSON 日誌（含後台 Print 驗證）"""
@@ -816,16 +872,47 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
 
 # 新建 Session 切换函数（容错处理防止 Radio 报错）
 def create_new_session_event(user_state: dict):
+    """新建 Session 切換函數（帶狀態同步與軟刪除過濾）"""
+    if not isinstance(user_state, dict):
+        user_state = {}
     username = user_state.get("username", "default")
     new_sess_id = str(uuid.uuid4())
-    mem_mgr = get_or_create_user_memory(username, session_id=new_sess_id)
-    mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
     
+    # 1. 獲取用戶記憶體管理器實例
+    mem_mgr = get_or_create_user_memory(username)
+    
+    # 2. 存儲層創建新會話記錄
+    if hasattr(mem_mgr, "history_storage") and mem_mgr.history_storage:
+        mem_mgr.history_storage.create_session(username, new_sess_id, title="新對話")
+    
+    # 3. 強制切換記憶體上下文並初始化
+    mem_mgr.switch_session(new_sess_id)
+    user_state["current_session_id"] = new_sess_id
+    
+    # 4. 重新拉取已過濾軟刪除的 Session 列表
     choices = fetch_session_dropdown_choices(username)
     if not choices:
-        choices = [(f"💬 新对话", new_sess_id)]
+        choices = [(f"💬 新對話 ({new_sess_id[:8]})", new_sess_id)]
+        
+    logging.info(f"✨ 用戶 [{username}] 已創建並切換至全新會話 [{new_sess_id[:8]}]")
+    return (
+        [], 
+        "*新對話已開啟*", 
+        "✅ 已新建會話", 
+        gr.update(choices=choices, value=new_sess_id)
+    )
 
-    return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
+# def create_new_session_event(user_state: dict):
+#     username = user_state.get("username", "default")
+#     new_sess_id = str(uuid.uuid4())
+#     mem_mgr = get_or_create_user_memory(username, session_id=new_sess_id)
+#     mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
+    
+#     choices = fetch_session_dropdown_choices(username)
+#     if not choices:
+#         choices = [(f"💬 新对话", new_sess_id)]
+
+#     return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
 
 # 新建 用户点赞/点踩及意见反馈组件
 def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict):
@@ -870,15 +957,51 @@ def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict)
 
 # 在侧边栏选中历史对话时的切换处理函数
 def switch_session_event(selected_session_id: str, user_state: dict):
+    """在侧边栏/下拉框选中历史对话时的切换处理函数"""
+    if not isinstance(user_state, dict):
+        user_state = {}
+        
     username = user_state.get("username", "default")
+    
     if not selected_session_id:
         return [], "*未选择会话*", "就绪"
 
-    mem_mgr = get_or_create_user_memory(username, session_id=selected_session_id)
+    # 1. 获取用户内存管理器实例
+    mem_mgr = get_or_create_user_memory(username)
+
+    # 2. ⚠️【关键修复】强行触发内存切换，重新从持久化存储中载入该 session 的 active 消息
+    mem_mgr.switch_session(selected_session_id)
+
+    # 3. ⚠️【关键修复】同步更新 user_state 中的 current_session_id，确保后续操作不越权/不出错
+    user_state["current_session_id"] = selected_session_id
+
+    # 4. 从重新装载后的短期内存中获取已过滤软删的有效消息
     raw_msgs = mem_mgr.short_term.get_messages()
-    rendered_history = [{"role": m["role"], "content": normalize_message_content(m.get("content", ""))} for m in raw_msgs]
+    rendered_history = [
+        {
+            "role": m.get("role", "user"), 
+            "content": normalize_message_content(m.get("content", ""))
+        } 
+        for m in raw_msgs
+    ]
+
+    logging.info(f"📖 用户 [{username}] 已成功加载并切至历史会话 [{selected_session_id[:8]}] (有效消息数: {len(rendered_history)})")
+
+    return (
+        rendered_history, 
+        f"📖 已加载历史会话: [{selected_session_id[:8]}...]", 
+        f"✅ 已切至会话 {selected_session_id[:8]}"
+    )
+# def switch_session_event(selected_session_id: str, user_state: dict):
+#     username = user_state.get("username", "default")
+#     if not selected_session_id:
+#         return [], "*未选择会话*", "就绪"
+
+#     mem_mgr = get_or_create_user_memory(username, session_id=selected_session_id)
+#     raw_msgs = mem_mgr.short_term.get_messages()
+#     rendered_history = [{"role": m["role"], "content": normalize_message_content(m.get("content", ""))} for m in raw_msgs]
     
-    return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
+#     return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
 
 
 # 添加缓存以加快重复标准化同一内容的性能（如在编辑面板重建中）
@@ -1029,55 +1152,99 @@ def load_agent_selected_user_turn_content(history: List[Dict[str, Any]], selecte
         pass
     return ""
 
-
-def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kept_history: List[Dict[str, str]]):
-    """重建代理会话，使用保留的历史消息作为前缀。包含性能诊断日志。"""
-
+def rebuild_agent_session_with_prefix(
+    mem_mgr: MemoryManager, 
+    username: str, 
+    current_session_id: str, 
+    kept_history: List[Dict[str, str]]
+):
+    """
+    軟刪除重建：把選中輪數及以後（編輯點及之後）的所有內容標記為軟刪除。
+    """
     t_start = time_module.time()
     
-    session_id = mem_mgr.session_id
-    logging.info(f"🔄 [会话重建] 开始重建会话 {session_id[:8]}...，保留消息数: {len(kept_history)}")
+    if not current_session_id:
+        logging.error("❌ [會話軟重建失敗] 未傳入有效的 current_session_id")
+        return
 
-    if hasattr(mem_mgr, "history_storage"):
-        try:
-            t_del = time_module.time()
-            mem_mgr.history_storage.delete_session(username, session_id)
-            logging.info(f"  → 删除旧会话耗时 {(time_module.time() - t_del):.2f}s")
-        except Exception as e:
-            logging.error(f"❌ 重建会话时删除旧会话失败: {e}")
-
-        try:
-            t_create = time_module.time()
-            first_user = next((normalize_message_content(m.get("content", "")) for m in kept_history if m.get("role") == "user"), "新对话")
-            title = (str(first_user)[:15] + "...") if len(str(first_user)) > 15 else str(first_user)
-            mem_mgr.history_storage.create_session(username, session_id, title=title or "新对话")
-            logging.info(f"  → 创建新会话索引耗时 {(time_module.time() - t_create):.2f}s")
-        except Exception as e:
-            logging.error(f"❌ 重建会话时创建会话索引失败: {e}")
-
-    t_clear = time_module.time()
-    mem_mgr.short_term.clear()
-    mem_mgr.entity.clear()
-    logging.info(f"  → 清空内存缓存耗时 {(time_module.time() - t_clear):.2f}s")
-
-    t_process = time_module.time()
-    for idx, msg in enumerate(kept_history):
-        role = msg.get("role")
-        content = normalize_message_content(msg.get("content", ""))
-        if not content:
-            continue
-        if role == "user":
-            mem_mgr.process_user_input(content)
-        elif role == "assistant":
-            mem_mgr.process_assistant_output(content)
+    if mem_mgr.session_id != current_session_id:
+        logging.warning(f"⚠️ [上下文強行對齊] mem_mgr 會話 ({mem_mgr.session_id[:8]}) 與請求 ({current_session_id[:8]}) 不一致，自動執行切換")
+        mem_mgr.switch_session(current_session_id)
         
-        # 每处理10条消息输出一次进度
-        if (idx + 1) % 10 == 0:
-            logging.debug(f"    └─ 已处理 {idx + 1} 条消息")
+    session_id = mem_mgr.session_id
+    keep_count = len(kept_history)
     
-    t_end = time_module.time()
-    logging.info(f"  → 重建内存消息耗时 {(t_end - t_process):.2f}s，总耗时 {(t_end - t_start):.2f}s")
-    logging.info(f"✅ [会话重建] 完成")
+    logging.info(f"🔄 [會話軟重建] 用戶 [{username}] 會話 [{session_id[:8]}] 執行截斷：保留前 {keep_count} 條 active 訊息，軟刪選中輪數及以後的內容")
+
+    # 1. 持久化層標記軟刪除
+    if hasattr(mem_mgr, "history_storage") and mem_mgr.history_storage:
+        try:
+            mem_mgr.history_storage.soft_delete_messages_after(
+                user_id=username,
+                session_id=session_id,
+                keep_active_count=keep_count
+            )
+        except Exception as e:
+            logging.error(f"❌ [軟刪執行異常] 用戶 [{username}] 會話 [{session_id}] 軟刪訊息失敗: {e}", exc_info=True)
+
+    # 2. 徹底清空當前記憶體快取，強迫從存儲層重新載入（只載入未軟刪的訊息）
+    if hasattr(mem_mgr, "short_term") and hasattr(mem_mgr.short_term, "clear"):
+        mem_mgr.short_term.clear()
+    if hasattr(mem_mgr, "entity") and hasattr(mem_mgr.entity, "clear"):
+        mem_mgr.entity.clear()
+        
+    # 3. 重新加載 active 訊息
+    mem_mgr.switch_session(session_id)
+    logging.info(f"✅ [會話軟重建成功] 當前短期記憶體有效訊息數: {len(mem_mgr.short_term.get_messages())}")
+    
+# def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kept_history: List[Dict[str, str]]):
+#     """重建代理会话，使用保留的历史消息作为前缀。包含性能诊断日志。"""
+
+#     t_start = time_module.time()
+    
+#     session_id = mem_mgr.session_id
+#     logging.info(f"🔄 [会话重建] 开始重建会话 {session_id[:8]}...，保留消息数: {len(kept_history)}")
+
+#     if hasattr(mem_mgr, "history_storage"):
+#         try:
+#             t_del = time_module.time()
+#             mem_mgr.history_storage.delete_session(username, session_id)
+#             logging.info(f"  → 删除旧会话耗时 {(time_module.time() - t_del):.2f}s")
+#         except Exception as e:
+#             logging.error(f"❌ 重建会话时删除旧会话失败: {e}")
+
+#         try:
+#             t_create = time_module.time()
+#             first_user = next((normalize_message_content(m.get("content", "")) for m in kept_history if m.get("role") == "user"), "新对话")
+#             title = (str(first_user)[:15] + "...") if len(str(first_user)) > 15 else str(first_user)
+#             mem_mgr.history_storage.create_session(username, session_id, title=title or "新对话")
+#             logging.info(f"  → 创建新会话索引耗时 {(time_module.time() - t_create):.2f}s")
+#         except Exception as e:
+#             logging.error(f"❌ 重建会话时创建会话索引失败: {e}")
+
+#     t_clear = time_module.time()
+#     mem_mgr.short_term.clear()
+#     mem_mgr.entity.clear()
+#     logging.info(f"  → 清空内存缓存耗时 {(time_module.time() - t_clear):.2f}s")
+
+#     t_process = time_module.time()
+#     for idx, msg in enumerate(kept_history):
+#         role = msg.get("role")
+#         content = normalize_message_content(msg.get("content", ""))
+#         if not content:
+#             continue
+#         if role == "user":
+#             mem_mgr.process_user_input(content)
+#         elif role == "assistant":
+#             mem_mgr.process_assistant_output(content)
+        
+#         # 每处理10条消息输出一次进度
+#         if (idx + 1) % 10 == 0:
+#             logging.debug(f"    └─ 已处理 {idx + 1} 条消息")
+    
+#     t_end = time_module.time()
+#     logging.info(f"  → 重建内存消息耗时 {(t_end - t_process):.2f}s，总耗时 {(t_end - t_start):.2f}s")
+#     logging.info(f"✅ [会话重建] 完成")
 
 def regenerate_agent_from_edited_turn(
     history: List[Dict[str, str]],
@@ -1091,7 +1258,11 @@ def regenerate_agent_from_edited_turn(
 ):
     safe_history = history or []
     clean_message = normalize_message_content(edited_user_message)
+    
+    # 1. 解析 user_state 参数（安全提取 username 与 current_session_id）
     username = user_state.get("username", "default") if isinstance(user_state, dict) else "default"
+    current_session_id = user_state.get("current_session_id") if isinstance(user_state, dict) else None
+    
     mem_mgr = get_or_create_user_memory(username)
 
     if not clean_message:
@@ -1117,6 +1288,7 @@ def regenerate_agent_from_edited_turn(
         yield safe_history, "⚠️ 仅支持编辑用户提问轮次", "⚠️ 非用户轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
         return
 
+    # 2. 截取编辑点之前严格保留的历史记录（前 0 到 turn_idx-1 条有效消息）
     kept_history: List[Dict[str, str]] = []
     for msg in safe_history[:turn_idx]:
         if not isinstance(msg, dict):
@@ -1126,7 +1298,13 @@ def regenerate_agent_from_edited_turn(
         if role in ("user", "assistant") and content:
             kept_history.append({"role": role, "content": content})
 
-    rebuild_agent_session_with_prefix(mem_mgr, username, kept_history)
+    # 3. 【关键修复】显式传入 current_session_id 触发精准软截断，防止会话错乱
+    rebuild_agent_session_with_prefix(
+        mem_mgr=mem_mgr,
+        username=username,
+        current_session_id=current_session_id,
+        kept_history=kept_history
+    )
 
     final_history = kept_history
     final_inspector = "*等待启动诊断...*"
@@ -1134,6 +1312,7 @@ def regenerate_agent_from_edited_turn(
     final_gpu = get_gpu_memory_status()
     final_radio_update = gr.update(choices=fetch_session_dropdown_choices(username), value=mem_mgr.session_id)
 
+    # 4. 执行流式推导
     for out in agent_stream_predict(
         user_message=clean_message,
         history=kept_history,
@@ -1148,17 +1327,97 @@ def regenerate_agent_from_edited_turn(
         
         yield chat_hist, inspector_md, status_text, gpu_text, radio_update, gr.skip(), gr.skip()
 
-    # 编辑面板刷新
+    # 5. 编辑面板刷新
     logging.info(f"开始重建编辑选项...")
     try:
         selector_update, edit_text = refresh_agent_edit_panel_from_history(final_history)
     except Exception as e:
         logging.error(f"编辑面板刷新异常：{str(e)}", exc_info=True)
-        # 异常时返回空更新
         selector_update = gr.update(choices=[], value=None)
         edit_text = ""
 
     yield final_history, final_inspector, final_status, final_gpu, final_radio_update, selector_update, edit_text
+
+# def regenerate_agent_from_edited_turn(
+#     history: List[Dict[str, str]],
+#     selected_user_turn_idx: Optional[str],
+#     edited_user_message: str,
+#     llm_model: str,
+#     top_k_ret: int,
+#     top_k_rerank: int,
+#     filter_input: str,
+#     user_state: dict,
+# ):
+#     safe_history = history or []
+#     clean_message = normalize_message_content(edited_user_message)
+#     username = user_state.get("username", "default") if isinstance(user_state, dict) else "default"
+#     mem_mgr = get_or_create_user_memory(username)
+
+#     if not clean_message:
+#         yield safe_history, "⚠️ 编辑后的提问不能为空", "⚠️ 编辑内容为空", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+#         return
+
+#     if selected_user_turn_idx in (None, ""):
+#         yield safe_history, "⚠️ 请先选择要编辑的历史提问", "⚠️ 未选择历史轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+#         return
+
+#     try:
+#         turn_idx = int(selected_user_turn_idx)
+#     except Exception:
+#         yield safe_history, "⚠️ 历史轮次索引无效", "⚠️ 索引无效", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+#         return
+
+#     if turn_idx < 0 or turn_idx >= len(safe_history):
+#         yield safe_history, "⚠️ 选择的轮次超出范围", "⚠️ 轮次超出范围", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+#         return
+
+#     target_msg = safe_history[turn_idx]
+#     if not isinstance(target_msg, dict) or target_msg.get("role") != "user":
+#         yield safe_history, "⚠️ 仅支持编辑用户提问轮次", "⚠️ 非用户轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
+#         return
+
+#     kept_history: List[Dict[str, str]] = []
+#     for msg in safe_history[:turn_idx]:
+#         if not isinstance(msg, dict):
+#             continue
+#         role = msg.get("role")
+#         content = normalize_message_content(msg.get("content", ""))
+#         if role in ("user", "assistant") and content:
+#             kept_history.append({"role": role, "content": content})
+
+#     rebuild_agent_session_with_prefix(mem_mgr, username, kept_history)
+
+#     final_history = kept_history
+#     final_inspector = "*等待启动诊断...*"
+#     final_status = "🤖 推理中..."
+#     final_gpu = get_gpu_memory_status()
+#     final_radio_update = gr.update(choices=fetch_session_dropdown_choices(username), value=mem_mgr.session_id)
+
+#     for out in agent_stream_predict(
+#         user_message=clean_message,
+#         history=kept_history,
+#         llm_model=llm_model,
+#         top_k_ret=top_k_ret,
+#         top_k_rerank=top_k_rerank,
+#         filter_input=filter_input,
+#         user_state=user_state,
+#     ):
+#         chat_hist, inspector_md, status_text, gpu_text, radio_update = out
+#         final_history, final_inspector, final_status, final_gpu, final_radio_update = chat_hist, inspector_md, status_text, gpu_text, radio_update
+        
+#         yield chat_hist, inspector_md, status_text, gpu_text, radio_update, gr.skip(), gr.skip()
+
+#     # 编辑面板刷新
+#     logging.info(f"开始重建编辑选项...")
+#     try:
+#         selector_update, edit_text = refresh_agent_edit_panel_from_history(final_history)
+#     except Exception as e:
+#         logging.error(f"编辑面板刷新异常：{str(e)}", exc_info=True)
+#         # 异常时返回空更新
+#         selector_update = gr.update(choices=[], value=None)
+#         edit_text = ""
+
+#     yield final_history, final_inspector, final_status, final_gpu, final_radio_update, selector_update, edit_text
 # ==================== ✨🧩 TAB3_EDIT_REGENERATE_END 🧩✨ ====================
 
 def test_tool_execution(tool_name, tool_input_json, user_state: dict):

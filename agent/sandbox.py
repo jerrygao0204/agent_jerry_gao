@@ -8,6 +8,7 @@ import logging
 import contextlib
 import multiprocessing
 from typing import Dict, Any, List, Tuple, Optional
+import concurrent.futures
 
 # 导入静态审查器
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -87,9 +88,10 @@ def _isolated_execution_target(code_str: str, global_vars: Dict[str, Any], retur
 class SandboxExecutor:
     """受限安全沙箱隔离执行器 (子进程强熔断版)"""
 
-    def __init__(self, config_path: str = None, timeout: int = 10):
+    def __init__(self, config_path: str = None, timeout: int = 10, tool_timeout: int = 15):
         self.checker = ASTCodeChecker(config_path=config_path)
         self.timeout = timeout
+        self.tool_timeout = tool_timeout # 单次工具调用的最大等待超时
 
     def run(
         self,
@@ -145,33 +147,56 @@ class SandboxExecutor:
         )
         process.start()
 
-        # 3. 轮询：在超时预算内，一边把子进程发来的工具调用请求转发给 ToolDispatcher 执行，
-        #    一边检查子进程是否已经跑完。
+       # agent/sandbox.py (SandboxExecutor.run 方法核心轮询部分)
+
+        # 3. 动态 Deadline 轮询（带工具执行时间补偿与卡死隔离）
+        start_time = time.time()
         deadline = start_time + self.timeout
         poll_interval = 0.05
-        while True:
-            remaining = deadline - time.time()
-            if remaining <= 0:
-                break
 
-            if request_queue is not None:
-                try:
-                    req = request_queue.get(timeout=min(poll_interval, max(remaining, 0.001)))
-                except queue.Empty:
-                    req = None
-                if req is not None:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            while True:
+                now = time.time()
+                remaining = deadline - now
+
+                # 优先检查子进程存活状态，防止死锁
+                if not process.is_alive():
+                    process.join()
+                    break
+
+                if remaining <= 0:
+                    break
+
+                if request_queue is not None:
                     try:
-                        result = tool_dispatcher.dispatch(req["tool_name"], req["kwargs"])
-                        response_queue.put({"call_id": req["call_id"], "result": result, "error": None})
-                    except Exception as tool_err:
-                        logger.warning(f"⚙️ 工具调用 [{req.get('tool_name')}] 执行失败: {tool_err}")
-                        response_queue.put({"call_id": req["call_id"], "result": None, "error": str(tool_err)})
-            else:
-                process.join(timeout=min(poll_interval, max(remaining, 0.001)))
+                        get_timeout = min(poll_interval, max(remaining, 0.001))
+                        req = request_queue.get(timeout=get_timeout)
+                    except queue.Empty:
+                        req = None
 
-            if not process.is_alive():
-                process.join()
-                break
+                    if req is not None:
+                        tool_start = time.time()
+                        tool_name = req.get("tool_name")
+                        is_tool_timeout = False
+
+                        try:
+                            future = executor.submit(tool_dispatcher.dispatch, tool_name, req.get("kwargs", {}))
+                            result = future.result(timeout=self.tool_timeout)
+                            response_queue.put({"call_id": req["call_id"], "result": result, "error": None})
+                        except concurrent.futures.TimeoutError:
+                            is_tool_timeout = True
+                            err_msg = f"工具 [{tool_name}] 执行超时 ({self.tool_timeout}s)"
+                            logger.warning(f"⚙️ {err_msg}")
+                            response_queue.put({"call_id": req["call_id"], "result": None, "error": err_msg})
+                        except Exception as tool_err:
+                            logger.warning(f"⚙️ 工具调用 [{tool_name}] 执行失败: {tool_err}")
+                            response_queue.put({"call_id": req["call_id"], "result": None, "error": str(tool_err)})
+                        finally:
+                            tool_duration = time.time() - tool_start
+                            # 💡 [关键修复]: 仅在工具正常响应（未触发 tool_timeout 卡死）时顺延 CPU deadline
+                            if not is_tool_timeout:
+                                deadline += tool_duration
+                                logger.info(f"⏱️ 工具 [{tool_name}] 耗时 {round(tool_duration, 2)}s，沙箱 Deadline 顺延。")
 
         # 判定是否超时
         if process.is_alive():
@@ -205,19 +230,25 @@ class SandboxExecutor:
         }
 
 if __name__ == "__main__":
-    sandbox = SandboxExecutor(timeout=2)
+    import time
+
+    # 初始化基础沙箱：CPU 代码逻辑超时 2s，单次工具执行超时 2s
+    sandbox = SandboxExecutor(timeout=2, tool_timeout=2)
 
     print("\n--- 1. 拦截测试 ---")
     res1 = sandbox.run("import os; os.system('echo hack')")
     print(res1)
+    assert res1["status"] == "security_blocked", "拦截测试应触发 security_blocked"
 
     print("\n--- 2. 死循环超时熔断测试 ---")
     res2 = sandbox.run("while True: pass")
     print(res2)
+    assert res2["status"] == "timeout", "死循环应触发 timeout 熔断"
 
     print("\n--- 3. 正常计算测试 ---")
     res3 = sandbox.run("import math\na = 10\nb = 20\nFINAL_RESULT = math.sqrt(a + b)")
     print(res3)
+    assert res3["status"] == "success", "正常计算测试应成功"
 
     print("\n--- 4. stdout 捕获测试 (CodeAct Observation 来源) ---")
     res4 = sandbox.run("print('正在计算...')\nx = 3 * 7\nprint(f'x = {x}')\nFINAL_RESULT = x")
@@ -251,7 +282,9 @@ if __name__ == "__main__":
             return None
 
     dispatcher = ToolDispatcher(tool_factory=_MockToolFactory(), user_role="analyst")
-    res7 = sandbox.run(
+    # 显式配置 tool_timeout=5，确保 IPC 响应窗口充裕，防止卡死
+    sandbox_bridge = SandboxExecutor(timeout=2, tool_timeout=5)
+    res7 = sandbox_bridge.run(
         "res = search_knowledge_base(query='怎么创建预警用户', top_k=3)\n"
         "print(res)\n"
         "FINAL_RESULT = res",
@@ -261,7 +294,7 @@ if __name__ == "__main__":
     print(res7)
     assert res7["status"] == "success", "工具调用桥应能正常执行"
     assert "怎么创建预警用户" in res7["result"] and "Top-3" in res7["result"], "工具调用结果应正确透传回沙箱"
-    print("✅ CodeAct 工具调用桥测试通过：主进程真正执行了工具，沙箱侧像调用普通函数一样拿到结果")
+    print("✅ CodeAct 工具调用桥测试通过")
 
     print("\n--- 8. 工具调用桥：工具执行报错应正确透传 ---")
 
@@ -274,7 +307,8 @@ if __name__ == "__main__":
             return _FailingTool()
 
     dispatcher2 = ToolDispatcher(tool_factory=_FailingToolFactory())
-    res8 = sandbox.run(
+    sandbox_failing = SandboxExecutor(timeout=2, tool_timeout=5)
+    res8 = sandbox_failing.run(
         "search_knowledge_base(query='任意问题')",
         tool_names=["search_knowledge_base"],
         tool_dispatcher=dispatcher2,
@@ -282,3 +316,53 @@ if __name__ == "__main__":
     print(res8)
     assert res8["status"] == "runtime_error" and "向量库连接超时" in res8["error"], "工具执行异常应正确透传回沙箱侧"
     print("✅ 工具调用报错透传测试通过")
+
+    print("\n--- 9. 慢工具耗时补偿测试 (工具耗时 3s > 沙箱 timeout 2s) ---")
+
+    class _SlowTool:
+        def run(self, **kwargs):
+            time.sleep(3)  # 工具耗时 3s
+            return "慢工具执行完毕"
+
+    class _SlowToolFactory:
+        def get_tool(self, name, user_role=None):
+            return _SlowTool()
+
+    dispatcher3 = ToolDispatcher(tool_factory=_SlowToolFactory())
+    
+    # 💡 重新实例化沙箱：CPU 代码超时 2s，但允许单次工具执行最多 5s
+    sandbox_slow = SandboxExecutor(timeout=2, tool_timeout=5)
+    res9 = sandbox_slow.run(
+        "res = search_knowledge_base(query='慢查询')\n"
+        "print(res)\n"
+        "FINAL_RESULT = res",
+        tool_names=["search_knowledge_base"],
+        tool_dispatcher=dispatcher3,
+    )
+    print(res9)
+    assert res9["status"] == "success" and "慢工具执行完毕" in res9["result"], "工具时间补偿失败，沙箱误杀慢工具！"
+    print("✅ 慢工具时间补偿测试通过：工具耗时 3s 未触发沙箱误杀，Deadline 顺延生效")
+
+    print("\n--- 10. 工具卡死隔离测试 (工具耗时 5s > tool_timeout 2s) ---")
+
+    class _BlockedTool:
+        def run(self, **kwargs):
+            time.sleep(5)  # 模拟网络卡死 5s
+            return "不应该返回"
+
+    class _BlockedToolFactory:
+        def get_tool(self, name, user_role=None):
+            return _BlockedTool()
+
+    dispatcher4 = ToolDispatcher(tool_factory=_BlockedToolFactory())
+    
+    # 💡 重新实例化沙箱：单次工具执行限制 2s
+    sandbox_blocked = SandboxExecutor(timeout=2, tool_timeout=2)
+    res10 = sandbox_blocked.run(
+        "search_knowledge_base(query='卡死查询')",
+        tool_names=["search_knowledge_base"],
+        tool_dispatcher=dispatcher4,
+    )
+    print(res10)
+    assert res10["status"] == "runtime_error" and "执行超时" in res10["error"], "工具卡死隔离失败！"
+    print("✅ 工具卡死隔离测试通过：工具单次超时触发，并把错误透传给沙箱")

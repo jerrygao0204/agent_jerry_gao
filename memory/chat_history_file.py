@@ -76,15 +76,19 @@ class ChatHistoryFileStorage:
         return data
 
     def _load_messages(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
-        """安全读取 session_xxxx.json 并执行 Message 节点归一化"""
+        """安全读取 session_xxxx.json 并执行 Message 节点归一化（带读锁保护）"""
         session_file = self._get_session_file_path(user_id, session_id)
-        data = self._load_json(session_file)
+        if not os.path.exists(session_file):
+            return []
+            
+        with file_lock_for(session_file):
+            data = self._load_json(session_file)
+            
         if not isinstance(data, list):
             return []
             
-        # 对每一条 message 节点执行归一化
         return [self._normalize_message_record(msg) for msg in data]
-
+    
     # ==========================================
     # 🛠️ 会话与消息读写操作
     # ==========================================
@@ -151,16 +155,114 @@ class ChatHistoryFileStorage:
             })
             atomic_dump_json(session_file, messages)
 
-    def get_user_sessions(self, user_id: str, limit: int = 30) -> List[Dict[str, Any]]:
-        """获取指定用户的最近对话清单（自动补全 Schema）"""
-        sessions = self._load_sessions(user_id)
+    # ==========================================
+    # 🗑️ 软删除操作 (Soft Delete Methods)
+    # ==========================================
+    def soft_delete_session(self, user_id: str, session_id: str):
+        """软删除会话：仅标记 is_deleted/status，不物理删除文件，保留用于审计"""
+        sessions_file = self._get_sessions_file(user_id)
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with file_lock_for(sessions_file):
+            sessions = self._load_sessions(user_id)
+            if session_id in sessions:
+                sessions[session_id]["is_deleted"] = True
+                sessions[session_id]["status"] = "deleted"
+                sessions[session_id]["updated_at"] = now
+                atomic_dump_json(sessions_file, sessions)
+
+    def soft_delete_messages_after(self, user_id: str, session_id: str, keep_active_count: int):
+        """软删除指定编辑点及之后的消息，解耦文件锁避免死锁"""
+        session_file = self._get_session_file_path(user_id, session_id)
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        modified_count = 0
+
+        # 1. 操作 session 消息文件锁
+        with file_lock_for(session_file):
+            raw_messages = self._load_json(session_file)
+            if isinstance(raw_messages, list):
+                active_count = 0
+                for msg in raw_messages:
+                    self._normalize_message_record(msg)
+                    if not msg.get("is_active", True) or msg.get("status") == "deleted":
+                        continue
+
+                    active_count += 1
+                    if active_count > keep_active_count:
+                        msg["is_active"] = False
+                        msg["status"] = "deleted"
+                        msg["deleted_at"] = now
+                        modified_count += 1
+
+                if modified_count > 0:
+                    atomic_dump_json(session_file, raw_messages)
+
+        # 2. 独立操作 sessions 索引文件锁（避免与 session_file 形成交叉嵌套锁）
+        if modified_count > 0:
+            sessions_file = self._get_sessions_file(user_id)
+            with file_lock_for(sessions_file):
+                sessions = self._load_sessions(user_id)
+                if session_id in sessions:
+                    sessions[session_id]["updated_at"] = now
+                    atomic_dump_json(sessions_file, sessions)
+                    
+            logger.info(f"🗑️ [消息软截断] 用户 [{user_id}] 会话 [{session_id[:8]}] 保留前 {keep_active_count} 条 active 消息，已软删 {modified_count} 条消息")
+
+    def rollback_session_messages(self, user_id: str, session_id: str, expected_count: int):
+        """事务回滚专用：确保磁盘消息数量不超过 expected_count"""
+        messages = self.get_session_messages(user_id, session_id)
+        if len(messages) > expected_count:
+            self.soft_delete_messages_after(user_id, session_id, keep_active_count=expected_count)
+            logger.warning(f"🚨 [存储回滚] 用户 [{user_id}] 会话 [{session_id[:8]}] 消息数已回滚至 {expected_count} 条")
+
+    # ==========================================
+    # 🔄 内部私有加载函数 (内部不加锁，避免重入死锁)
+    # ==========================================
+    def _load_sessions_unlocked(self, user_id: str) -> Dict[str, Any]:
+        """无锁安全读取 sessions_index.json"""
+        sessions_file = self._get_sessions_file(user_id)
+        data = self._load_json(sessions_file)
+        if not isinstance(data, dict):
+            return {}
+        for s_id, s_data in data.items():
+            data[s_id] = self._normalize_session_record(s_data)
+        return data
+
+    def _load_messages_unlocked(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
+        """无锁安全读取 session_xxxx.json"""
+        session_file = self._get_session_file_path(user_id, session_id)
+        data = self._load_json(session_file)
+        if not isinstance(data, list):
+            return []
+        return [self._normalize_message_record(msg) for msg in data]
+    
+    # ==========================================
+    # 🔍 读取与查询操作 (更新为带过滤功能)
+    # ==========================================
+    def get_user_sessions(self, user_id: str, limit: int = 30, include_deleted: bool = False) -> List[Dict[str, Any]]:
+        """获取指定用户的最近对话清单（带读锁保护）"""
+        sessions_file = self._get_sessions_file(user_id)
+        with file_lock_for(sessions_file):
+            sessions = self._load_sessions_unlocked(user_id)
+            
         user_sessions = list(sessions.values())
+        if not include_deleted:
+            user_sessions = [
+                s for s in user_sessions
+                if not s.get("is_deleted", False) and s.get("status", "active") != "deleted"
+            ]
+
         user_sessions.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
         return user_sessions[:limit]
 
-    def get_session_messages(self, user_id: str, session_id: str) -> List[Dict[str, Any]]:
-        """获取指定用户的某个会话全量聊天记录（自动补全 Schema）"""
-        return self._load_messages(user_id, session_id)
+    def get_session_messages(self, user_id: str, session_id: str, include_inactive: bool = False) -> List[Dict[str, Any]]:
+        """获取指定用户的某个会话聊天记录（带读锁保护）"""
+        session_file = self._get_session_file_path(user_id, session_id)
+        with file_lock_for(session_file):
+            messages = self._load_messages_unlocked(user_id, session_id)
+            
+        if include_inactive:
+            return messages
+        return [m for m in messages if m.get("is_active", True) and m.get("status", "valid") == "valid"]
 
     def delete_session(self, user_id: str, session_id: str):
         """删除某个会话索引及对应的 JSON 文件"""

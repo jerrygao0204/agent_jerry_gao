@@ -1,0 +1,18 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "我想知道表A一共有多少行",
+    "timestamp": "2026-09-22 10:47:40",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "表A共有10,000行。",
+    "timestamp": "2026-09-22 10:48:15",
+    "is_active": true,
+    "status": "valid"
+  }
+]

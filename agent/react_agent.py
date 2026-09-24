@@ -266,11 +266,41 @@ class ReActAgent:
             )
 
     def _is_short_query(self, query: str) -> bool:
-        clean_q = query.strip().lower()
-        if len(clean_q) < self.min_query_length:
-            return True
-        common_greetings = {"你好", "您好", "在吗", "谢谢", "收到", "好的", "hi", "hello", "hey"}
-        return clean_q in common_greetings
+        """
+        [LLM 意圖分類] 判斷用戶輸入是否為通用問候、閒聊或無需調用工具的短問句。
+        保持函數簽名與返回類型 (bool) 不變，相容 run_stream 的調用邏輯。
+        """
+        classifier_prompt = (
+            "你是一個意圖分類專家。請分析用戶輸入，判斷是否可以直接回答而不需要調用任何外部工具、知識庫或代碼沙箱。\n\n"
+            "分類類別：\n"
+            "1. DIRECT_CHAT: 通用問候（如：你好、在嗎）、日常閒聊、禮貌用語（如：謝謝、好的）、或無需任何外部數據/工具即可回答的極簡問題。\n"
+            "2. NEED_TOOLS: 需要檢索知識庫、查詢特定數據庫、執行代碼計算或調用外部 API 的實質性任務。\n\n"
+            f"用戶輸入: {query}\n\n"
+            "請嚴格僅返回標籤名稱（DIRECT_CHAT 或 NEED_TOOLS），不要包含任何額外字符或說明。"
+        )
+        print(f"🧠 [LLM 分類器] 正在分析 Query: {query}")
+        try:
+            response = ""
+            for chunk in self.llm_client.stream_generate(query=classifier_prompt, context=""):
+                response += chunk
+            
+            clean_res = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip().upper()
+            if "DIRECT_CHAT" in clean_res:
+                logger.info(f"🤖 [LLM 分類器] Query [{query}] 判定為 DIRECT_CHAT (無需工具)")
+                return True
+        except Exception as e:
+            logger.warning(f"⚠️ [LLM 分類器異常] 意圖分類失敗，降級走完整工具路由: {e}")
+            return False
+
+        logger.info(f"🛠️ [LLM 分類器] Query [{query}] 判定為 NEED_TOOLS (需調用工具)")
+        return False        
+
+    # def _is_short_query(self, query: str) -> bool:
+    #     clean_q = query.strip().lower()
+    #     if len(clean_q) < self.min_query_length:
+    #         return True
+    #     common_greetings = {"你好", "您好", "在吗", "谢谢", "收到", "好的", "hi", "hello", "hey"}
+    #     return clean_q in common_greetings
 
     def _prepare_tool_kwargs(self, tool_name: str, raw_kwargs: Dict[str, Any]) -> Dict[str, Any]:
         kwargs = dict(raw_kwargs)
@@ -648,196 +678,6 @@ class ReActAgent:
             logger.error(f"CodeAct 运行捕获异常: {e}")
             self.memory_mgr.rollback()
             yield self._yield_step("rollback", f"🚨 运行异常已触发 Memory Rollback: {str(e)}")
-
-    # def run_stream(
-    #     self, 
-    #     query: str, 
-    #     tools_schema: Optional[Union[str, List[Dict[str, Any]]]] = None
-    # ) -> Generator[Dict[str, Any], None, None]:
-    #     """
-    #     流式 Agent 推理逻辑
-    #     :param query: 用户输入 Query
-    #     :param tools_schema: (可选) 外部传入的工具 Schema。支持标准的 Specs List[Dict] 或描述字符串
-    #     """
-    #     self.memory_mgr.begin_transaction()
-    #     self.memory_mgr.process_user_input(query)
-
-    #     # 从 MemoryManager 取出历史消息，组成标准多轮 messages（排除刚存进去的这次 query）
-    #     context_data = self.memory_mgr.get_context_for_llm()
-    #     history_msgs = context_data.get("messages", [])[:-1]
-    #     chat_history_messages: List[Dict[str, str]] = [
-    #         {"role": m["role"], "content": m["content"]} for m in history_msgs
-    #     ]
-
-    #     # 📌【修复 1】：在入口处安全初始化变量，防范 UnboundLocalError
-    #     selected_packages: List[Tuple[str, str]] = []
-    #     pkg_names: List[str] = ["injected_custom_schema"]
-    #     available_tool_names: List[str] = []
-
-    #     try:
-    #         # 1. 短文本拦截
-    #         if self._is_short_query(query):
-    #             yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
-                
-    #             full_response = ""
-    #             turn_messages = chat_history_messages + [{"role": "user", "content": query}]
-    #             for chunk in self.llm_client.stream_generate(messages=turn_messages):
-    #                 full_response += chunk
-                
-    #             final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
-    #             yield self._yield_step("final_answer", final_ans)
-                
-    #             self.memory_mgr.process_assistant_output(final_ans)
-    #             self.memory_mgr.commit()
-    #             return
-            
-    #         # 2. 三级分级路由机制 (Hierarchical Routing)
-    #         # 📌 优先使用外部注入的 tools_schema；若无，则自动触发内部路由获取
-    #         if tools_schema is not None:
-    #             yield self._yield_step("thought", "检测到沙盒注入的预剪枝工具 Schema，直接载入...")
-    #             if isinstance(tools_schema, list):
-    #                 # 转换标准的 Tool Spec 结构为 Prompt 渲染需要的文本格式
-    #                 tool_names_list = []
-    #                 descriptions = []
-    #                 for spec in tools_schema:
-    #                     func_info = spec.get("function", spec) if isinstance(spec, dict) else {}
-    #                     name = func_info.get("name", "unknown_tool")
-    #                     desc = func_info.get("description", "")
-    #                     params = func_info.get("parameters", {})
-    #                     tool_names_list.append(name)
-    #                     descriptions.append(f"- **{name}**: {desc}\n  参数规范: {json.dumps(params, ensure_ascii=False)}")
-                    
-    #                 # tool_names = ", ".join(tool_names_list)
-    #                 tools_description = "\n".join(descriptions)
-    #                 available_tool_names = tool_names_list  # 💡 修复：正确填充沙箱白名单
-    #                 pkg_names = tool_names_list
-
-    #             else:
-    #                 tools_description = str(tools_schema)
-    #                 # tool_names = "已加载工具"
-    #                 available_tool_names = []  # 若为纯字符串描述，由沙箱自行处理或默认放行
-
-    #         else:
-    #             yield self._yield_step("thought", "正在分析用户意图，匹配业务领域 (Domain)...")
-    #             selected_domains = self._route_domains(query)
-                
-    #             yield self._yield_step("thought", f"锁定业务领域: `{selected_domains}`，正在筛选工具包 (Package)...")
-    #             selected_packages = self._route_packages(query, selected_domains)
-                
-    #             pkg_names = [pkg for _, pkg in selected_packages]
-    #             yield self._yield_step("thought", f"锁定工具包: `{pkg_names}`，装载精准工具 Schema。")
-
-    #             # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_BEGIN 🧩✨ ====================
-    #             logger.info(f"🔧 [Tool Schema Loading] 开始装载工具元数据，共 {len(selected_packages)} 个工具包...")
-    #             for domain, pkg in selected_packages:
-    #                 logger.info(f"  → 加载 [{domain}] - [{pkg}]...")
-
-    #             import time as time_module
-    #             t_schema_start = time_module.time()
-    #             try:
-    #                 tool_names, tools_description = self.tool_factory.get_tools_metadata_by_packages(
-    #                     selected_packages, 
-    #                     user_role=self.user_role
-    #                 )
-    #                 t_schema_end = time_module.time()
-    #                 logger.info(f"✅ [Tool Schema Loading] 完成！耗时 {(t_schema_end - t_schema_start):.2f}s，共获取 {len(tool_names.split(','))} 个工具。")
-    #             except Exception as e:
-    #                 t_schema_end = time_module.time()
-    #                 logger.error(f"❌ [Tool Schema Loading] 异常耗时 {(t_schema_end - t_schema_start):.2f}s：{str(e)}", exc_info=True)
-    #                 yield self._yield_step("thought", f"⚠️ 工具元数据加载异常: {str(e)}，降级到通用回复模式...")
-    #                 # 降级处理：跳过工具调用，直接 LLM 回复
-    #                 full_response = ""
-    #                 turn_messages = chat_history_messages + [{"role": "user", "content": query}]
-    #                 for chunk in self.llm_client.stream_generate(messages=turn_messages):
-    #                     full_response += chunk
-    #                 final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
-    #                 yield self._yield_step("final_answer", final_ans)
-    #                 self.memory_mgr.process_assistant_output(final_ans)
-    #                 self.memory_mgr.commit()
-    #                 return
-
-    #             available_tool_names = [t.strip() for t in tool_names.split(",") if t.strip()]
-    #             # ==================== ✨🧩 TOOL_SCHEMA_DEBUG_END 🧩✨ ====================
-           
-    #         scratchpad = ""
-
-    #         # 3. 核心 CodeAct 循环：LLM 生成代码 -> AST 预检 -> 沙箱执行 -> Observation 喂回
-    #         for iteration in range(1, self.max_iterations + 1):
-    #             logger.info(f"[CodeAct Step] 开始第 {iteration}/{self.max_iterations} 轮推理/执行...")
-    #             prompt = self.system_prompt_template.format(
-    #                 tools_description=tools_description,
-    #                 input=query,
-    #                 agent_scratchpad=scratchpad
-    #             )
-
-    #             full_response = ""
-    #             turn_messages = chat_history_messages + [{"role": "user", "content": prompt}]
-    #             for chunk in self.llm_client.stream_generate(messages=turn_messages):
-    #                 full_response += chunk
-
-    #             clean_response = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
-    #             think_match = re.search(r"<think>(.*?)</think>", full_response, re.DOTALL)
-    #             extracted_think = think_match.group(1).strip() if think_match else ""
-
-    #             reflection, code = self._extract_reflection_and_code(clean_response)
-    #             final_answer_match = re.search(r"Final Answer:\s*(.*)", clean_response, re.DOTALL)
-
-    #             if final_answer_match and not code:
-    #                 final_ans = final_answer_match.group(1).strip()
-    #                 if extracted_think:
-    #                     yield self._yield_step("thought", extracted_think)
-    #                 yield self._yield_step("final_answer", final_ans)
-
-    #                 self.memory_mgr.process_assistant_output(final_ans)
-    #                 self.memory_mgr.commit()
-    #                 return
-
-    #             if code:
-    #                 yield self._yield_step("thought", f"【第 {iteration}/{self.max_iterations} 步】{reflection or extracted_think or '准备执行代码...'}")
-    #                 yield self._yield_step("code", f"```python\n{code}\n```")
-
-    #                 sandbox_res = self.sandbox.run(
-    #                     code_str=code,
-    #                     tool_names=available_tool_names,
-    #                     tool_dispatcher=self.tool_dispatcher,
-    #                 )
-    #                 if sandbox_res["status"] == "security_blocked":
-    #                     raise ValueError(f"安全沙箱检测到高危指令: {sandbox_res['error']}")
-
-    #                 observation = self._build_observation(sandbox_res)
-    #                 yield self._yield_step("observation", observation)
-
-    #                 # 💡 [收敛机制 1]: 纯变量计算自动收敛
-    #                 is_pure_calc = sandbox_res["status"] == "success" and not any(t in code for t in available_tool_names)
-    #                 if is_pure_calc and sandbox_res.get("result") is not None:
-    #                     final_ans = f"计算完成，执行结果为: {sandbox_res['result']}"
-    #                     yield self._yield_step("final_answer", final_ans)
-    #                     self.memory_mgr.process_assistant_output(final_ans)
-    #                     self.memory_mgr.commit()
-    #                     return
-
-    #                 # 💡 [收敛机制 2]: 工具已成功返回结果且无异常，若 LLM 代码未包含后续操作逻辑，标记可收敛上下文
-    #                 if sandbox_res["status"] == "success" and sandbox_res.get("result") is not None:
-    #                     logger.info(f"[CodeAct] 工具执行成功并获取结果: {sandbox_res['result']}")
-
-    #                 scratchpad += (
-    #                     f"<reflection>{reflection}</reflection>\n"
-    #                     f"```python\n{code}\n```\n"
-    #                     f"Observation: {observation}\n\n"
-    #                 )
-
-    #             else:
-    #                 final_ans = clean_response.strip()
-    #                 yield self._yield_step("final_answer", final_ans)
-    #                 self.memory_mgr.process_assistant_output(final_ans)
-    #                 self.memory_mgr.commit()
-    #                 return
-
-    #     except Exception as e:
-    #         logger.error(f"CodeAct 运行捕获异常: {e}")
-    #         self.memory_mgr.rollback()
-    #         yield self._yield_step("rollback", f"🚨 运行异常已触发 Memory Rollback: {str(e)}")
-
 
 # =============================================================================
 # 单元测试桩
