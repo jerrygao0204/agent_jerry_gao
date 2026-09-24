@@ -68,6 +68,7 @@ from factory import init_tools
 from agent.sandbox import SandboxExecutor
 from agent.react_agent import ReActAgent 
 from memory.memory_manager import MemoryManager
+from memory.session_registry import SessionMemoryRegistry
 from agent.compliance import ComplianceChecker
 from memory.feedback_store import feedback_store
 from config.config_loader import config_loader, DEFAULT_CONFIG
@@ -138,8 +139,13 @@ DATA_DIR = config_loader.data_root
 
 global_qa_chain = None
 global_compliance_checker = None
-# 缓存活跃的 MemoryManager 实例: {user_id: MemoryManager}
-user_memory_managers: Dict[str, MemoryManager] = {}
+# 💡 [多用户/多标签并发安全]: 按 (user_id, session_id) 缓存 MemoryManager，而不是"每用户一个"。
+# 共用一个实例时，同一用户的两个标签页 / "agent 流式回答中切换会话" 会互相改写 session_id 与事务快照，
+# 导致消息写错会话、rollback 误删对方消息。详见 memory/session_registry.py。
+_memory_registry = SessionMemoryRegistry(
+    factory=lambda user_id, session_id: MemoryManager(user_id=user_id, session_id=session_id, max_messages=20),
+    max_cached=256,
+)
 
 # 📌 1. 安全加载 YAML 配置文件
 def safe_load_yaml(file_path: str, default_payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -184,14 +190,14 @@ def load_user_credentials() -> Tuple[Dict[str, str], Dict[str, str], Dict[str, s
 VALID_USERS_PWD, USER_ROLES, RAW_KEY_MAP = load_user_credentials()
 
 def get_or_create_user_memory(username: str, session_id: Optional[str] = None) -> MemoryManager:
-    """获取或初始化对应用户的 MemoryManager"""
-    if username not in user_memory_managers:
-        logging.info(f"🛠️ 为账号 [{username}] 初始化 MemoryManager...")
-        user_memory_managers[username] = MemoryManager(user_id=username, session_id=session_id, max_messages=20)
-    elif session_id and user_memory_managers[username].session_id != session_id:
-        user_memory_managers[username].switch_session(session_id)
-        
-    return user_memory_managers[username]
+    """获取 (用户, 会话) 专属的 MemoryManager（线程安全）。
+
+    - 传入 session_id：返回该会话专属实例，其 session_id 不会被其他请求改动。
+      所有会写入消息的入口（agent 推理、编辑重跑、清空、切换）都应传入 user_state["current_session_id"]。
+    - 不传 session_id：仅用于"列会话清单 / 访问存储层"这类与具体会话无关的场景，
+      返回该用户最近使用的会话实例（没有则返回一个稳定的占位实例）。
+    """
+    return _memory_registry.get(username, session_id)
 
 def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
     """获取前端 Dropdown/Radio 使用的会话选项列表 (会自动过滤已软删的 Session)"""
@@ -332,13 +338,11 @@ def clear_agent_memory(user_state: dict):
     username = user_state.get("username", "default") if user_state else "default"
     req_session_id = user_state.get("current_session_id") if user_state else None
     
-    # 1. 获取用户 Memory 管理器单例
-    mem_mgr = get_or_create_user_memory(username)
+    # 1. 按请求中的会话 ID 获取该会话专属的 Memory 管理器（不再共用并切换同一个实例）
+    mem_mgr = get_or_create_user_memory(username, req_session_id)
 
     # 2. 上下文强行对齐：如果前端传入了特定的 session_id 且与当前不一致，先进行切换
-    if req_session_id and mem_mgr.session_id != req_session_id:
-        logging.warning(f"⚠️ [清空对话上下文强转] 内存会话 ({mem_mgr.session_id[:8]}) 与请求会话 ({req_session_id[:8]}) 不一致，自动切换")
-        mem_mgr.switch_session(req_session_id)
+    # (会话专属实例天然与请求会话对齐，不再需要"强行切换")
 
     current_session_id = mem_mgr.session_id
 
@@ -356,15 +360,19 @@ def clear_agent_memory(user_state: dict):
     # 5. 如果有效会话列表为空，自动新建一个全新 Session；否则切到第一个有效会话
     if not choices:
         new_sess_id = str(uuid.uuid4())
-        mem_mgr.switch_session(new_sess_id)
+        mem_mgr = get_or_create_user_memory(username, new_sess_id)
         if hasattr(mem_mgr, "history_storage") and mem_mgr.history_storage:
             mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
         choices = fetch_session_dropdown_choices(username)
         new_choice = new_sess_id
     else:
         new_choice = choices[0][1]
-        mem_mgr.switch_session(new_choice)
+        mem_mgr = get_or_create_user_memory(username, new_choice)
 
+    # 被软删除的会话不再需要缓存；同步本标签页当前会话
+    _memory_registry.evict(username, current_session_id)
+    if isinstance(user_state, dict):
+        user_state["current_session_id"] = new_choice
     return [], "*等待启动诊断...*", "✅ 已成功软删除当前对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
 # def clear_agent_memory(user_state: dict):
@@ -768,7 +776,8 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     
     context_logger.info(f"🤖 用户 [{username}] (角色: {user_role}) 启动 ReAct Agent 任务...")
 
-    user_mem_mgr = get_or_create_user_memory(username)
+    # 💡 按本标签页(user_state)绑定的会话取管理器：推理期间别的标签页/事件切换会话，不会改到这个实例
+    user_mem_mgr = get_or_create_user_memory(username, user_state.get("current_session_id"))
 
     if not clean_message:
         choices = fetch_session_dropdown_choices(username)
@@ -839,24 +848,50 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     inspector_log = f"🚀 **Agent 任务启动 (用户: {username}     {raw_user_key} | 会话: {user_mem_mgr.session_id[:8]}...)**: `{clean_message}`\n\n---\n"
     choices = fetch_session_dropdown_choices(username)
     yield history, inspector_log, "🤖 推理中...", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
-    final_reply = ""
-    for step in agent.run_stream(clean_message
-                                ,history_messages=history_context
-                                 ):
+
+    for step in agent.run_stream(clean_message, history_messages=history_context):
         stage = step.get("stage")
         content = step.get("content", "")
-        cleaned_content = normalize_message_content(content)
-        inspector_log += f"{cleaned_content}\n\n"
-
+        
+        # 1. Inspector Log 仅记录排查步骤（保持原始/不强制添加兜底词）
+        if content:
+            inspector_log += f"[{stage}] {content}\n\n"
+        
+        # 2. 最终回答节点：严格清洗 + 安全兜底
         if stage == "final_answer":
+            # 清洗思考标签与逻辑残留
+            cleaned_content = normalize_message_content(content)
+            
+            # 若清洗完为空白，触发安全兜底
+            if not cleaned_content or not cleaned_content.strip():
+                cleaned_content = "我没有理解你的意思"
+            
+            # 记录后端日志（使用 logging，避免 print 格式干扰流输出）
+            logging.info(f"[Agent Final Answer] User: {username} | Session: {user_mem_mgr.session_id} | Content: {cleaned_content}")
+            
             history[-1]["content"] = cleaned_content
-            final_reply = cleaned_content
+            
         elif stage == "rollback":
+            cleaned_content = normalize_message_content(content)
+            
+            if not cleaned_content or not cleaned_content.strip():
+                cleaned_content = "任务因异常中断"
+                
+            logging.warning(f"[Agent Rollback] User: {username} | Session: {user_mem_mgr.session_id} | Reason: {cleaned_content}")
+            
             history[-1]["content"] = f"🚨 **任务中断**: \n{cleaned_content}"
-            final_reply = f"🚨 任务中断: {cleaned_content}"
+            
+        # 3. 循环内部轻量级 Yield（跳过数据库下拉框重新加载，保障 FPS 吞吐量）
+        yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.skip()
 
-        choices = fetch_session_dropdown_choices(username)
-        yield history, inspector_log, f"🤖 执行: {stage}", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
+    # 5. 循环结束后的安全兜底校验
+    if history and not history[-1]["content"].strip():
+        history[-1]["content"] = "我没有理解你的意思"
+
+    # 6. 最终一次性刷新 Session 下拉菜单，保障性能
+    choices = fetch_session_dropdown_choices(username)
+    yield history, inspector_log, "✅ 任务完成", get_gpu_memory_status(), gr.update(choices=choices, value=user_mem_mgr.session_id)
+
 
     # 📊 寫入 Agent 總 pipeline Metrics 日誌 (供 Tab 4 圖表使用)
     t_agent_end = time.perf_counter()
@@ -878,15 +913,14 @@ def create_new_session_event(user_state: dict):
     username = user_state.get("username", "default")
     new_sess_id = str(uuid.uuid4())
     
-    # 1. 獲取用戶記憶體管理器實例
-    mem_mgr = get_or_create_user_memory(username)
+    # 1. 直接為新會話建立專屬的記憶體管理器
+    mem_mgr = get_or_create_user_memory(username, new_sess_id)
     
     # 2. 存儲層創建新會話記錄
     if hasattr(mem_mgr, "history_storage") and mem_mgr.history_storage:
         mem_mgr.history_storage.create_session(username, new_sess_id, title="新對話")
     
-    # 3. 強制切換記憶體上下文並初始化
-    mem_mgr.switch_session(new_sess_id)
+    # 3. 同步本標籤頁當前會話（新會話的管理器已在步驟 1 建立，無需切換共用實例）
     user_state["current_session_id"] = new_sess_id
     
     # 4. 重新拉取已過濾軟刪除的 Session 列表
@@ -966,11 +1000,11 @@ def switch_session_event(selected_session_id: str, user_state: dict):
     if not selected_session_id:
         return [], "*未选择会话*", "就绪"
 
-    # 1. 获取用户内存管理器实例
-    mem_mgr = get_or_create_user_memory(username)
+    # 1. 获取【所选会话】专属的内存管理器（不再改写共用实例的 session_id）
+    mem_mgr = get_or_create_user_memory(username, selected_session_id)
 
-    # 2. ⚠️【关键修复】强行触发内存切换，重新从持久化存储中载入该 session 的 active 消息
-    mem_mgr.switch_session(selected_session_id)
+    # 2. ⚠️【关键修复】从持久化存储重新载入该 session 的 active 消息（缓存实例可能已过期）
+    mem_mgr.reload_session()
 
     # 3. ⚠️【关键修复】同步更新 user_state 中的 current_session_id，确保后续操作不越权/不出错
     user_state["current_session_id"] = selected_session_id
@@ -1066,6 +1100,9 @@ def normalize_message_content(raw_content: Any) -> str:
     text = text.replace("'text':", "").replace('"text":', "")
     text = text.replace("'", "").replace('"', "")
     text = re.sub(r"\s+", " ", text).strip()
+
+    if not text:
+            return "我没有理解你的意思"
     
     # 限制缓存大小，防止无限增大
     if len(_normalize_cache) > 5000:  # 如果缓存超过5000项，清空一半
@@ -1073,6 +1110,8 @@ def normalize_message_content(raw_content: Any) -> str:
         logging.info(f"  🗑️ normalize_message_content 缓存已清空（防止超大）")
     
     _normalize_cache[cache_key] = text
+
+    
     return text
 
 
@@ -1168,8 +1207,8 @@ def rebuild_agent_session_with_prefix(
         return
 
     if mem_mgr.session_id != current_session_id:
-        logging.warning(f"⚠️ [上下文強行對齊] mem_mgr 會話 ({mem_mgr.session_id[:8]}) 與請求 ({current_session_id[:8]}) 不一致，自動執行切換")
-        mem_mgr.switch_session(current_session_id)
+        logging.warning(f"⚠️ [上下文強行對齊] mem_mgr 會話 ({mem_mgr.session_id[:8]}) 與請求 ({current_session_id[:8]}) 不一致，改取請求會話專屬實例")
+        mem_mgr = get_or_create_user_memory(username, current_session_id)
         
     session_id = mem_mgr.session_id
     keep_count = len(kept_history)
@@ -1193,8 +1232,8 @@ def rebuild_agent_session_with_prefix(
     if hasattr(mem_mgr, "entity") and hasattr(mem_mgr.entity, "clear"):
         mem_mgr.entity.clear()
         
-    # 3. 重新加載 active 訊息
-    mem_mgr.switch_session(session_id)
+    # 3. 重新加載 active 訊息（switch_session 遇到相同 id 會直接返回，不會重載，故用 reload_session）
+    mem_mgr.reload_session()
     logging.info(f"✅ [會話軟重建成功] 當前短期記憶體有效訊息數: {len(mem_mgr.short_term.get_messages())}")
     
 # def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kept_history: List[Dict[str, str]]):
@@ -1263,7 +1302,7 @@ def regenerate_agent_from_edited_turn(
     username = user_state.get("username", "default") if isinstance(user_state, dict) else "default"
     current_session_id = user_state.get("current_session_id") if isinstance(user_state, dict) else None
     
-    mem_mgr = get_or_create_user_memory(username)
+    mem_mgr = get_or_create_user_memory(username, current_session_id)
 
     if not clean_message:
         yield safe_history, "⚠️ 编辑后的提问不能为空", "⚠️ 编辑内容为空", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
@@ -1297,6 +1336,22 @@ def regenerate_agent_from_edited_turn(
         content = normalize_message_content(msg.get("content", ""))
         if role in ("user", "assistant") and content:
             kept_history.append({"role": role, "content": content})
+
+    # =========================================================
+    # 💡 关键修改：直接在此函数内更新历史对话记录的名称 (Title Update)
+    # =========================================================
+    if turn_idx == 0 :
+        # 截取编辑后的第一关提问前 18 个字符作为新名称
+        new_title = clean_message[:18] + ("..." if len(clean_message) > 18 else "")
+        try:
+            mem_mgr.history_storage.update_session_title(
+                user_id=username,
+                session_id=current_session_id or mem_mgr.session_id,
+                new_title=new_title
+            )
+            logging.info(f"🏷️ [Title Updated] 已在編輯首輪時将會話 [{mem_mgr.session_id[:8]}] 的名稱更新爲: '{new_title}'")
+        except Exception as e:
+            logging.warning(f"⚠️ 更新歷史對話記錄名稱失敗: {e}")
 
     # 3. 【关键修复】显式传入 current_session_id 触发精准软截断，防止会话错乱
     rebuild_agent_session_with_prefix(
@@ -2251,7 +2306,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 session_choices = fetch_session_dropdown_choices(found_user)
                 if not session_choices:
                     default_sess = str(uuid.uuid4())
-                    mem_mgr.switch_session(default_sess)
+                    mem_mgr = get_or_create_user_memory(found_user, default_sess)
                     mem_mgr.history_storage.create_session(found_user, default_sess, title="新对话")
                     session_choices = fetch_session_dropdown_choices(found_user)
                 else:
@@ -2260,6 +2315,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     valid_values = [c[1] for c in session_choices]
                     if default_sess not in valid_values and valid_values:
                         default_sess = valid_values[0]
+
+                # 把本标签页的当前会话写入 user_state，后续请求按它取会话专属管理器
+                new_state["current_session_id"] = default_sess
                 # 📌 关键追加：根据当前用户的 Role 过滤工具列表
                 role_tools = get_all_registered_tool_names(user_role=found_role)
                 default_tool = role_tools[0] if role_tools else None
@@ -2327,7 +2385,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 session_choices = fetch_session_dropdown_choices(username_clean)
                 if not session_choices:
                     default_sess = str(uuid.uuid4())
-                    mem_mgr.switch_session(default_sess)
+                    mem_mgr = get_or_create_user_memory(username_clean, default_sess)
                     mem_mgr.history_storage.create_session(username_clean, default_sess, title="新对话")
                     session_choices = fetch_session_dropdown_choices(username_clean)
                 else:
@@ -2336,6 +2394,9 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                     valid_values = [c[1] for c in session_choices]
                     if default_sess not in valid_values and valid_values:
                         default_sess = valid_values[0]
+
+                # 把本标签页的当前会话写入 user_state，后续请求按它取会话专属管理器
+                new_state["current_session_id"] = default_sess
 
                 obs_md, obs_json, _fig_lat, _fig_gpu = render_observability_dashboard()
                 return (

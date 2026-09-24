@@ -14,7 +14,7 @@ CodeAct 工具调用传输层抽象。
         - ToolTransportClient（客户端接口）：注入到沙箱子进程里的代理函数只认这个
           接口的 call()，不关心背后是进程内 IPC 队列，还是未来的 HTTP/gRPC 请求。
 
-    今天只有 IPCQueueToolTransport 是真正实现（见 agent/transports/ipc_transport.py），
+    今天只有 IPCPipeToolTransport 是真正实现（见 agent/transports/ipc_transport.py），
     HTTPToolTransport / GRPCToolTransport 是为以后拆分布式部署预留的骨架
     （见 agent/transports/http_transport.py、grpc_transport.py）。切换时只需要在
     组装 SandboxExecutor 的地方换一个 Transport 实现，ToolDispatcher 和业务代码不用动。
@@ -93,20 +93,20 @@ def build_tool_proxies(tool_names: List[str], transport: ToolTransportClient) ->
     LLM 生成的代码里可以直接写 `search_knowledge_base(query="xxx")`，
     内部实际转发给 transport.call(...)，对上层完全透明。
 
-    注意：这里生成的闭包函数在 fork 场景下可以正常工作（fork 直接复制内存，
-    不需要 pickle）；如果未来改用 'spawn' 启动方式，闭包无法被 pickle，
-    需要改成模块级可序列化的类实例（如 functools.partial 或自定义 __call__ 类）。
+    💡 代理对象是模块级的 _ToolProxy 类实例（而不是闭包），因此可以被 pickle：
+    既兼容 fork，也兼容 spawn / forkserver 启动方式。
     """
-    proxies: Dict[str, Callable[..., Any]] = {}
-    for name in tool_names:
-        proxies[name] = _make_tool_proxy(name, transport)
-    return proxies
+    return {name: _ToolProxy(name, transport) for name in tool_names}
 
 
-def _make_tool_proxy(tool_name: str, transport: ToolTransportClient) -> Callable[..., Any]:
-    def _proxy(**kwargs) -> Any:
-        return transport.call(tool_name, kwargs)
+class _ToolProxy:
+    """沙箱内可调用的工具代理：只负责把 (tool_name, kwargs) 交给 transport。"""
 
-    _proxy.__name__ = tool_name
-    _proxy.__doc__ = f"CodeAct 工具代理: 转发调用到主进程执行的 [{tool_name}]"
-    return _proxy
+    def __init__(self, tool_name: str, transport: ToolTransportClient):
+        self.__name__ = tool_name
+        self.__doc__ = f"CodeAct 工具代理: 转发调用到主进程执行的 [{tool_name}]"
+        self._tool_name = tool_name
+        self._transport = transport
+
+    def __call__(self, **kwargs) -> Any:
+        return self._transport.call(self._tool_name, kwargs)

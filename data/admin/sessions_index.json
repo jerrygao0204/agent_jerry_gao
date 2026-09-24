@@ -13,7 +13,34 @@
     "user_id": "admin",
     "title": "新對話",
     "created_at": "2026-09-22 10:48:07",
-    "updated_at": "2026-09-22 10:49:54",
+    "updated_at": "2026-09-24 11:22:14",
+    "is_deleted": true,
+    "status": "deleted"
+  },
+  "e9bd431b-0ce6-4b61-9d22-42741fba085d": {
+    "session_id": "e9bd431b-0ce6-4b61-9d22-42741fba085d",
+    "user_id": "admin",
+    "title": "新對話",
+    "created_at": "2026-09-24 10:59:21",
+    "updated_at": "2026-09-24 11:22:16",
+    "is_deleted": true,
+    "status": "deleted"
+  },
+  "54d0338c-9474-42cc-93e7-beb48cd9937b": {
+    "session_id": "54d0338c-9474-42cc-93e7-beb48cd9937b",
+    "user_id": "admin",
+    "title": "新對話",
+    "created_at": "2026-09-24 11:19:43",
+    "updated_at": "2026-09-24 11:22:15",
+    "is_deleted": true,
+    "status": "deleted"
+  },
+  "062cadf0-4394-4b08-82e3-43fcb843d42b": {
+    "session_id": "062cadf0-4394-4b08-82e3-43fcb843d42b",
+    "user_id": "admin",
+    "title": "哈嘍，隨便聊聊？",
+    "created_at": "2026-09-24 11:22:16",
+    "updated_at": "2026-09-24 12:14:32",
     "is_deleted": false,
     "status": "active"
   }

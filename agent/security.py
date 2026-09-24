@@ -1,5 +1,6 @@
 # agent/security.py
 import ast
+import copy
 import os
 import yaml
 import logging
@@ -92,13 +93,18 @@ class ASTCodeChecker(ast.NodeVisitor):
         return warnings
 
     def check_code(self, code_str: str) -> Tuple[bool, List[str], List[str]]:
-        self.violations = []
+        # 💡 [并发安全]: visit_* 会往 self.violations 里 append。若多个线程共用同一个 checker
+        # 实例，A 的违规记录会被 B 的 `self.violations = []` 清掉或混入 B 的结果。
+        # 因此每次审查都用一份浅拷贝（白/黑名单集合只读共享，violations 独享），
+        # 审查过程中不再写任何共享状态。
+        worker = copy.copy(self)
+        worker.violations = []
         try:
             tree = ast.parse(code_str)
-            self.visit(tree)
-            is_safe = len(self.violations) == 0
+            worker.visit(tree)
+            is_safe = len(worker.violations) == 0
             warnings = self._check_observability(tree) if is_safe else []
-            return is_safe, self.violations, warnings
+            return is_safe, worker.violations, warnings
         except SyntaxError as e:
             return False, [f"SyntaxError 语法错误，拒绝执行: {e}"], []
         except Exception as e:

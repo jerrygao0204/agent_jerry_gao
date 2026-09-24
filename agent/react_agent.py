@@ -504,22 +504,51 @@ class ReActAgent:
         available_tool_names: List[str] = []
 
         try:
-            # 1. 短文本拦截
+            # # 1. 短文本拦截
+            # if self._is_short_query(query):
+            #     yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
+                
+            #     full_response = ""
+            #     # 🎯【修改 1】：通过 _assemble_messages 注入双源 Context System Prompt
+            #     turn_messages = self._assemble_messages(
+            #         tools_description="无可用工具 (超短文本问答)",
+            #         history_messages=chat_history_messages,
+            #         current_input=query,
+            #         scratchpad=""
+            #     )
+            #     for chunk in self.llm_client.stream_generate(messages=turn_messages):
+            #         full_response += chunk
+                
+            #     final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+            #     yield self._yield_step("final_answer", final_ans)
+                
+            #     self.memory_mgr.process_assistant_output(final_ans)
+            #     self.memory_mgr.commit()
+            #     return
+            # 1. 短文本 / 纯问候词拦截
             if self._is_short_query(query):
-                yield self._yield_step("thought", "检测到用户输入为超短问句或通用问候词，跳过工具检索，直连 LLM 回复。")
+                yield self._yield_step("thought", "检测到通用问候或超短闲聊，直连 LLM 答复...")
+                
+                # 🎯【核心修复】：为直连分支使用纯自然语言的 System Prompt，禁止 CodeAct 代码格式！
+                direct_system_prompt = (
+                    "你是一个专业的人工智能助手。"
+                    "请直接使用自然语言回答用户的问候或问题。"
+                    "严禁输出任何 Python 代码块、print() 语句或 FINAL_RESULT 变量！"
+                )
+                
+                turn_messages = [
+                    {"role": "system", "content": direct_system_prompt},
+                    *chat_history_messages,
+                    {"role": "user", "content": query}
+                ]
                 
                 full_response = ""
-                # 🎯【修改 1】：通过 _assemble_messages 注入双源 Context System Prompt
-                turn_messages = self._assemble_messages(
-                    tools_description="无可用工具 (超短文本问答)",
-                    history_messages=chat_history_messages,
-                    current_input=query,
-                    scratchpad=""
-                )
                 for chunk in self.llm_client.stream_generate(messages=turn_messages):
                     full_response += chunk
                 
+                # 干净提取文本
                 final_ans = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+                
                 yield self._yield_step("final_answer", final_ans)
                 
                 self.memory_mgr.process_assistant_output(final_ans)

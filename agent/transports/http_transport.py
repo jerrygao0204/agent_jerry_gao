@@ -4,7 +4,7 @@
 
 使用场景：
     当沙箱不再是本机 fork 出来的子进程，而是跑在独立的远程 worker（比如另一台机器
-    或独立容器）上时，IPCQueueToolTransport 依赖的 multiprocessing.Manager().Queue()
+    或独立容器）上时，IPCPipeToolTransport 依赖的 multiprocessing.Pipe()
     就不可用了（Queue 代理只在同一批由该 Manager 派生的进程间有效）。
     这种情况下，注入到远程 worker 里的代理函数需要通过 HTTP 请求把
     "工具名 + 参数" 发回主进程（或一个专门的 Tool Server），由主进程执行真正的

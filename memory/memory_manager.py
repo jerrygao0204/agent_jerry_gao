@@ -47,6 +47,15 @@ class MemoryManager:
             elif msg.get("role") == "assistant":
                 self.short_term.add_assistant_message(msg["content"])
 
+    def reload_session(self):
+        """强制从持久化存储重新载入【当前】会话的 active 消息，丢弃内存中的短期记忆。
+
+        switch_session(同一个 id) 会因为"防重校验"直接返回而不重新载入，
+        需要"原地刷新"时（切回已缓存的会话、软删除/编辑重建之后）应调用本方法。
+        """
+        self.short_term.clear()
+        self._load_session_history()
+
     def switch_session(self, new_session_id: str):
         """切换活跃会话（加防重校验与实体状态刷新）"""
         if not new_session_id or new_session_id == self.session_id:
