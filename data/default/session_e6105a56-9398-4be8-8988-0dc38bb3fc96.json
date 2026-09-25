@@ -1,0 +1,10 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "你好",
+    "timestamp": "2026-09-25 13:49:41",
+    "is_active": true,
+    "status": "valid"
+  }
+]

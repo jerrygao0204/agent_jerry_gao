@@ -1,0 +1,10 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "請幫我查詢數據",
+    "timestamp": "2026-09-25 14:06:22",
+    "is_active": true,
+    "status": "valid"
+  }
+]

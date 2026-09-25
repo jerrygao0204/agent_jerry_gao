@@ -1,0 +1,18 @@
+[
+  {
+    "user_id": "default",
+    "role": "user",
+    "content": "你好",
+    "timestamp": "2026-09-25 14:34:39",
+    "is_active": true,
+    "status": "valid"
+  },
+  {
+    "user_id": "default",
+    "role": "assistant",
+    "content": "你好，我是測試助手",
+    "timestamp": "2026-09-25 14:34:39",
+    "is_active": true,
+    "status": "valid"
+  }
+]

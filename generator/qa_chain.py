@@ -216,6 +216,32 @@ class QAChain:
                 logging.warning(f"🛡️ [Compliance] QA Chain 生成结果触发合规拦截: {audit_result['blocked_by']}")
                 yield {"type": "security_block", "data": audit_result["sanitized_text"]}
 
+    def run(
+        self,
+        query: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        filter_expr: Optional[str] = None,
+        pre_retrieved_chunks: Optional[List[Dict[str, Any]]] = None,
+        enable_compliance_check: bool = True
+    ) -> str:
+        """
+        非流式問答入口：封裝 stream_answer，返回完整字符串。
+        主要用於測試或簡單調用場景。
+        """
+        outputs = []
+        for response in self.stream_answer(
+            query=query,
+            history=history,
+            filter_expr=filter_expr,
+            pre_retrieved_chunks=pre_retrieved_chunks,
+            enable_compliance_check=enable_compliance_check
+        ):
+            if response["type"] == "text":
+                outputs.append(response["data"])
+            elif response["type"] == "security_block":
+                outputs.append(response["data"])
+        return "".join(outputs)
+
 
 # =====================================================================
 # 🧪 测试与可视化打印

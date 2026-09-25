@@ -1,11 +1,11 @@
 # tests/test_retriever.py
 #
 # 根据仓库真实结构调整：
-# - 仓库里是 search/retriever.py 的 FineBIRetriever，而不是原稿假设的
+# - 仓库里是 search/retriever.py 的 Retriever，而不是原稿假设的
 #   rag.retriever.Retriever；返回的也不是带 .page_content 属性的
 #   LangChain Document 对象，而是普通 dict（含 chunk_id / content /
 #   base_content / up_content / down_content / hierarchy 等字段）。
-# - FineBIRetriever.__init__ 会直接连接 Milvus，且 embedding 依赖真实的
+# - Retriever.__init__ 会直接连接 Milvus，且 embedding 依赖真实的
 #   Qwen3-Embedding 模型 + GPU（transformers/torch）。这些在普通 CI/本地
 #   环境里既连不上也跑不动，所以这里用 unittest.mock 把 ModelFactory 和
 #   MilvusClient 都替换掉，只对"纯逻辑"部分做单元测试：
@@ -31,9 +31,9 @@ def retriever_inst():
         MockMilvusClient.return_value = mock_client
         MockModelFactory.return_value = MagicMock()
 
-        from search.retriever import FineBIRetriever
+        from search.retriever import Retriever
 
-        r = FineBIRetriever(
+        r = Retriever(
             milvus_host="mock-host",
             milvus_port="19530",
             collection_name="finebi_knowledge_chunks_test",
@@ -43,10 +43,10 @@ def retriever_inst():
 
 def test_generate_sparse_vector_is_deterministic_and_nonempty():
     """稀疏向量生成对同一文本应结果一致，且不应为空"""
-    from search.retriever import FineBIRetriever
+    from search.retriever import Retriever
 
-    vec1 = FineBIRetriever.generate_sparse_vector("怎么创建预警用户")
-    vec2 = FineBIRetriever.generate_sparse_vector("怎么创建预警用户")
+    vec1 = Retriever.generate_sparse_vector("怎么创建预警用户")
+    vec2 = Retriever.generate_sparse_vector("怎么创建预警用户")
 
     assert vec1 == vec2
     assert len(vec1) > 0

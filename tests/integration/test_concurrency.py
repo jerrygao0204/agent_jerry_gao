@@ -15,7 +15,8 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from generator.qa_chain import QAChain
+from agent_jerry_gao.generator.qa_chain import QAChain
+
 
 
 def percentile(values, p: float) -> float:

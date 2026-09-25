@@ -286,5 +286,383 @@
     "updated_at": "2026-09-22 10:48:15",
     "is_deleted": false,
     "status": "active"
+  },
+  "75d43444-4bb9-4ed1-b154-49f710960adc": {
+    "session_id": "75d43444-4bb9-4ed1-b154-49f710960adc",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 13:34:02",
+    "updated_at": "2026-09-25 13:34:02",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "e6105a56-9398-4be8-8988-0dc38bb3fc96": {
+    "session_id": "e6105a56-9398-4be8-8988-0dc38bb3fc96",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 13:49:41",
+    "updated_at": "2026-09-25 13:49:41",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "7feac6b7-7687-4566-aa02-3f257d4a1514": {
+    "session_id": "7feac6b7-7687-4566-aa02-3f257d4a1514",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:02:59",
+    "updated_at": "2026-09-25 14:02:59",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "40e80469-45a0-4f5b-8d22-39201d3c96b2": {
+    "session_id": "40e80469-45a0-4f5b-8d22-39201d3c96b2",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:02:59",
+    "updated_at": "2026-09-25 14:02:59",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "a98d6263-5d4d-4e19-895e-c888ca5ef737": {
+    "session_id": "a98d6263-5d4d-4e19-895e-c888ca5ef737",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:06:22",
+    "updated_at": "2026-09-25 14:06:22",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "aca4769f-fb12-45cc-a22f-7c02631d4152": {
+    "session_id": "aca4769f-fb12-45cc-a22f-7c02631d4152",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:06:22",
+    "updated_at": "2026-09-25 14:06:22",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "b0c707ae-61e5-4fda-b920-1da68d5a03d4": {
+    "session_id": "b0c707ae-61e5-4fda-b920-1da68d5a03d4",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:22:10",
+    "updated_at": "2026-09-25 14:22:10",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "45657890-ec24-449b-bd27-39f195a26904": {
+    "session_id": "45657890-ec24-449b-bd27-39f195a26904",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:22:10",
+    "updated_at": "2026-09-25 14:22:10",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "f267d51a-ec95-42c8-8a32-3fd2794d32d5": {
+    "session_id": "f267d51a-ec95-42c8-8a32-3fd2794d32d5",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:24:44",
+    "updated_at": "2026-09-25 14:24:44",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "d6157788-3f35-4354-bfbc-075295f9d5c2": {
+    "session_id": "d6157788-3f35-4354-bfbc-075295f9d5c2",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:24:44",
+    "updated_at": "2026-09-25 14:24:44",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "ea0b9dd3-a819-41c5-a8e1-2de3ca853fe4": {
+    "session_id": "ea0b9dd3-a819-41c5-a8e1-2de3ca853fe4",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:27:28",
+    "updated_at": "2026-09-25 14:27:28",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "12bb3846-7753-4450-a3e1-38cb033d52a7": {
+    "session_id": "12bb3846-7753-4450-a3e1-38cb033d52a7",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:27:28",
+    "updated_at": "2026-09-25 14:27:28",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "f6424633-6e71-444f-8143-d3b405ee2e82": {
+    "session_id": "f6424633-6e71-444f-8143-d3b405ee2e82",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:29:58",
+    "updated_at": "2026-09-25 14:29:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "b034f7ee-7dc5-4e87-98f6-93a4cd086241": {
+    "session_id": "b034f7ee-7dc5-4e87-98f6-93a4cd086241",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:29:58",
+    "updated_at": "2026-09-25 14:29:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "470a734f-8553-490d-b35c-e22d9a88cdda": {
+    "session_id": "470a734f-8553-490d-b35c-e22d9a88cdda",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:34:39",
+    "updated_at": "2026-09-25 14:34:39",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "9aa0850b-2cca-4106-bb34-c3f37c034cf9": {
+    "session_id": "9aa0850b-2cca-4106-bb34-c3f37c034cf9",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:34:40",
+    "updated_at": "2026-09-25 14:34:40",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "cad5dd4d-6dac-4b84-868b-a0bd7f1bbbbe": {
+    "session_id": "cad5dd4d-6dac-4b84-868b-a0bd7f1bbbbe",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:48:09",
+    "updated_at": "2026-09-25 14:48:09",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "68c0d426-e5ff-4b2c-b827-458bd503c71b": {
+    "session_id": "68c0d426-e5ff-4b2c-b827-458bd503c71b",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:48:09",
+    "updated_at": "2026-09-25 14:48:09",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "9d2029cf-bdd5-4632-b89a-922d0437f2a5": {
+    "session_id": "9d2029cf-bdd5-4632-b89a-922d0437f2a5",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:50:28",
+    "updated_at": "2026-09-25 14:50:28",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "255b20e2-0a6b-43e7-86e7-2b5536769e57": {
+    "session_id": "255b20e2-0a6b-43e7-86e7-2b5536769e57",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:50:28",
+    "updated_at": "2026-09-25 14:50:28",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "621be804-34d0-43bb-8cd8-3fe909e66e60": {
+    "session_id": "621be804-34d0-43bb-8cd8-3fe909e66e60",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:54:27",
+    "updated_at": "2026-09-25 14:54:27",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "16a11520-a4e8-4b37-94bd-b8268ccd83a4": {
+    "session_id": "16a11520-a4e8-4b37-94bd-b8268ccd83a4",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:54:27",
+    "updated_at": "2026-09-25 14:54:27",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "2ef27ffe-269d-45c7-b5b9-9cb01fc61492": {
+    "session_id": "2ef27ffe-269d-45c7-b5b9-9cb01fc61492",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 14:58:39",
+    "updated_at": "2026-09-25 14:58:39",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "1a09a9d4-d4f9-4c42-9c11-cf3b20b288c4": {
+    "session_id": "1a09a9d4-d4f9-4c42-9c11-cf3b20b288c4",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 14:58:39",
+    "updated_at": "2026-09-25 14:58:39",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "64df51e6-adde-4bb2-a46d-2de8274a3798": {
+    "session_id": "64df51e6-adde-4bb2-a46d-2de8274a3798",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 15:01:15",
+    "updated_at": "2026-09-25 15:01:15",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "f1e8d27d-8bf4-4f48-a6bb-94322ef2e57a": {
+    "session_id": "f1e8d27d-8bf4-4f48-a6bb-94322ef2e57a",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 15:01:15",
+    "updated_at": "2026-09-25 15:01:15",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "17be9a36-04f0-4a12-99d8-25fb3c2dad6c": {
+    "session_id": "17be9a36-04f0-4a12-99d8-25fb3c2dad6c",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 15:04:25",
+    "updated_at": "2026-09-25 15:04:25",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "b8b8beca-5cc9-4785-9e5c-dd658185aeb2": {
+    "session_id": "b8b8beca-5cc9-4785-9e5c-dd658185aeb2",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 15:04:25",
+    "updated_at": "2026-09-25 15:04:25",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "40cb78fd-bd6f-464a-bb5f-19dcf8f2d53a": {
+    "session_id": "40cb78fd-bd6f-464a-bb5f-19dcf8f2d53a",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 15:09:00",
+    "updated_at": "2026-09-25 15:09:00",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "72387aec-6c78-412f-a842-8b92ecba9c0d": {
+    "session_id": "72387aec-6c78-412f-a842-8b92ecba9c0d",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 15:09:00",
+    "updated_at": "2026-09-25 15:09:00",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "62489332-e36b-405d-bc76-f3b954780b2a": {
+    "session_id": "62489332-e36b-405d-bc76-f3b954780b2a",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 15:28:58",
+    "updated_at": "2026-09-25 15:28:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "3399bf17-6701-4723-9f3c-6652f6ad23b1": {
+    "session_id": "3399bf17-6701-4723-9f3c-6652f6ad23b1",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 15:28:58",
+    "updated_at": "2026-09-25 15:28:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "0cfda5c7-b7fc-4911-97ac-5fd5bd1e5e50": {
+    "session_id": "0cfda5c7-b7fc-4911-97ac-5fd5bd1e5e50",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 15:59:43",
+    "updated_at": "2026-09-25 15:59:43",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "57a5fecf-f6b7-4bf4-b14a-30b4dfbc53ac": {
+    "session_id": "57a5fecf-f6b7-4bf4-b14a-30b4dfbc53ac",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 15:59:44",
+    "updated_at": "2026-09-25 15:59:44",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "979ae898-6905-43a4-bde1-af47ad73f97d": {
+    "session_id": "979ae898-6905-43a4-bde1-af47ad73f97d",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 16:03:11",
+    "updated_at": "2026-09-25 16:03:11",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "10969591-ff58-4070-8c37-ad70b58256b5": {
+    "session_id": "10969591-ff58-4070-8c37-ad70b58256b5",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 16:03:11",
+    "updated_at": "2026-09-25 16:03:11",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "2a507eee-2f73-452a-8baf-1c86fbb950a0": {
+    "session_id": "2a507eee-2f73-452a-8baf-1c86fbb950a0",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 16:09:09",
+    "updated_at": "2026-09-25 16:09:09",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "56fabb5b-42b2-46ae-a945-ae60b168acbf": {
+    "session_id": "56fabb5b-42b2-46ae-a945-ae60b168acbf",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 16:09:09",
+    "updated_at": "2026-09-25 16:09:09",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "9bea13eb-de6e-4158-973f-7e6e5485cd0e": {
+    "session_id": "9bea13eb-de6e-4158-973f-7e6e5485cd0e",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 16:10:58",
+    "updated_at": "2026-09-25 16:10:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "7f0e48c3-5ffd-4ed4-ac40-33a0023e237e": {
+    "session_id": "7f0e48c3-5ffd-4ed4-ac40-33a0023e237e",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 16:10:58",
+    "updated_at": "2026-09-25 16:10:58",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "87e5f8a4-1b39-4f1d-be42-85cb3c7d1f6f": {
+    "session_id": "87e5f8a4-1b39-4f1d-be42-85cb3c7d1f6f",
+    "user_id": "default",
+    "title": "你好",
+    "created_at": "2026-09-25 16:12:25",
+    "updated_at": "2026-09-25 16:12:25",
+    "is_deleted": false,
+    "status": "active"
+  },
+  "4025b365-3570-4c32-a256-92d94fb970e5": {
+    "session_id": "4025b365-3570-4c32-a256-92d94fb970e5",
+    "user_id": "default",
+    "title": "請幫我查詢數據",
+    "created_at": "2026-09-25 16:12:25",
+    "updated_at": "2026-09-25 16:12:25",
+    "is_deleted": false,
+    "status": "active"
   }
 }

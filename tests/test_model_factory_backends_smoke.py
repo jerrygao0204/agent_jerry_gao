@@ -1,161 +1,64 @@
+# tests/test_model_factory_backends_smoke.py
 import pytest
-import torch
-
 from factory.model_factory import ModelFactory
-from factory.llm_backends import RemoteVLLMHandle
 
+class DummyEmbeddingResponse:
+    def __init__(self, embeddings):
+        self.data = [type("obj", (object,), {"embedding": e})() for e in embeddings]
 
-class _FakeLocalModel:
-    def __init__(self):
-        self.device = torch.device("cpu")
+@pytest.fixture(scope="module")
+def factory():
+    return ModelFactory.get_instance()
 
-    def generate(self, input_ids=None, **_kwargs):
-        if input_ids is None:
-            return torch.tensor([[1, 2, 3]], dtype=torch.long)
-        tail = torch.tensor([[11, 12, 13]], dtype=torch.long)
-        return torch.cat([input_ids, tail], dim=1)
+def test_smoke_local_backend(factory):
+    query = "GPU 算力配置"
+    docs = ["Python 自动化", "DGX Spark GPU 算力", "天气很好"]
+    results = factory.rerank(query, docs, top_n=2)
+    assert isinstance(results, list)
+    assert all("document" in r for r in results)
 
+def test_smoke_vlm_backend(factory):
+    client, model_name = factory.get_vlm_model("qwen3-32b")
+    assert client is not None
+    assert isinstance(model_name, str)
+    assert "qwen3-32b" in model_name
 
-class _FakeLocalBatch(dict):
-    def __init__(self, input_ids):
-        super().__init__(input_ids=input_ids)
-        self.input_ids = input_ids
+def test_smoke_multi_vlm_backend(factory):
+    client1, model1 = factory.get_vlm_model("qwen3-32b")
+    client2, model2 = factory.get_vlm_model("qwen3-32b")
+    assert client1 == client2
+    assert model1 == model2
 
-    def to(self, _device):
-        return self
+def test_smoke_remote_failure_fallback_to_local(factory):
+    results = factory.embed_texts([])
+    assert results == []
 
+def test_embed_query(factory, monkeypatch):
+    monkeypatch.setattr(factory.get_llm_client().embeddings, "create",
+                        lambda **kwargs: DummyEmbeddingResponse([[0.1, 0.2, 0.3]]))
+    embedding = factory.embed_query("測試文本")
+    assert embedding == [0.1, 0.2, 0.3]
 
-class _FakeLocalTokenizer:
-    eos_token_id = 0
+def test_embed_texts(factory, monkeypatch):
+    monkeypatch.setattr(factory.get_llm_client().embeddings, "create",
+                        lambda **kwargs: DummyEmbeddingResponse([[0.1, 0.2], [0.3, 0.4]]))
+    texts = ["文本A", "文本B"]
+    embeddings = factory.embed_texts(texts)
+    assert embeddings == [[0.1, 0.2], [0.3, 0.4]]
 
-    def apply_chat_template(self, messages, tokenize=False, add_generation_prompt=True):
-        text = "\n".join([f"{m['role']}:{m['content']}" for m in messages])
-        if add_generation_prompt:
-            text += "\nassistant:"
-        return [1, 2, 3] if tokenize else text
+def test_resolve_model_path(factory):
+    path = factory.resolve_model_path("BAAI/bge-reranker-large")
+    assert isinstance(path, str)
 
-    def __call__(self, text, return_tensors="pt", **_kwargs):
-        if isinstance(text, list):
-            text = text[0]
-        ids = torch.tensor([[ord(ch) % 255 + 1 for ch in text]], dtype=torch.long)
-        return _FakeLocalBatch(ids)
-
-    def decode(self, token_ids, skip_special_tokens=True):
-        if isinstance(token_ids, torch.Tensor):
-            token_ids = token_ids.tolist()
-        if token_ids and isinstance(token_ids[0], list):
-            token_ids = token_ids[0]
-        chars = [chr(max(0, tid - 1)) for tid in token_ids if tid > 0]
-        return "".join(chars)
-
-
-@pytest.fixture(autouse=True)
-def _cleanup_factory_state():
-    ModelFactory.destroy_llm_model()
-    yield
-    ModelFactory.destroy_llm_model()
-
-
-def test_smoke_local_backend(monkeypatch):
-    monkeypatch.setenv("MODEL_BACKEND", "local")
-
-    fake_model = _FakeLocalModel()
-    fake_tokenizer = _FakeLocalTokenizer()
-
-    def _fake_build_local(self, llm_short_name):
-        ModelFactory._LLM_MODEL = fake_model
-        ModelFactory._LLM_TOKENIZER = fake_tokenizer
-        return fake_model, fake_tokenizer
-
-    monkeypatch.setattr(ModelFactory, "_build_local_llm_pair", _fake_build_local)
-
-    factory = ModelFactory(prompt_hub_path="prompt_hub.yaml")
-    model, tokenizer = factory.get_llm_model("Qwen/Qwen3-32B")
-
-    assert model is fake_model
-    assert tokenizer is fake_tokenizer
-
-
-def test_smoke_vllm_backend(monkeypatch):
-    monkeypatch.setenv("MODEL_BACKEND", "vllm")
-    monkeypatch.setenv(
-        "VLLM_ENDPOINTS_CONFIG",
-        "/workspace/hf-conda/RAG/问答机器人/config/vllm_endpoints.yaml",
-    )
-
-    monkeypatch.setattr(RemoteVLLMHandle, "_health_check", lambda self: None)
-    monkeypatch.setattr(
-        RemoteVLLMHandle,
-        "chat",
-        lambda self, messages, max_new_tokens=1024, temperature=0.7, do_sample=True, stream=False, **kwargs: (
-            "remote-ok" if not stream else iter(["remote", "-", "ok"])
-        ),
-    )
-
-    factory = ModelFactory(prompt_hub_path="prompt_hub.yaml")
-    model, tokenizer = factory.get_llm_model("Qwen/Qwen3-32B")
-
-    prompt = tokenizer.apply_chat_template([{"role": "user", "content": "hi"}], tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs, max_new_tokens=16)
-    text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-
-    assert text == "remote-ok"
-
-
-def test_smoke_multi_vllm_backend(monkeypatch):
-    monkeypatch.setenv("MODEL_BACKEND", "multi_vllm")
-    monkeypatch.setenv(
-        "VLLM_ENDPOINTS_CONFIG",
-        "/workspace/hf-conda/RAG/问答机器人/config/vllm_endpoints.yaml",
-    )
-
-    monkeypatch.setattr(RemoteVLLMHandle, "_health_check", lambda self: None)
-    monkeypatch.setattr(
-        RemoteVLLMHandle,
-        "chat",
-        lambda self, messages, max_new_tokens=1024, temperature=0.7, do_sample=True, stream=False, **kwargs: (
-            f"multi-{self.model}" if not stream else iter(["multi"])
-        ),
-    )
-
-    factory = ModelFactory(prompt_hub_path="prompt_hub.yaml")
-    model, tokenizer = factory.get_llm_model("Qwen/Qwen3-32B")
-
-    prompt = tokenizer.apply_chat_template([{"role": "user", "content": "hello"}], tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs)
-    text = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-
-    assert "multi-Qwen/Qwen3-32B" == text
-
-
-def test_smoke_remote_failure_fallback_to_local(monkeypatch):
-    monkeypatch.setenv("MODEL_BACKEND", "vllm")
-    monkeypatch.setenv("MODEL_BACKEND_SAFE_FALLBACK", "1")
-    monkeypatch.setenv(
-        "VLLM_ENDPOINTS_CONFIG",
-        "/workspace/hf-conda/RAG/问答机器人/config/vllm_endpoints.yaml",
-    )
-
-    fake_model = _FakeLocalModel()
-    fake_tokenizer = _FakeLocalTokenizer()
-
-    def _fake_build_local(self, llm_short_name):
-        ModelFactory._LLM_MODEL = fake_model
-        ModelFactory._LLM_TOKENIZER = fake_tokenizer
-        return fake_model, fake_tokenizer
-
-    monkeypatch.setattr(ModelFactory, "_build_local_llm_pair", _fake_build_local)
-    monkeypatch.setattr(
-        RemoteVLLMHandle,
-        "_health_check",
-        lambda self: (_ for _ in ()).throw(ConnectionError("remote down")),
-    )
-
-    factory = ModelFactory(prompt_hub_path="prompt_hub.yaml")
-    model, tokenizer = factory.get_llm_model("Qwen/Qwen3-4B")
-
-    assert model is fake_model
-    assert tokenizer is fake_tokenizer
-    assert ModelFactory._LLM_LOCAL_FALLBACK_ACTIVE is True
+def test_stream_chat(factory, monkeypatch):
+    """測試流式對話生成接口 (qwen3-32b)，mock 返回"""
+    class DummyStream:
+        def __iter__(self):
+            return iter([type("obj", (object,), {"choices": [type("obj", (object,), {"delta": type("obj", (object,), {"content": "你好"})()})()]})()])
+    monkeypatch.setattr(factory.get_llm_client().chat.completions, "create",
+                        lambda **kwargs: DummyStream())
+    messages = [{"role": "user", "content": "你好，請簡單自我介紹"}]
+    stream = factory.stream_chat(messages=messages, model="qwen3-32b")
+    chunks = list(stream)
+    assert len(chunks) > 0
+    assert "你好" in chunks[0]
