@@ -99,8 +99,8 @@ class HierarchicalToolFactory:
            - 若 Domain 配置了白名单，必须包含 user_role
         4. 均未配置，默认放行
         """
-        if not user_role or user_role in ["None", "null"]:
-            return True
+        # if not user_role or user_role in ["None", "null"]:
+        #     return True
 
         # 1. 优先校验：工具级白名单 (显式配置)
         if tool.role_whitelist is not None:

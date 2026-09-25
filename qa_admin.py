@@ -213,12 +213,6 @@ def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
             choices.append((f"{title} ({session_id[:8]})", session_id))
     return choices
 
-# def fetch_session_dropdown_choices(username: str) -> List[Tuple[str, str]]:
-#     """获取指定用户的历史会话列表，用于 Radio/Dropdown 组件展示"""
-#     mem_mgr = get_or_create_user_memory(username)
-#     sessions = mem_mgr.get_recent_sessions_list()
-#     choices = [(f"💬 {s.get('title', '新对话')} ({s.get('updated_at', '')[5:16]})", s['session_id']) for s in sessions]
-#     return choices
 
 # ==========================================
 # 📄 2.1 UI 上下文注入与预览函数
@@ -264,30 +258,6 @@ def save_user_context(user_info, content: str) -> str:
                         except Exception as e:
                             logging.error(f"❌ 保存上下文失败 [{target_path}]: {e}")
                             return f"❌ **保存失败：** {str(e)}"
-
-# # ------------------------------------------
-# # 📄 Part 2: 读取系统认知图谱 Context
-# # ------------------------------------------
-# def load_system_memory_context(user_info) -> str:
-#     """仅读取 Memory Growth 自动生成的 Context (memory_growth/context/users/{user_id}/user_prompt_context.txt)"""
-#     # 🎯 1. 容错解析出纯粹的 username（如 "admin"），避免返回完整文件路径
-#     if isinstance(user_info, dict):
-#         username = user_info.get("username", "default")
-#     elif isinstance(user_info, str):
-#         username = user_info
-#     else:
-#         username = "default"
-
-#     # 🎯 2. 正确拼装标准路径: MEMORY_GROWTH_CONTEXT_DIR
-#     target_path = os.path.join(MEMORY_GROWTH_CONTEXT_DIR)
-#     if not os.path.exists(target_path):
-#         return ""
-#     try:
-#         with open(target_path, "r", encoding="utf-8") as f:
-#             return f.read().strip()
-#     except Exception as e:
-#         logging.error(f"❌ 读取 Memory Growth Context 失败 [{target_path}]: {e}")
-#         return ""
 
                         
 # ==========================================
@@ -375,41 +345,6 @@ def clear_agent_memory(user_state: dict):
         user_state["current_session_id"] = new_choice
     return [], "*等待启动诊断...*", "✅ 已成功软删除当前对话与记忆", "", gr.update(choices=choices, value=new_choice)
 
-# def clear_agent_memory(user_state: dict):
-#     """【修正】物理删除当前 Session，清空内存并更新前端 Radio 选择框"""
-#     username = user_state.get("username", "default") if user_state else "default"
-#     mem_mgr = get_or_create_user_memory(username)
-#     current_session_id = mem_mgr.session_id
-
-#     # 1. 物理删除持久化存储中的当前 Session
-#     if hasattr(mem_mgr, "history_storage") and current_session_id:
-#         try:
-#             # mem_mgr.history_storage.delete_session(username, current_session_id)
-#             mem_mgr.soft_clear_all()  # 软删除内存中的消息
-#             logging.info(f"🗑️ 已成功从存储中删除用户 [{username}] 的会话 [{current_session_id}]")
-#         except Exception as e:
-#             logging.error(f"❌ 删除会话记录失败: {e}")
-
-#     # 2. 清空内存对象
-#     mem_mgr.clear_all()
-
-#     # 3. 重新获取最新的会话列表
-#     choices = fetch_session_dropdown_choices(username)
-
-#     # 4. 如果会话已被空，自动生成一个全新的 Session
-#     if not choices:
-#         new_sess_id = str(uuid.uuid4())
-#         mem_mgr.switch_session(new_sess_id)
-#         if hasattr(mem_mgr, "history_storage"):
-#             mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
-#         choices = fetch_session_dropdown_choices(username)
-#         new_choice = new_sess_id
-#     else:
-#         new_choice = choices[0][1]
-#         mem_mgr.switch_session(new_choice)
-
-#     return [], "*等待启动诊断...*", "✅ 已成功清空对话与记忆", "", gr.update(choices=choices, value=new_choice)
-
 def parse_metrics_logs(log_path: str = LOG_FILE_PATH) -> pd.DataFrame:
     """解析 log_pipeline_metrics 輸出的 JSON 日誌（含後台 Print 驗證）"""
     metrics_data = []
@@ -460,26 +395,29 @@ def render_observability_dashboard():
         fig_empty = px.scatter(title="⚠️ 暫無 Metrics 日誌數據，請先在 Tab 1 或 Tab 3 執行推理")
         return summary_md, metrics, fig_empty, fig_empty
 
-    # 1. 各階段 Latency 箱線圖
+    # 1. 各阶段 Latency 箱线图
     stage_df = df[df["stage"].isin(["hybrid_search", "rerank", "context_expansion", "llm_ttft"])]
     if not stage_df.empty:
         fig_latency = px.box(
             stage_df, x="stage", y="elapsed_ms", color="stage", points="all",
-            title="⚡ RAG 管道各階段 Latency 分佈 (ms)",
-            labels={"elapsed_ms": "耗時 (ms)", "stage": "管道階段"}
+            title="⚡ RAG 管道各阶段 Latency 分佈 (ms)",
+            labels={"elapsed_ms": "耗时 (ms)", "stage": "管道阶段"},
+            template="plotly_white"  # 👈 添加浅色画布模板
         )
     else:
-        fig_latency = px.scatter(title="⚠️ 暫無階段 Latency 數據")
+        fig_latency = px.scatter(title="⚠️ 暫無階段 Latency 數據", template="plotly_white")
 
-    # 2. GPU 顯存折線圖
+    # 2. GPU 显存折线图
     if "gpu_allocated_gb" in df.columns:
         fig_gpu = px.line(
             df, x="timestamp", y="gpu_allocated_gb", markers=True,
             title="📈 GPU VRAM 顯存動態變化 (GB)",
-            labels={"gpu_allocated_gb": "已分配顯存 (GB)", "timestamp": "時間戳"}
+            labels={"gpu_allocated_gb": "已分配顯存 (GB)", "timestamp": "時間戳"},
+            template="plotly_white"  # 👈 添加浅色画布模板
         )
     else:
-        fig_gpu = px.scatter(title="⚠️ 暫無 GPU 顯存數據")
+        fig_gpu = px.scatter(title="⚠️ 暫無 GPU 顯存數據", template="plotly_white")
+
 
     return summary_md, metrics, fig_latency, fig_gpu
 
@@ -804,30 +742,6 @@ def agent_stream_predict(user_message, history, llm_model, top_k_ret, top_k_rera
     history.append({"role": "user", "content": clean_message})
     history.append({"role": "assistant", "content": "🤖 *Agent 正在规划并执行任务...*"})
 
-    # # ====================================================
-    # # 🎯 在 agent_stream_predict 中合并双源 Context
-    # # ====================================================
-    # user_custom_ctx = load_user_prompt_context(user_state)
-    # system_memory_ctx = load_system_memory_context(user_state)
-
-    # context_blocks = []
-    # if user_custom_ctx:
-    #     context_blocks.append(f"### 【USER CUSTOM PREFERENCES / 用户自定义硬性约束与偏好】\n{user_custom_ctx}")
-    # if system_memory_ctx:
-    #     context_blocks.append(f"### 【SYSTEM MEMORY & COGNITIVE PROFILE / 认知图谱与历史记忆】\n{system_memory_ctx}")
-
-    # merged_context_prompt = ""
-    # if context_blocks:
-    #     merged_context_prompt = (
-    #         "\n\n====================================================\n"
-    #         "🎯 USER CONTEXT INJECTION (用户上下文与认知图谱约束)\n"
-    #         "====================================================\n"
-    #         f"{'\n\n'.join(context_blocks)}\n"
-    #         "====================================================\n"
-    #         "⚠️ 注意：雙源 Context 僅作為背景輔助，回答必須基於用戶的實際問題。\n"
-    #     )
-    #     context_logger.info(f"✅ 成功拼接用户 [{username}] 双源 Context，总字符数: {len(merged_context_prompt)}")
-
     agent = ReActAgent(
         llm_client=LLMClient(default_model_name=llm_model),
         model_name=llm_model,
@@ -936,18 +850,6 @@ def create_new_session_event(user_state: dict):
         gr.update(choices=choices, value=new_sess_id)
     )
 
-# def create_new_session_event(user_state: dict):
-#     username = user_state.get("username", "default")
-#     new_sess_id = str(uuid.uuid4())
-#     mem_mgr = get_or_create_user_memory(username, session_id=new_sess_id)
-#     mem_mgr.history_storage.create_session(username, new_sess_id, title="新对话")
-    
-#     choices = fetch_session_dropdown_choices(username)
-#     if not choices:
-#         choices = [(f"💬 新对话", new_sess_id)]
-
-#     return [], "*新对话已开启*", "已新建会话", gr.update(choices=choices, value=new_sess_id), gr.update(choices=choices, value=new_sess_id)
-
 # 新建 用户点赞/点踩及意见反馈组件
 def handle_chatbot_like(like_data: gr.LikeData, history: list, user_state: dict):
     """
@@ -1026,17 +928,6 @@ def switch_session_event(selected_session_id: str, user_state: dict):
         f"📖 已加载历史会话: [{selected_session_id[:8]}...]", 
         f"✅ 已切至会话 {selected_session_id[:8]}"
     )
-# def switch_session_event(selected_session_id: str, user_state: dict):
-#     username = user_state.get("username", "default")
-#     if not selected_session_id:
-#         return [], "*未选择会话*", "就绪"
-
-#     mem_mgr = get_or_create_user_memory(username, session_id=selected_session_id)
-#     raw_msgs = mem_mgr.short_term.get_messages()
-#     rendered_history = [{"role": m["role"], "content": normalize_message_content(m.get("content", ""))} for m in raw_msgs]
-    
-#     return rendered_history, f"📖 已加载历史会话: [{selected_session_id[:8]}...]", f"已切至会话 {selected_session_id[:8]}"
-
 
 # 添加缓存以加快重复标准化同一内容的性能（如在编辑面板重建中）
 _normalize_cache = {}
@@ -1235,55 +1126,6 @@ def rebuild_agent_session_with_prefix(
     # 3. 重新加載 active 訊息（switch_session 遇到相同 id 會直接返回，不會重載，故用 reload_session）
     mem_mgr.reload_session()
     logging.info(f"✅ [會話軟重建成功] 當前短期記憶體有效訊息數: {len(mem_mgr.short_term.get_messages())}")
-    
-# def rebuild_agent_session_with_prefix(mem_mgr: MemoryManager, username: str, kept_history: List[Dict[str, str]]):
-#     """重建代理会话，使用保留的历史消息作为前缀。包含性能诊断日志。"""
-
-#     t_start = time_module.time()
-    
-#     session_id = mem_mgr.session_id
-#     logging.info(f"🔄 [会话重建] 开始重建会话 {session_id[:8]}...，保留消息数: {len(kept_history)}")
-
-#     if hasattr(mem_mgr, "history_storage"):
-#         try:
-#             t_del = time_module.time()
-#             mem_mgr.history_storage.delete_session(username, session_id)
-#             logging.info(f"  → 删除旧会话耗时 {(time_module.time() - t_del):.2f}s")
-#         except Exception as e:
-#             logging.error(f"❌ 重建会话时删除旧会话失败: {e}")
-
-#         try:
-#             t_create = time_module.time()
-#             first_user = next((normalize_message_content(m.get("content", "")) for m in kept_history if m.get("role") == "user"), "新对话")
-#             title = (str(first_user)[:15] + "...") if len(str(first_user)) > 15 else str(first_user)
-#             mem_mgr.history_storage.create_session(username, session_id, title=title or "新对话")
-#             logging.info(f"  → 创建新会话索引耗时 {(time_module.time() - t_create):.2f}s")
-#         except Exception as e:
-#             logging.error(f"❌ 重建会话时创建会话索引失败: {e}")
-
-#     t_clear = time_module.time()
-#     mem_mgr.short_term.clear()
-#     mem_mgr.entity.clear()
-#     logging.info(f"  → 清空内存缓存耗时 {(time_module.time() - t_clear):.2f}s")
-
-#     t_process = time_module.time()
-#     for idx, msg in enumerate(kept_history):
-#         role = msg.get("role")
-#         content = normalize_message_content(msg.get("content", ""))
-#         if not content:
-#             continue
-#         if role == "user":
-#             mem_mgr.process_user_input(content)
-#         elif role == "assistant":
-#             mem_mgr.process_assistant_output(content)
-        
-#         # 每处理10条消息输出一次进度
-#         if (idx + 1) % 10 == 0:
-#             logging.debug(f"    └─ 已处理 {idx + 1} 条消息")
-    
-#     t_end = time_module.time()
-#     logging.info(f"  → 重建内存消息耗时 {(t_end - t_process):.2f}s，总耗时 {(t_end - t_start):.2f}s")
-#     logging.info(f"✅ [会话重建] 完成")
 
 def regenerate_agent_from_edited_turn(
     history: List[Dict[str, str]],
@@ -1392,88 +1234,6 @@ def regenerate_agent_from_edited_turn(
         edit_text = ""
 
     yield final_history, final_inspector, final_status, final_gpu, final_radio_update, selector_update, edit_text
-
-# def regenerate_agent_from_edited_turn(
-#     history: List[Dict[str, str]],
-#     selected_user_turn_idx: Optional[str],
-#     edited_user_message: str,
-#     llm_model: str,
-#     top_k_ret: int,
-#     top_k_rerank: int,
-#     filter_input: str,
-#     user_state: dict,
-# ):
-#     safe_history = history or []
-#     clean_message = normalize_message_content(edited_user_message)
-#     username = user_state.get("username", "default") if isinstance(user_state, dict) else "default"
-#     mem_mgr = get_or_create_user_memory(username)
-
-#     if not clean_message:
-#         yield safe_history, "⚠️ 编辑后的提问不能为空", "⚠️ 编辑内容为空", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
-#         return
-
-#     if selected_user_turn_idx in (None, ""):
-#         yield safe_history, "⚠️ 请先选择要编辑的历史提问", "⚠️ 未选择历史轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
-#         return
-
-#     try:
-#         turn_idx = int(selected_user_turn_idx)
-#     except Exception:
-#         yield safe_history, "⚠️ 历史轮次索引无效", "⚠️ 索引无效", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
-#         return
-
-#     if turn_idx < 0 or turn_idx >= len(safe_history):
-#         yield safe_history, "⚠️ 选择的轮次超出范围", "⚠️ 轮次超出范围", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
-#         return
-
-#     target_msg = safe_history[turn_idx]
-#     if not isinstance(target_msg, dict) or target_msg.get("role") != "user":
-#         yield safe_history, "⚠️ 仅支持编辑用户提问轮次", "⚠️ 非用户轮次", get_gpu_memory_status(), gr.skip(), gr.skip(), gr.skip()
-#         return
-
-#     kept_history: List[Dict[str, str]] = []
-#     for msg in safe_history[:turn_idx]:
-#         if not isinstance(msg, dict):
-#             continue
-#         role = msg.get("role")
-#         content = normalize_message_content(msg.get("content", ""))
-#         if role in ("user", "assistant") and content:
-#             kept_history.append({"role": role, "content": content})
-
-#     rebuild_agent_session_with_prefix(mem_mgr, username, kept_history)
-
-#     final_history = kept_history
-#     final_inspector = "*等待启动诊断...*"
-#     final_status = "🤖 推理中..."
-#     final_gpu = get_gpu_memory_status()
-#     final_radio_update = gr.update(choices=fetch_session_dropdown_choices(username), value=mem_mgr.session_id)
-
-#     for out in agent_stream_predict(
-#         user_message=clean_message,
-#         history=kept_history,
-#         llm_model=llm_model,
-#         top_k_ret=top_k_ret,
-#         top_k_rerank=top_k_rerank,
-#         filter_input=filter_input,
-#         user_state=user_state,
-#     ):
-#         chat_hist, inspector_md, status_text, gpu_text, radio_update = out
-#         final_history, final_inspector, final_status, final_gpu, final_radio_update = chat_hist, inspector_md, status_text, gpu_text, radio_update
-        
-#         yield chat_hist, inspector_md, status_text, gpu_text, radio_update, gr.skip(), gr.skip()
-
-#     # 编辑面板刷新
-#     logging.info(f"开始重建编辑选项...")
-#     try:
-#         selector_update, edit_text = refresh_agent_edit_panel_from_history(final_history)
-#     except Exception as e:
-#         logging.error(f"编辑面板刷新异常：{str(e)}", exc_info=True)
-#         # 异常时返回空更新
-#         selector_update = gr.update(choices=[], value=None)
-#         edit_text = ""
-
-#     yield final_history, final_inspector, final_status, final_gpu, final_radio_update, selector_update, edit_text
-# ==================== ✨🧩 TAB3_EDIT_REGENERATE_END 🧩✨ ====================
 
 def test_tool_execution(tool_name, tool_input_json, user_state: dict):
     start_time = time.time()
@@ -1606,155 +1366,167 @@ def get_all_registered_tool_names(user_role: Optional[str] = None) -> list:
 # ==========================================
 # 🖥️ 5. 构建带“4 个完整 Tab”的 Gradio 应用
 # ==========================================
-CUSTOM_CSS = """
-/* 全局字体设置：微软雅黑 (Microsoft YaHei) */
-* {
-    font-family: "Microsoft YaHei", "微软雅黑", "Segoe UI", Arial, sans-serif !important;
+gemini_css = """
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
+
+/* 1. 淺色模式 CSS 變數覆蓋 */
+:root, gradio-app, .gradio-container {
+    --body-background-fill: #ffffff !important;
+    --background-fill-primary: #f0f4f9 !important; /* Gemini 經典淺灰藍卡片 */
+    --background-fill-secondary: #e9eef6 !important;
+    --border-color-primary: #e1e3e1 !important;
+    --border-color-accent: #0b57d0 !important;
+    --radius-sm: 12px !important;
+    --radius-md: 20px !important;
+    --radius-lg: 28px !important;
+    --text-color-body: #1f1f1f !important;
+    --text-color-subdued: #444746 !important;
+    --font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* 默认 / 1080P 屏幕 (1366px - 1920px) 基准字号 */
-html, body, .gradio-container {
+/* 2. 全螢幕自適應頁面容器 (取消 1400px 限制) */
+body, html, .gradio-container {
+    background-color: #ffffff !important;
+    color: #1f1f1f !important;
+    font-family: 'Google Sans', sans-serif !important;
+    width: 100% !important;
+    max-width: 100% !important; /* 解除 1400px 固定寬度 */
+    margin: 0 !important;
+    padding: 12px 24px !important; /* 保持適當的四周邊距 */
+    box-sizing: border-box !important;
+}
+
+footer { display: none !important; }
+
+/* 3. Gemini 漸變標題 */
+.gemini-header h1 {
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #1a73e8 0%, #8ab4f8 50%, #e91e63 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    margin-bottom: 20px !important;
+}
+
+/* 4. 淺色卡片容器自適應 */
+.gemini-card {
+    background-color: #f0f4f9 !important;
+    border: 1px solid #e1e3e1 !important;
+    border-radius: 20px !important;
+    padding: 20px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03) !important;
+    width: 100% !important;
+}
+
+/* 5. 淺色膠囊輸入框 */
+.gemini-input textarea, .gemini-input input {
+    background-color: #ffffff !important;
+    border: 1px solid #c4c7c5 !important;
+    border-radius: 28px !important;
+    color: #1f1f1f !important;
+    padding: 14px 22px !important;
     font-size: 15px !important;
-}
-
-/* 按钮、输入框、标签等组件字号优化 */
-.gr-button, .gr-input, .gr-dropdown, .gr-radio, .gr-form {
-    font-size: 14px !important;
-}
-
-/* Markdown 标题缩放控制 */
-.markdown-text h1 { font-size: 1.8rem !important; }
-.markdown-text h2 { font-size: 1.5rem !important; }
-.markdown-text h3 { font-size: 1.2rem !important; }
-
-/* 📱 移动端与小屏适配 (<= 768px) */
-@media screen and (max-width: 768px) {
-    html, body, .gradio-container {
-        font-size: 13px !important;
-        padding: 4px !important;
-    }
-    
-    /* 1. 强制所有并排的 Row 在手机上变为纵向排列（上下堆叠） */
-    .gradio-container .gr-row {
-        display: flex !important;
-        flex-direction: column !important;
-        flex-wrap: nowrap !important;
-    }
-
-    /* 2. 让所有 Column 在手机端宽度撑满 100% */
-    .gradio-container .gr-column {
-        width: 100% !important;
-        max-width: 100% !important;
-        flex: none !important;
-    }
-
-    /* 3. 优化聊天框与输入框在手机上的高度与显示 */
-    .gr-chatbot {
-        height: 380px !important; /* 手机端适当缩减聊天框高度，避免过长 */
-    }
-
-    /* 4. 优化顶部 Tab 导航栏文字大小，防止挤压换行 */
-    .gr-tabs button {
-        font-size: 12px !important;
-        padding: 6px 8px !important;
-    }
-
-    /* 💡 5. 补充：顶部标题栏专属优化（解决标题与退出按钮拥挤问题） */
-    .header-container {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 8px !important;
-        padding: 8px 4px !important;
-    }
-
-    /* 缩减移动端主标题字号并允许适当排布 */
-    .header-container h1, .header-container h2 {
-        font-size: 1.1rem !important;
-        line-height: 1.3 !important;
-        margin: 0 !important;
-    }
-
-    /* 将退出按钮移至右上角或自适应靠右 */
-    #logout_btn {
-        align-self: flex-end !important;
-        margin-top: -35px !important;
-    }
-}
-
-/* 🖥️ 2K / 4K 高分辨率大屏适配 (>= 2560px) */
-@media screen and (min-width: 2560px) {
-    html, body, .gradio-container {
-        font-size: 18px !important;
-    }
-    .gr-button, .gr-input, .gr-dropdown, .gr-radio {
-        font-size: 16px !important;
-    }
-    .markdown-text h1 { font-size: 2.2rem !important; }
-    .markdown-text h2 { font-size: 1.8rem !important; }
-    .markdown-text h3 { font-size: 1.4rem !important; }
-}
-
-/* ---------------------------------------------------------
-   🔒 登录界面绝对居中与高度紧凑样式
-   --------------------------------------------------------- */
-/* 外层容器占满整个视口，作为绝对定位参照物 */
-.login-container {
-    position: relative !important;
-    min-height: 75vh !important;
     width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
 }
 
-/* 登录卡片强行紧凑并视口绝对居中 */
-.login-card {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    
-    /* 尺寸强行收缩 */
-    width: 100% !important;
-    max-width: 400px !important;
-    height: auto !important;
-    max-height: fit-content !important;
-    
-    /* 内部间距调整 */
-    padding: 30px 24px !important;
-    background: var(--background-fill-primary, #ffffff) !important;
-    border: 1px solid var(--border-color-primary, #e5e7eb) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+.gemini-input textarea:focus, .gemini-input input:focus {
+    border-color: #0b57d0 !important;
+    box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.15) !important;
 }
 
-/* 强行收缩 Gradio 卡片内部各子层级高度 */
-.login-card > div,
-.login-card .form,
-.login-card .block {
-    height: auto !important;
-    min-height: unset !important;
-    flex-grow: 0 !important;
+/* 6. 藍色主按鈕 */
+.gemini-btn-primary {
+    background: linear-gradient(135deg, #0b57d0 0%, #1a73e8 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 24px !important;
+    font-weight: 500 !important;
+    font-size: 15px !important;
+    transition: all 0.2s ease !important;
 }
 
-/* 居中标题与提示 */
-.login-card h2 {
-    text-align: center !important;
-    margin-bottom: 4px !important;
+.gemini-btn-primary:hover {
+    opacity: 0.95 !important;
+    box-shadow: 0 4px 12px rgba(11, 87, 208, 0.25) !important;
 }
 
-#logout_btn {
+/* 7. Tab 樣式 */
+.tab-nav {
+    border-bottom: 1px solid #e1e3e1 !important;
+    margin-bottom: 20px !important;
+}
+
+.tab-nav button {
+    color: #444746 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
     border: none !important;
     background: transparent !important;
-    color: #666 !important;
-    box-shadow: none !important;
 }
-#logout_btn:hover {
-    color: #ef4444 !important;
-    background: #fee2e2 !important;
+
+.tab-nav button.selected {
+    color: #0b57d0 !important;
+    border-bottom: 3px solid #0b57d0 !important;
+}
+
+/* 8. 📱 多螢幕響應式適配 (Responsive Breakpoints) */
+
+/* 行動端 (<= 768px) */
+@media screen and (max-width: 768px) {
+    body, html, .gradio-container {
+        padding: 8px 12px !important;
+    }
+    .gemini-header h1 {
+        font-size: 1.6rem !important;
+    }
+    .gemini-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+}
+
+/* 2K / 4K 超寬螢幕 (>= 2560px) */
+@media screen and (min-width: 2560px) {
+    body, html, .gradio-container {
+        padding: 20px 40px !important;
+    }
+    .gemini-header h1 {
+        font-size: 2.8rem !important;
+    }
 }
 """
 
+head_injection = f"""
+<style>
+{gemini_css}
+</style>
+<script>
+    function purgeDarkMode() {{
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        document.body.removeAttribute('style'); // 清除 body 上的 style="background: #000;"
+        document.body.style.backgroundColor = '#ffffff';
+        
+        // 強制 Gradio 容器滿寬
+        const containers = document.querySelectorAll('.gradio-container');
+        containers.forEach(el => {{
+            el.style.maxWidth = '100%';
+            el.style.width = '100%';
+        }});
+    }}
+    
+    // 1. 初始化執行
+    document.addEventListener('DOMContentLoaded', purgeDarkMode);
+    setTimeout(purgeDarkMode, 100);
+    setTimeout(purgeDarkMode, 500);
+    setTimeout(purgeDarkMode, 1500);
+
+    // 2. DOM 動態監聽：一旦 Gradio 重新賦予 dark 類別，立刻剔除
+    const observer = new MutationObserver(purgeDarkMode);
+    observer.observe(document.documentElement, {{ attributes: true, attributeFilter: ['class', 'style'] }});
+</script>
+"""
 # --- 🔑 JS 辅助脚本：持久化与清除 Cookie ---
 # --- 🔑 JS 辅助脚本：直接读取 DOM 写入 Cookie ---
 JS_SET_COOKIE = """
@@ -1812,6 +1584,7 @@ div.custom-modal-content {
 """
 
 def build_qa_admin_ui(qa_chain: Optional[Any] = None):
+    
     # 📌 1. 显式加载 tools.yaml，确保配置文件中的工具与角色白名单全量载入
     yaml_path = os.path.join(SCRIPT_DIR, "config", "tools.yaml")
     print(f"\n================ [DEBUG 1: YAML 路径与解析] ================")
@@ -1837,7 +1610,12 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
     except Exception as e:
         logging.warning(f"⚠️ 工具初始化说明: {e}")
 
-    with gr.Blocks(title=" QA 智能问答与 Agent 调试台", theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
+    with gr.Blocks(
+        title=" Growlong", 
+        css=gemini_css,
+        head=head_injection,
+        theme=gr.themes.Soft(primary_hue="blue")
+    ) as demo:
         # 用户状态存取 State
         user_state = gr.State(value={"is_logged_in": False, "username": ""})
 
@@ -1875,7 +1653,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
         # =========================================================
         with gr.Column(visible=False) as main_portal_view:
             with gr.Row(elem_classes="header-container"):
-                user_info_banner = gr.Markdown("# 🤖  QA 智能问答与 Agent 工具链调试台", scale=4)
+                user_info_banner = gr.Markdown("# Growlong 工具链调试台", scale=4)
                 # 用空列或设置 scale 撑开间距，将退出按钮推到最右侧
                 with gr.Column(scale=1, min_width=10, visible=True):
                     pass
@@ -2302,7 +2080,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 found_role = USER_ROLES.get(found_user, "user")
                 mem_mgr = get_or_create_user_memory(found_user)
                 new_state = {"is_logged_in": True, "username": found_user, "role": found_role}
-                banner_text = f"# 🤖  QA 智能问答与 Agent 调试台 (当前登录用户: `{found_user}` | 角色: `{found_role}`)"                
+                banner_text = f"# Growlong (当前登录用户/角色: `{found_user}|{found_role}`)"                
                 session_choices = fetch_session_dropdown_choices(found_user)
                 if not session_choices:
                     default_sess = str(uuid.uuid4())
@@ -2380,7 +2158,7 @@ def build_qa_admin_ui(qa_chain: Optional[Any] = None):
                 role_tools = get_all_registered_tool_names(user_role=found_role)
                 default_tool = role_tools[0] if role_tools else None
                 new_state = {"is_logged_in": True, "username": username_clean, "role": found_role}
-                banner_text = f"# 🤖  QA 智能问答与 Agent 调试台 (当前登录用户: `{username_clean}` | 角色: `{found_role}`)"
+                banner_text = f"# Growlong (当前登录用户/角色: `{username_clean}`)"
 
                 session_choices = fetch_session_dropdown_choices(username_clean)
                 if not session_choices:
@@ -2503,7 +2281,11 @@ if __name__ == "__main__":
     app = gr.mount_gradio_app(
         app=app,
         blocks=qa_ui,
-        path="/qa"  # 對應原有的 root_path
+        path="/qa",  # 對應原有的 root_path
+        root_path="/qa",
+        css=gemini_css,                          # 👈 显式再传一次
+        head=head_injection,                     # 👈 显式再传一次
+        theme=gr.themes.Soft(primary_hue="blue"),# 👈 显式再传一次
     )
 
     # 5. 使用 Uvicorn 啟動服務
