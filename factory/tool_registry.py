@@ -59,35 +59,3 @@ def init_tools(retriever: Optional[Any] = None, reranker: Optional[Any] = None) 
 
         tool_instance = cls(**tool_kwargs)
         tool_factory.register_tool(tool_instance)
-
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
-    # 📌 使用基於 project_root 的動態路徑進行驗證
-    target_yaml_path = os.path.join(project_root, "config", "tools.yaml")
-
-    print("\n" + "=" * 60)
-    print("🔍 [YAML 讀取測試] 開始驗證...")
-    print(f"📌 解析出的專案根目錄: {project_root}")
-    print(f"📌 目標 YAML 絕對路徑: {target_yaml_path}")
-    print("=" * 60)
-
-    if not os.path.exists(target_yaml_path):
-        print(f"❌ [錯誤] 檔案不存在，請檢查目錄結構: {target_yaml_path}")
-    else:
-        print(f"✅ [成功] 成功定位檔案！")
-        try:
-            init_tools()
-            all_target_packages = [
-                (domain, pkg)
-                for domain, pkgs in tool_factory._hierarchy.items()
-                for pkg in pkgs.keys()
-            ]
-            _, tools = tool_factory.get_tools_metadata_by_packages(all_target_packages, user_role="admin")
-            print(f"🎉 [成功] 成功加載 YAML 並註冊 {len(tools)} 個工具！")
-        except Exception as e:
-            print(f"❌ [錯誤] 初始化失敗: {e}")
-
-    print("=" * 60 + "\n")

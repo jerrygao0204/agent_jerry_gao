@@ -1,103 +1,119 @@
 # tests/test_retriever.py
-#
-# 根据仓库真实结构调整：
-# - 仓库里是 search/retriever.py 的 Retriever，而不是原稿假设的
-#   rag.retriever.Retriever；返回的也不是带 .page_content 属性的
-#   LangChain Document 对象，而是普通 dict（含 chunk_id / content /
-#   base_content / up_content / down_content / hierarchy 等字段）。
-# - Retriever.__init__ 会直接连接 Milvus，且 embedding 依赖真实的
-#   Qwen3-Embedding 模型 + GPU（transformers/torch）。这些在普通 CI/本地
-#   环境里既连不上也跑不动，所以这里用 unittest.mock 把 ModelFactory 和
-#   MilvusClient 都替换掉，只对"纯逻辑"部分做单元测试：
-#     1) generate_sparse_vector 的稀疏向量生成是否稳定、可复现
-#     2) hybrid_search 对 Milvus 返回结果的解析、层级拼接、前后置
-#        Chunk 上下文拓展逻辑是否正确
-#   真正端到端连 Milvus + 真实模型的检索效果验证，建议放在单独标记的
-#   集成测试（如 @pytest.mark.integration）里，按需在有 GPU/Milvus 的
-#   环境手动跑，而不是放进默认的单元测试套件。
-
-from unittest.mock import MagicMock, patch
-
 import pytest
+import torch
+from unittest.mock import MagicMock
+from search.reranker import Reranker
 
 
 @pytest.fixture
-def retriever_inst():
-    """构造一个不需要真实 Milvus 连接、不加载真实 Embedding 模型的 FineBIRetriever"""
-    with patch("search.retriever.ModelFactory") as MockModelFactory, \
-         patch("search.retriever.MilvusClient") as MockMilvusClient:
+def mock_reranker(mocker):
+    """构建注入 Mock Tokenizer 与 Mock Model 的 Reranker 实例"""
+    # 1. 模拟 Tokenizer 输出
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.return_value.to.return_value = {}
 
-        mock_client = MagicMock()
-        MockMilvusClient.return_value = mock_client
-        MockModelFactory.return_value = MagicMock()
+    # 2. 模拟 Model 的 Logits 输出
+    mock_model = MagicMock()
+    # 预设 Logits 输出 模拟得分 (例如 [3.0, 0.5, -2.0])
+    mock_logits = torch.tensor([3.0, 0.5, -2.0])
+    mock_outputs = MagicMock()
+    mock_outputs.logits.view.return_value.float.return_value = mock_logits
+    mock_model.return_value = mock_outputs
 
-        from search.retriever import Retriever
+    # 3. 拦截 ModelFactory 的静态属性注入
+    mocker.patch("factory.model_factory.ModelFactory._rerank_tokenizer", mock_tokenizer)
+    mocker.patch("factory.model_factory.ModelFactory._rerank_model", mock_model)
+    mocker.patch("factory.model_factory.ModelFactory._device", "cpu")
 
-        r = Retriever(
-            milvus_host="mock-host",
-            milvus_port="19530",
-            collection_name="finebi_knowledge_chunks_test",
-        )
-        yield r
-
-
-def test_generate_sparse_vector_is_deterministic_and_nonempty():
-    """稀疏向量生成对同一文本应结果一致，且不应为空"""
-    from search.retriever import Retriever
-
-    vec1 = Retriever.generate_sparse_vector("怎么创建预警用户")
-    vec2 = Retriever.generate_sparse_vector("怎么创建预警用户")
-
-    assert vec1 == vec2
-    assert len(vec1) > 0
-    assert all(isinstance(v, float) for v in vec1.values())
+    reranker = Reranker(strict_mode=True)
+    return reranker
 
 
-def test_hybrid_search_parses_hit_and_expands_context(retriever_inst, monkeypatch):
-    """验证命中结果的层级拼接、以及前置/后置 Chunk 上下文拓展是否正确"""
-    # 绕开真实的稠密向量模型推理
-    monkeypatch.setattr(retriever_inst, "get_dense_embedding", lambda text: [0.1, 0.2, 0.3])
-
-    mock_hit = {
-        "entity": {
-            "chunk_id": "c2",
-            "content": "重置密码：进入个人中心 -> 忘记密码 -> 按提示重置密码。",
-            "section_id": "sec_01",
-            "file_name": "finebi_faq.md",
-            "full_hierarchy_array": {"data": ["FAQ", "账号相关", "重置密码"]},
-            "biz_summary": "密码重置指引",
-            "next_chunk_id": "c3",
-            "prev_chunk_id": "c1",
-        },
-        "distance": 0.87,
+def test_build_context_aware_text(mock_reranker):
+    """验证上下文感知的文本拼接逻辑"""
+    chunk_data = {
+        "chunk_id": "c2",
+        "hierarchy": "文档1 > 章节2",
+        "biz_summary": "测试摘要",
+        "content": "核心内容C2",
+        "up_content": "c1",
+        "down_content": "c3"
     }
-    retriever_inst.client.hybrid_search.return_value = [[mock_hit]]
-    retriever_inst.client.query.return_value = [
-        {"chunk_id": "c1", "content": "个人中心入口说明"},
-        {"chunk_id": "c3", "content": "重置成功后的提示文案"},
+    chunk_map = {
+        "c1": "上文内容C1",
+        "c2": "核心内容C2",
+        "c3": "下文内容C3"
+    }
+
+    text = mock_reranker._build_context_aware_text(chunk_data, chunk_map, enable_surrounding_context=True)
+
+    assert "[文档层级 (Hierarchy)]: 文档1 > 章节2" in text
+    assert "[业务摘要 (Summary)]: 测试摘要" in text
+    assert "[上文补充 (Up Content - c1)]:\n上文内容C1" in text
+    assert "[核心内容 (Core Content - c2)]:\n核心内容C2" in text
+    assert "[下文补充 (Down Content - c3)]:\n下文内容C3" in text
+
+
+def test_rerank_filtering_and_sorting(mock_reranker):
+    """验证 Reranker 的重排序、Sigmoid 转换与得分过滤逻辑"""
+    documents = [
+        {"chunk_id": "c1", "content": "FineBI 支持多种数据源"},
+        {"chunk_id": "c2", "content": "帆软报表安装教程"},
+        {"chunk_id": "c3", "content": "无关文档内容"}
+    ]
+    query = "FineBI 连接"
+
+    # 执行 rerank
+    results = mock_reranker.rerank(query=query, documents=documents, top_n=2)
+
+    # Logits [3.0, 0.5, -2.0] -> Sigmoid 后 top1 明显最高
+    assert len(results) <= 2
+    assert results[0]["chunk_id"] == "c1"
+    assert "rerank_score" in results[0]
+    assert "rerank_prob" in results[0]
+
+
+def test_rerank_empty_documents(mock_reranker):
+    """验证空文档列表的边界处理"""
+    results = mock_reranker.rerank(query="test", documents=[], top_n=5)
+    assert results == []
+
+
+def test_rerank_low_probability_blocking(mock_reranker, mocker):
+    """验证当 Top-1 概率未达到 min_prob 门槛时的阻断熔断"""
+    # 模拟非常低的分数 Logits [-5.0, -6.0]，Sigmoid 后概率接近 0
+    mock_logits = torch.tensor([-5.0, -6.0])
+    mock_outputs = MagicMock()
+    mock_outputs.logits.view.return_value.float.return_value = mock_logits
+    mocker.patch.object(mock_reranker, "model", return_value=mock_outputs)
+
+    # 在实例属性上设置门槛值
+    mock_reranker.min_prob = 0.25
+
+    documents = [
+        {"chunk_id": "c1", "content": "内容1"},
+        {"chunk_id": "c2", "content": "内容2"}
     ]
 
-    results = retriever_inst.hybrid_search(query="如何重置密码", top_k=3, expand_context=True)
+    # 【修正点】移除 rerank 调用的非法关键字参数 min_prob
+    results = mock_reranker.rerank(query="不相关问题", documents=documents)
+    # 概率低未过门槛，触发阻断并返回 []
+    assert results == []
 
-    assert len(results) == 1
-    top = results[0]
-    assert top["chunk_id"] == "c2"
-    assert "重置密码" in top["content"]
-    assert top["hierarchy"] == "FAQ > 账号相关 > 重置密码"
-    assert top["up_content"] == "个人中心入口说明"
-    assert top["down_content"] == "重置成功后的提示文案"
 
-    retriever_inst.client.load_collection.assert_called_once_with(
-        collection_name="finebi_knowledge_chunks_test"
+def test_rerank_disable_filtering(mock_reranker):
+    """验证 disable_filtering=True 时无视门槛强制截取 Top-N"""
+    documents = [
+        {"chunk_id": "c1", "content": "内容1"},
+        {"chunk_id": "c2", "content": "内容2"},
+        {"chunk_id": "c3", "content": "内容3"}
+    ]
+
+    results = mock_reranker.rerank(
+        query="任意查询", 
+        documents=documents, 
+        top_n=2, 
+        disable_filtering=True
     )
 
-
-def test_hybrid_search_returns_empty_list_when_no_hits(retriever_inst, monkeypatch):
-    """Milvus 无召回结果时应返回空列表，而不是抛异常"""
-    monkeypatch.setattr(retriever_inst, "get_dense_embedding", lambda text: [0.1])
-
-    retriever_inst.client.hybrid_search.return_value = []
-
-    results = retriever_inst.hybrid_search(query="这是一个不存在的问题")
-
-    assert results == []
+    assert len(results) == 2

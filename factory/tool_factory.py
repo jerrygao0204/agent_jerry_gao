@@ -374,30 +374,3 @@ def load_tools_from_yaml(yaml_path: str = "", factory: HierarchicalToolFactory =
 
         except Exception as e:
             logger.error(f"❌ 动态加载工具失败 [{module_path}.{class_name}]: {str(e)}")
-
-if __name__ == "__main__":
-    # 配置日志输出格式
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-
-    # 执行从 tools.yaml 动态装载
-    try:
-        yaml_path = Path(__file__).resolve().parent.parent /"config"/ "tools.yaml"
-        load_tools_from_yaml(str(yaml_path), tool_factory)
-        
-        
-        print("\n========== 1. [普通用户 user] Level 1 可见 Domain ==========")
-        print(tool_factory.get_domains_summary(user_role="user"))
-
-        print("\n========== 2. [数据分析师 analyst] Level 2 可见 Packages ==========")
-        print(tool_factory.get_packages_summary_by_domains(["finebi_system", "rag_knowledge"], user_role="analyst"))
-
-        print("\n========== 3. [管理员 admin] Level 3 工具 Schema 导出 ==========")
-        names, _ = tool_factory.get_tools_metadata_by_packages([("finebi_system", "metadata_pkg")], user_role="admin")
-        print("Admin 检索到工具:", names)
-
-        print("\n========== 4. [数据分析师 analyst] Level 3 工具 Schema 导出 ==========")
-        names, _ = tool_factory.get_tools_metadata_by_packages([("finebi_system", "metadata_pkg")], user_role="analyst")
-        print("Analyst 检索到工具:", names)
-
-    except FileNotFoundError:
-        logger.warning("未找到 tools.yaml 文件，请确保运行目录下存在配置文件。")

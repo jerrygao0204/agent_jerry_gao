@@ -1,4 +1,4 @@
-# reranker.py 重排序
+# search/reranker.py
 import os
 import sys
 import torch
